@@ -32,10 +32,10 @@ public class Hardware {
 	}
 
 	public void init()    {
-		frontLeftMotor = callingOpMode.hardwareMap.get(DcMotor.class, "frontLeft");
-		frontRightMotor = callingOpMode.hardwareMap.get(DcMotor.class, "frontRight");
-		backLeftMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backLeft");
-		backRightMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backRight");
+		frontLeftMotor = callingOpMode.hardwareMap.get(DcMotor.class, "frontLeftMotor");
+		frontRightMotor = callingOpMode.hardwareMap.get(DcMotor.class, "frontRightMotor");
+		backLeftMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backLeftMotor");
+		backRightMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backRightMotor");
 
 		frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 		frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
