@@ -192,6 +192,20 @@ public class Drivetrain {
 		Orientation current_orientation = hardware.imu.getRobotOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
 		angular_velocity_rad_per_s = hardware.imu.getRobotAngularVelocity(AngleUnit.RADIANS).zRotationRate;
 
+		// Note: the control hub is upside down, account for this
+		// If we are using extrinsic angles, wouldn't this not be a problem? TBD
+		/*current_orientation.thirdAngle = (float) (Math.PI - current_orientation.thirdAngle);
+
+		if (current_orientation.thirdAngle < 0.0) {
+			current_orientation.thirdAngle += (float) (Math.PI * 2.0);
+		}
+
+		if (current_orientation.thirdAngle > 2.0 * Math.PI) {
+			current_orientation.thirdAngle -= (float) (Math.PI * 2.0);
+		}*/
+
+		angular_velocity_rad_per_s = -angular_velocity_rad_per_s;
+
 		float heading_difference_from_start = getHeadingDifferenceFromStart(current_orientation);
 
 		// Clear rotation due to manual stick; the time is here so we don't stop it 1 ms later, when we're not actually rotating yet
@@ -330,13 +344,13 @@ public class Drivetrain {
 
 		// See https://www.youtube.com/watch?v=8rhAkjViHEQ for the math behind this
 		// Basically to calculate the power check the sin, compensated for the wheel's rotation
-		double sin_phi_fl_br = Math.sin(translation_direction - Math.PI / 4.0);
-		double sin_phi_fr_bl = Math.sin(translation_direction + Math.PI / 4.0);
+		double sin_phi_fl_br = Math.sin(translation_direction + Math.PI / 4.0);
+		double sin_phi_fr_bl = Math.sin(translation_direction - Math.PI / 4.0);
 
-		double frontLeft = (sin_phi_fl_br * translation_power) - clockwise_rotation_power;
-		double frontRight = (sin_phi_fr_bl * translation_power) + clockwise_rotation_power;
-		double backLeft = (sin_phi_fr_bl * translation_power) - clockwise_rotation_power;
-		double backRight = (sin_phi_fl_br * translation_power) + clockwise_rotation_power;
+		double frontLeft = (sin_phi_fl_br * translation_power) + clockwise_rotation_power;
+		double frontRight = (sin_phi_fr_bl * translation_power) - clockwise_rotation_power;
+		double backLeft = (sin_phi_fr_bl * translation_power) + clockwise_rotation_power;
+		double backRight = (sin_phi_fl_br * translation_power) - clockwise_rotation_power;
 
 		// Normalize all of them to get the expected result
 		double maxPower = Math.max(Math.max(Math.abs(frontLeft), Math.abs(frontRight)), Math.max(Math.abs(backLeft), Math.abs(backRight)));
