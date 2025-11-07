@@ -27,8 +27,8 @@ public class DrivetrainTest extends LinearOpMode {
 
 		while (opModeIsActive()) {
 
-			Vector2D translation_vector = new Vector2D(gamepad1.left_stick_x, gamepad1.left_stick_y);
-			Vector2D rotation_vector = new Vector2D(gamepad1.right_stick_x, gamepad1.right_stick_y);
+			Vector2D translation_vector = new Vector2D(gamepad1.left_stick_x, -gamepad1.left_stick_y);
+			Vector2D rotation_vector = new Vector2D(gamepad1.right_stick_x, -gamepad1.right_stick_y);
 
 			if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
 				translation_vector = new Vector2D(0.0, 0.0);
