@@ -44,8 +44,8 @@ public class Hardware {
 
 		// Make the positive direction on all motors +y
 		// (This is assuming the motors spin clockwise and their directions aren't flipped by gears)
-		frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-		backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+		frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+		backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
 		imu = callingOpMode.hardwareMap.get(IMU.class, "imu");
 	}

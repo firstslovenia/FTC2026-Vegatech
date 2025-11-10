@@ -1,7 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.*;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
@@ -19,11 +24,13 @@ public class DrivetrainTest extends LinearOpMode {
 		hardware.init();
 
 		drivetrain = new Drivetrain(this, hardware);
-		drivetrain.fieldCentricTranslation = false;
+		drivetrain.fieldCentricTranslation = true;
 		drivetrain.fieldCentricRotation = false;
 		drivetrain.keepHeading = false;
 
 		waitForStart();
+		hardware.imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
+
 
 		while (opModeIsActive()) {
 
@@ -53,6 +60,10 @@ public class DrivetrainTest extends LinearOpMode {
 
 			if (gamepad1.y) {
 				drivetrain.fieldCentricTranslation = false;
+			}
+
+			if (gamepad1.guideWasPressed()) {
+				drivetrain.resetStartingDirection();
 			}
 
 			drivetrain.update(translation_vector, rotation_vector);
