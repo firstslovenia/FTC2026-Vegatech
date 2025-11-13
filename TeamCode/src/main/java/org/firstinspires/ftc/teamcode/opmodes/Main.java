@@ -1,21 +1,25 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.*;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.LedIndicator;
+import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
-@TeleOp(name = "DrivetrainTest")
-public class DrivetrainTest extends LinearOpMode {
+@TeleOp(name = "Main")
+public class Main extends LinearOpMode {
 
 	Hardware hardware;
 	Drivetrain drivetrain;
+	LedIndicator ledIndicator;
+	Shooter shooter;
+	Webcam webcam;
 
 	@Override
 	public void runOpMode() {
@@ -27,6 +31,13 @@ public class DrivetrainTest extends LinearOpMode {
 		drivetrain.fieldCentricTranslation = true;
 		drivetrain.fieldCentricRotation = true;
 		drivetrain.keepHeading = true;
+
+		ledIndicator = new LedIndicator(this, hardware);
+		ledIndicator.setPosition(LedIndicator.OFF_POSITION);
+
+		shooter = new Shooter(this, hardware);
+
+		webcam = new Webcam(this, hardware);
 
 		waitForStart();
 		hardware.imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
@@ -46,20 +57,20 @@ public class DrivetrainTest extends LinearOpMode {
 				if (gamepad1.dpad_left) { translation_vector.x -= 0.65; }
 			}
 
-			if (gamepad1.a) {
-				drivetrain.fieldCentricRotation = true;
+			if (gamepad1.aWasPressed()) {
+				drivetrain.fieldCentricRotation = !drivetrain.fieldCentricRotation;
 			}
 
 			if (gamepad1.b) {
-				drivetrain.fieldCentricRotation = false;
+				drivetrain.fieldCentricTranslation = !drivetrain.fieldCentricTranslation;
 			}
 
 			if (gamepad1.x) {
-				drivetrain.fieldCentricTranslation = true;
-			}
-
-			if (gamepad1.y) {
-				drivetrain.fieldCentricTranslation = false;
+				if (shooter.enabled) {
+					shooter.update(0.0);
+				} else {
+					shooter.update(0.8);
+				}
 			}
 
 			if (gamepad1.guideWasPressed()) {
@@ -67,6 +78,14 @@ public class DrivetrainTest extends LinearOpMode {
 			}
 
 			drivetrain.update(translation_vector, rotation_vector);
+
+			if (webcam.last_detections.isEmpty()) {
+				ledIndicator.setPosition(LedIndicator.OFF_POSITION);
+			} else {
+				ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
+			}
+
+			webcam.update();
 
 			telemetry.update();
 		}

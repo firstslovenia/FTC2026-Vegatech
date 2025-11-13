@@ -40,7 +40,7 @@ public class Drivetrain {
 	/// What motor power to consider not actually moving
 	///
 	/// 2025/09/04 - our motors need to be 0.5 to actually cause **any** movement! For rotation about 0.25 for all motors
-	public double power_epsilon = 0.15;
+	public double power_epsilon = 0.05;
 
 	/// How many ms to wait before releasing the breaks after not moving
 	public long stop_breaking_after_ms = 1000;
@@ -73,7 +73,7 @@ public class Drivetrain {
 	public Drivetrain(LinearOpMode opMode, Hardware hw_map) {
 		callingOpMode = opMode;
 		hardware = hw_map;
-		rotation_pid_controller = new GenericPIDController(callingOpMode, 0.7, 0.0, 0.15, 0.2);
+		rotation_pid_controller = new GenericPIDController(callingOpMode, 1.0, 0.0, 0.0, 0.1);
 		resetStartingDirection();
 	}
 
@@ -192,20 +192,6 @@ public class Drivetrain {
 		Orientation current_orientation = hardware.imu.getRobotOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
 		angular_velocity_rad_per_s = hardware.imu.getRobotAngularVelocity(AngleUnit.RADIANS).zRotationRate;
 
-		// Note: the control hub is upside down, account for this
-		// If we are using extrinsic angles, wouldn't this not be a problem? TBD
-		/*current_orientation.thirdAngle = (float) (Math.PI - current_orientation.thirdAngle);
-
-		if (current_orientation.thirdAngle < 0.0) {
-			current_orientation.thirdAngle += (float) (Math.PI * 2.0);
-		}
-
-		if (current_orientation.thirdAngle > 2.0 * Math.PI) {
-			current_orientation.thirdAngle -= (float) (Math.PI * 2.0);
-		}*/
-
-		angular_velocity_rad_per_s = -angular_velocity_rad_per_s;
-
 		float heading_difference_from_start = getHeadingDifferenceFromStart(current_orientation);
 
 		// Clear rotation due to manual stick; the time is here so we don't stop it 1 ms later, when we're not actually rotating yet
@@ -253,7 +239,7 @@ public class Drivetrain {
 				double rotation_power_input = rotation_inputs.first;
 				double wanted_heading_input = rotation_inputs.second;
 
-				if (rotation_power_input > 2 * power_epsilon) {
+				if (rotation_power_input > power_epsilon) {
 					wanted_heading = wanted_heading_input;
 					should_rotate = true;
 				}
@@ -327,7 +313,7 @@ public class Drivetrain {
 			}
 
 		} else {
-			if (Math.abs(rotation_stick.x) > power_epsilon) {
+			if (Math.abs(rotation_stick.x) > 2 * power_epsilon) {
 				started_rotating_due_to_manual_stick_time = System.currentTimeMillis();
 			}
 

@@ -4,6 +4,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 public class Hardware {
 
@@ -25,7 +28,13 @@ public class Hardware {
 	public static DcMotor backLeftMotor = null;
 	public static DcMotor backRightMotor = null;
 
+	public static DcMotor shooterMotor = null;
+
 	public static IMU imu = null;
+
+	public static Servo rgbLed = null;
+
+	public static WebcamName webcam = null;
 
 	public Hardware (LinearOpMode opmode) {
 		callingOpMode = opmode;
@@ -47,6 +56,12 @@ public class Hardware {
 		frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 		backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+		shooterMotor = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotor");
+		shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+		shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
 		imu = callingOpMode.hardwareMap.get(IMU.class, "imu");
+		rgbLed = callingOpMode.hardwareMap.get(Servo.class, "rgbLed");
+		webcam = callingOpMode.hardwareMap.get(WebcamName.class, "webcam");
 	}
 }
