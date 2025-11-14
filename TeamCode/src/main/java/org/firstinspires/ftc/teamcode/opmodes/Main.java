@@ -1,10 +1,15 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.LedIndicator;
@@ -21,16 +26,20 @@ public class Main extends LinearOpMode {
 	Shooter shooter;
 	Webcam webcam;
 
+	// Pedro stuff
+	private Follower follower;
+
+	/// Offset from the starting heading for field centric
+	double fieldCentricOffset = 0.0;
+
+	/// Whether to run in field centric mode
+	boolean fieldCentric = true;
+
 	@Override
 	public void runOpMode() {
 
 		hardware = new Hardware(this);
 		hardware.init();
-
-		drivetrain = new Drivetrain(this, hardware);
-		drivetrain.fieldCentricTranslation = true;
-		drivetrain.fieldCentricRotation = true;
-		drivetrain.keepHeading = true;
 
 		ledIndicator = new LedIndicator(this, hardware);
 		ledIndicator.setPosition(LedIndicator.OFF_POSITION);
@@ -41,9 +50,13 @@ public class Main extends LinearOpMode {
 
 		waitForStart();
 		hardware.imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
-		drivetrain.resetStartingDirection();
+
+		follower = Constants.createFollower(hardwareMap);
+		follower.update();
+		follower.startTeleOpDrive();
 
 		while (opModeIsActive()) {
+			follower.update();
 
 			Vector2D translation_vector = new Vector2D(gamepad1.left_stick_x, -gamepad1.left_stick_y);
 			Vector2D rotation_vector = new Vector2D(gamepad1.right_stick_x, -gamepad1.right_stick_y);
@@ -58,11 +71,7 @@ public class Main extends LinearOpMode {
 			}
 
 			if (gamepad1.aWasPressed()) {
-				drivetrain.fieldCentricRotation = !drivetrain.fieldCentricRotation;
-			}
-
-			if (gamepad1.b) {
-				drivetrain.fieldCentricTranslation = !drivetrain.fieldCentricTranslation;
+				fieldCentric = !fieldCentric;
 			}
 
 			if (gamepad1.x) {
@@ -74,10 +83,10 @@ public class Main extends LinearOpMode {
 			}
 
 			if (gamepad1.guideWasPressed()) {
-				drivetrain.resetStartingDirection();
+				fieldCentricOffset = hardware.imu.getRobotOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS).thirdAngle;
 			}
 
-			drivetrain.update(translation_vector, rotation_vector);
+			follower.setTeleOpDrive(translation_vector.y, -translation_vector.x, -rotation_vector.x, !fieldCentric, fieldCentricOffset);
 
 			if (webcam.last_detections.isEmpty()) {
 				ledIndicator.setPosition(LedIndicator.OFF_POSITION);

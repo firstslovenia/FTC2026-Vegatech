@@ -330,13 +330,13 @@ public class Drivetrain {
 
 		// See https://www.youtube.com/watch?v=8rhAkjViHEQ for the math behind this
 		// Basically to calculate the power check the sin, compensated for the wheel's rotation
-		double sin_phi_fl_br = Math.sin(translation_direction - Math.PI / 4.0);
-		double sin_phi_fr_bl = Math.sin(translation_direction + Math.PI / 4.0);
+		double sin_phi_fl_br = Math.sin(translation_direction + Math.PI / 4.0);
+		double sin_phi_fr_bl = Math.sin(translation_direction - Math.PI / 4.0);
 
-		double frontLeft = (sin_phi_fl_br * translation_power) - clockwise_rotation_power;
-		double frontRight = (sin_phi_fr_bl * translation_power) + clockwise_rotation_power;
-		double backLeft = (sin_phi_fr_bl * translation_power) - clockwise_rotation_power;
-		double backRight = (sin_phi_fl_br * translation_power) + clockwise_rotation_power;
+		double frontLeft = (sin_phi_fl_br * translation_power) + clockwise_rotation_power;
+		double frontRight = (sin_phi_fr_bl * translation_power) - clockwise_rotation_power;
+		double backLeft = (sin_phi_fr_bl * translation_power) + clockwise_rotation_power;
+		double backRight = (sin_phi_fl_br * translation_power) - clockwise_rotation_power;
 
 		// Normalize all of them to get the expected result
 		double maxPower = Math.max(Math.max(Math.abs(frontLeft), Math.abs(frontRight)), Math.max(Math.abs(backLeft), Math.abs(backRight)));

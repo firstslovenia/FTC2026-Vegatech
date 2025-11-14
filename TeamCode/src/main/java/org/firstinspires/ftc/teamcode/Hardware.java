@@ -28,6 +28,10 @@ public class Hardware {
 	public static DcMotor backLeftMotor = null;
 	public static DcMotor backRightMotor = null;
 
+	public static DcMotor leftForwardDeadwheel = null;
+	public static DcMotor rightForwardDeadwheel = null;
+	public static DcMotor backSidewaysDeadwheel = null;
+
 	public static DcMotor shooterMotor = null;
 
 	public static IMU imu = null;
@@ -53,8 +57,12 @@ public class Hardware {
 
 		// Make the positive direction on all motors +y
 		// (This is assuming the motors spin clockwise and their directions aren't flipped by gears)
-		frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-		backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+		frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+		backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+		backSidewaysDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "backSidewaysDeadwheel");
+		leftForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "leftForwardDeadwheel");
+		rightForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "rightForwardDeadwheel");
 
 		shooterMotor = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotor");
 		shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
