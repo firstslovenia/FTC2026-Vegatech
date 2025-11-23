@@ -56,7 +56,7 @@ public class Drivetrain {
 	/// In radians
 	///
 	/// By default, this is forward (Pi / 2)
-	double wanted_heading = Math.PI / 2.0;
+	public double wanted_heading = Math.PI / 2.0;
 
 	/// The last robot orientation, saved so we can reset it if our readout becomes all zeroes
 	Orientation last_robot_orientation;

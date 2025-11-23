@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -10,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 public class Hardware {
 
-	private LinearOpMode callingOpMode = null;
+	private OpMode callingOpMode = null;
 
 	//  Motor configuration:
 	//  ╔════════════════════╗
@@ -34,13 +36,15 @@ public class Hardware {
 
 	public static DcMotor shooterMotor = null;
 
+	public static DcMotor shooterPusherMotor = null;
+
 	public static IMU imu = null;
 
 	public static Servo rgbLed = null;
 
 	public static WebcamName webcam = null;
 
-	public Hardware (LinearOpMode opmode) {
+	public Hardware (OpMode opmode) {
 		callingOpMode = opmode;
 	}
 
@@ -68,7 +72,14 @@ public class Hardware {
 		shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 		shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
+		// Hack: they use the same port
+		shooterPusherMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backSidewaysDeadwheel");
+		shooterPusherMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+		shooterPusherMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
 		imu = callingOpMode.hardwareMap.get(IMU.class, "imu");
+		imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
+
 		rgbLed = callingOpMode.hardwareMap.get(Servo.class, "rgbLed");
 		webcam = callingOpMode.hardwareMap.get(WebcamName.class, "webcam");
 	}

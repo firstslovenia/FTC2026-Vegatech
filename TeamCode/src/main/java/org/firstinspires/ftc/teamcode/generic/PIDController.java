@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.generic;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import java.util.Optional;
 
@@ -11,7 +12,7 @@ public abstract class PIDController {
 	public String telemetry_prefix = "";
 
 	/// Optional calling opmode which can be set to print telemetry
-	public Optional<LinearOpMode> callingOpMode;
+	public Optional<OpMode> callingOpMode;
 
 	/// Whether or not to print debug values to telemetry
 	public boolean debug = true;
@@ -21,7 +22,7 @@ public abstract class PIDController {
 		debug = false;
 	}
 
-	public PIDController(Optional<LinearOpMode> callingOpmode, String telemetry_prefix) {
+	public PIDController(Optional<OpMode> callingOpmode, String telemetry_prefix) {
 		this.callingOpMode = callingOpmode;
 		this.telemetry_prefix = telemetry_prefix;
 		debug = true;
@@ -101,7 +102,7 @@ public abstract class PIDController {
 
 		if (callingOpMode.isPresent() && debug) {
 
-			LinearOpMode opmode = callingOpMode.get();
+			OpMode opmode = callingOpMode.get();
 
 			opmode.telemetry.addData(telemetry_prefix + "proportional", p);
 			opmode.telemetry.addData(telemetry_prefix + "integral", i);

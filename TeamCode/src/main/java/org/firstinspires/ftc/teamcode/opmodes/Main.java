@@ -2,10 +2,8 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
@@ -45,7 +43,6 @@ public class Main extends LinearOpMode {
 		webcam = new Webcam(this, hardware);
 
 		waitForStart();
-		hardware.imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
 		drivetrain.resetStartingDirection();
 
 		pedroFollower = Constants.createFollower(hardwareMap);
@@ -55,6 +52,7 @@ public class Main extends LinearOpMode {
 
 			Pose pos = pedroFollower.getPose();
 
+			telemetry.addData("Shooter power", hardware.shooterMotor.getPower());
 			telemetry.addData("X pos", pos.getX());
 			telemetry.addData("Y pos", pos.getY());
 			telemetry.addData("heading (telemetry)", pos.getHeading());
@@ -71,21 +69,35 @@ public class Main extends LinearOpMode {
 				if (gamepad1.dpad_left) { translation_vector.x -= 0.65; }
 			}
 
-			if (gamepad1.aWasPressed()) {
-				drivetrain.fieldCentricRotation = !drivetrain.fieldCentricRotation;
+			//if (gamepad1.aWasPressed()) {
+			//	drivetrain.keepHeading = !drivetrain.keepHeading;
+			//}
+
+			//if (gamepad1.bWasPressed()) {
+			//	drivetrain.fieldCentricTranslation = !drivetrain.fieldCentricTranslation;
+			//}
+
+			// Reset robot to 90 degrees
+			if (gamepad1.a) {
+				drivetrain.wanted_heading = Math.PI / 2.0;
 			}
 
-			if (gamepad1.bWasPressed()) {
-				drivetrain.fieldCentricTranslation = !drivetrain.fieldCentricTranslation;
-			}
-
-			if (gamepad1.x) {
-				if (shooter.enabled) {
-					shooter.update(0.0);
+			if (gamepad1.xWasPressed()) {
+				if (shooter.flywheel_enabled) {
+					shooter.update_flywheel_rpm(0.0);
 				} else {
-					shooter.update(0.8);
+					shooter.update_flywheel_rpm(Shooter.FLYWHEEL_NOMINAL_RPM);
 				}
 			}
+
+			if (gamepad1.right_trigger > 0.1) {
+				shooter.update_pusher_power(Shooter.PUSHER_NOMINAL_POWER);
+			} else if (gamepad1.left_trigger > 0.1) {
+				shooter.update_pusher_power(-Shooter.PUSHER_NOMINAL_POWER);
+			} else {
+				shooter.update_pusher_power(0.0);
+			}
+
 
 			if (gamepad1.guideWasPressed()) {
 				drivetrain.resetStartingDirection();
