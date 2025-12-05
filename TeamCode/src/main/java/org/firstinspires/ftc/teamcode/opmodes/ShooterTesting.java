@@ -13,7 +13,7 @@ public class ShooterTesting extends LinearOpMode {
 	LedIndicator ledIndicator;
 	Shooter shooter;
 
-	double rpms_x100 = 1.0;
+	double rpms_x100 = 20.0;
 
 	@Override
 	public void runOpMode() {
@@ -39,9 +39,9 @@ public class ShooterTesting extends LinearOpMode {
 			shooter.update_flywheel_rpm(rpms_x100 * 100.0);
 			shooter.update();
 
-			if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm) > 100.0) {
+			if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm_measurements.average().orElse(0.0)) > 100.0) {
 				ledIndicator.setPosition(LedIndicator.RED_POSITION);
-			} else if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm) > 20.0) {
+			} else if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm_measurements.average().orElse(0.0)) > 20.0) {
 				ledIndicator.setPosition(LedIndicator.YELLOW_POSITION);
 			} else if (shooter.flywheel_enabled) {
 				ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
@@ -50,9 +50,15 @@ public class ShooterTesting extends LinearOpMode {
 			}
 
 			telemetry.addData("rpms x100", rpms_x100);
-			telemetry.addData("RPM (measured)", shooter.last_rpm);
+			telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
 			telemetry.addData("Powah", hardware.shooterMotor.getPower());
 			telemetry.addData("Slow start multiplier", shooter.last_slow_start_multiplier);
+			telemetry.addData("Encoder pos", shooter.last_position_ticks.average().orElse(0.0));
+			telemetry.update();
+
+
+			telemetry.addData("power", rpms_x100);
+			telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
 			telemetry.update();
 		}
 	}

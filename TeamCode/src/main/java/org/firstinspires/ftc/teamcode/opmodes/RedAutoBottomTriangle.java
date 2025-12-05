@@ -65,7 +65,7 @@ public class RedAutoBottomTriangle extends OpMode {
 				/* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
 				if (!follower.isBusy()) {
 					setPathState(2);
-					shooter.update_flywheel_rpm(Shooter.FLYWHEEL_NOMINAL_RPM);
+					shooter.update_flywheel_rpm(3600.0);
 				}
 				break;
 

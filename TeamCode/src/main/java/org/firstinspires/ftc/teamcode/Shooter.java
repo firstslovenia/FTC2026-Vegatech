@@ -3,11 +3,9 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.generic.GenericPIDController;
+import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 
 public class Shooter {
-
-	/// Temp constant, the nominal rpm to run the flywheel at
-	public static double FLYWHEEL_NOMINAL_RPM = 1000.0;
 
 	/// Nominal power to run the pusher at
 	public static double PUSHER_NOMINAL_POWER = 0.4;
@@ -19,7 +17,7 @@ public class Shooter {
 	public static double FLYWHEEL_SLOW_START_TIME = 3000;
 
 	/// How many encoder counts mean one revolution on the output axle
-	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (30.0 / 125.0);
+	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (45.0 / 90.0);
 
 	/// When we started running the thingo
 	long started_running_time_ms = 0;
@@ -32,19 +30,26 @@ public class Shooter {
 	/// What RPM we want the flywheel's RPM to be
 	public double wanted_flywheel_rpm = 0.0;
 
+	/// The current flywheel's power - what we're regulating
+	public double flywheel_power = 0.0;
+
 	/// Whether we are powering the flywheel currently
 	public boolean flywheel_enabled = false;
 
 	/// Whether we are powering the pusher currently
 	public boolean pusher_enabled = false;
 
-	/// The last flywheel encoder position we measured
-	int last_position_ticks = 0;
-	/// When we measured last_position_ticks
-	long last_position_time_ms = 0;
+	/// Whether to not actually update motor values
+	public boolean dry_run = false;
 
-	/// The last rpm we measured
-	public double last_rpm = 0.0;
+	/// The last flywheel encoder position we measured
+	public SlidingWindow<Integer> last_position_ticks = new SlidingWindow<>(10, 0);
+
+	/// When we measured last_position_ticks
+	public SlidingWindow<Long> last_position_time_ms = new SlidingWindow<>(10, 0L);
+
+	/// Our last few rpm measurements - used to average the measurement out
+	public SlidingWindow<Double> last_rpm_measurements = new SlidingWindow<>(50, 0.0);
 
 	public double last_slow_start_multiplier = 0.0;
 
@@ -52,7 +57,7 @@ public class Shooter {
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherMotor.setPower(0.0);
 
-		shooter_power_pid_controller	= new GenericPIDController(callingOpMode, 0.06, 0.0, 0.0, 0.0);
+		shooter_power_pid_controller	= new GenericPIDController(callingOpMode, 100.0, 0.0, 0.0, 0.0);
 	}
 
 	public void disable_flywheel() {
@@ -78,52 +83,58 @@ public class Shooter {
 
 	/// Re-measures RPM and runs PID updates
 	public void update() {
+
+		double last_pos_ticks = last_position_ticks.average().orElse(0.0);
+		double last_time_ms = last_position_time_ms.average().orElse(0.0);
+
 		int position_ticks = hardware.shooterMotor.getCurrentPosition();
-		int delta_position_ticks = position_ticks - last_position_ticks;
+		double delta_position_ticks = position_ticks - last_pos_ticks;
 
 		long time_ms = System.currentTimeMillis();
-		long ms_elapsed = time_ms - last_position_time_ms;
+		double ms_elapsed = time_ms - last_time_ms;
 
-		if (last_position_time_ms == 0) {
-			last_position_time_ms = time_ms;
-			last_position_ticks = position_ticks;
+		if (!last_position_time_ms.first().isPresent()) {
+			last_position_time_ms.push(time_ms);
+			last_position_ticks.push(position_ticks);
 		}
 
-		boolean started_measurements = last_position_time_ms != 0;
-		boolean enough_elapsed = (time_ms - last_position_time_ms > 20);
-		boolean not_same_reading = (last_position_ticks != position_ticks) || (time_ms - last_position_time_ms > 50);
+		boolean started_measurements = last_position_time_ms.first().isPresent();
+		boolean enough_elapsed = (time_ms - last_time_ms > 20);
+		boolean not_same_reading = (last_pos_ticks != position_ticks) || (time_ms - last_time_ms > 10);
 
 		boolean are_measurements_ok = started_measurements && enough_elapsed && not_same_reading;
 
 		if (are_measurements_ok) {
 			double ticks_per_second = (double) delta_position_ticks * 1000.0 / ms_elapsed;
 			double ticks_per_minute = ticks_per_second * 60.0;
-			last_rpm = ticks_per_minute / TICKS_PER_REVOLUTION;
-			last_position_time_ms = time_ms;
-			last_position_ticks = position_ticks;
+
+			last_rpm_measurements.push(ticks_per_minute / TICKS_PER_REVOLUTION);
+			last_position_time_ms.push(time_ms);
+			last_position_ticks.push(position_ticks);
 		}
 
 		if (are_measurements_ok && wanted_flywheel_rpm != 0.0) {
-			shooter_power_pid_controller.error = (wanted_flywheel_rpm - last_rpm) / 100.0;
+			shooter_power_pid_controller.error = (wanted_flywheel_rpm - last_rpm_measurements.average().orElse(0.0)) / 1000.0;
 		}
 
 		shooter_power_pid_controller.update();
-		double shooter_power = shooter_power_pid_controller.output;
-		shooter_power = Math.min(Math.max(shooter_power, -1.0), 1.0);
+		double delta_shooter_power = shooter_power_pid_controller.output;
+
+		flywheel_power = flywheel_power + (delta_shooter_power * ms_elapsed / 1000.0);
+		flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
 
 		// Map -1 (max descelleration) to 0, to naturally coast along
-		if (shooter_power <= 0.0) {
-			shooter_power = shooter_power + 1.0;
-			shooter_power = shooter_power * FLYWHEEL_FEED_FORWARD;
+		if (flywheel_power <= 0.0) {
+			flywheel_power = flywheel_power + 1.0;
+			flywheel_power = flywheel_power * FLYWHEEL_FEED_FORWARD;
 		} else {
 			double power_threshold = 1.0 - FLYWHEEL_FEED_FORWARD;
-			shooter_power = shooter_power * power_threshold + FLYWHEEL_FEED_FORWARD;
+			flywheel_power = flywheel_power * power_threshold + FLYWHEEL_FEED_FORWARD;
 		}
 
-		shooter_power = Math.min(Math.max(shooter_power, -1.0), 1.0);
+		flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
 
-
-		if (shooter_power > 0.0 && started_running_time_ms == 0) {
+		if (flywheel_power > 0.0 && started_running_time_ms == 0) {
 			started_running_time_ms = time_ms;
 		}
 
@@ -131,7 +142,10 @@ public class Shooter {
 		last_slow_start_multiplier = Math.max(0.0, last_slow_start_multiplier);
 		last_slow_start_multiplier = Math.min(1.0, last_slow_start_multiplier);
 
-		shooter_power = shooter_power * last_slow_start_multiplier;
-		hardware.shooterMotor.setPower(shooter_power);
+		flywheel_power = flywheel_power * last_slow_start_multiplier;
+
+		if (!dry_run) {
+			hardware.shooterMotor.setPower(flywheel_power);
+		}
 	}
 }

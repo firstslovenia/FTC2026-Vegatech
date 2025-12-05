@@ -86,7 +86,7 @@ public class Main extends LinearOpMode {
 				if (shooter.flywheel_enabled) {
 					shooter.update_flywheel_rpm(0.0);
 				} else {
-					shooter.update_flywheel_rpm(Shooter.FLYWHEEL_NOMINAL_RPM);
+					shooter.update_flywheel_rpm(3600.0);
 				}
 			}
 

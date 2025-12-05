@@ -1,0 +1,10 @@
+80% moči freerun -> _____ RPM
+
+Idealno 150 cm, 1.5 : 1 torej 3 : 2 je baje 80% 300 ish cm
+
+12.5 V -> 2800 RPM @  80 % constant power
+12.5 V -> 3600 RPM @ 100 % constant power -- OK razdalja (~ 3 m)
+
+Working shooter v krožnici -> autonomous -> glede na razdaljo
+
+
