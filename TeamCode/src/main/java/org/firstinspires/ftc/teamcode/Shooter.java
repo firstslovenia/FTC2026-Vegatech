@@ -11,10 +11,18 @@ public class Shooter {
 	public static double PUSHER_NOMINAL_POWER = 0.4;
 
 	/// Minimum power to actually do anything on the flywheel
-	public static double FLYWHEEL_FEED_FORWARD = 0.1;
+	public static double FLYWHEEL_FEED_FORWARD = 0.033;
 
 	/// How long the slow start takes
 	public static double FLYWHEEL_SLOW_START_TIME = 3000;
+
+	/// Multiplier to apply to negative PID values
+	///
+	/// - it seems increasing power has a much greater effect than decreasing it,
+	///  causing oscillations around the wrong value
+	///
+	/// This is a bandaid-ish fix
+	public static double FLYWHEEL_NEGATIVE_PID_MULTIPLIER = 10.0;
 
 	/// How many encoder counts mean one revolution on the output axle
 	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (45.0 / 90.0);
@@ -57,7 +65,7 @@ public class Shooter {
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherMotor.setPower(0.0);
 
-		shooter_power_pid_controller	= new GenericPIDController(callingOpMode, 100.0, 0.0, 0.0, 0.0);
+		shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.3, 0.0, 0.08, 0.0);
 	}
 
 	public void disable_flywheel() {
@@ -99,8 +107,8 @@ public class Shooter {
 		}
 
 		boolean started_measurements = last_position_time_ms.first().isPresent();
-		boolean enough_elapsed = (time_ms - last_time_ms > 20);
-		boolean not_same_reading = (last_pos_ticks != position_ticks) || (time_ms - last_time_ms > 10);
+		boolean enough_elapsed = (time_ms - last_time_ms > 10);
+		boolean not_same_reading = (last_pos_ticks != position_ticks) || (time_ms - last_time_ms > 5);
 
 		boolean are_measurements_ok = started_measurements && enough_elapsed && not_same_reading;
 
@@ -120,10 +128,14 @@ public class Shooter {
 		shooter_power_pid_controller.update();
 		double delta_shooter_power = shooter_power_pid_controller.output;
 
+		if (delta_shooter_power < 0.0) {
+			delta_shooter_power *= FLYWHEEL_NEGATIVE_PID_MULTIPLIER;
+		}
+
 		flywheel_power = flywheel_power + (delta_shooter_power * ms_elapsed / 1000.0);
 		flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
 
-		// Map -1 (max descelleration) to 0, to naturally coast along
+		// Map -1 (max deceleration) to 0, to naturally coast along
 		if (flywheel_power <= 0.0) {
 			flywheel_power = flywheel_power + 1.0;
 			flywheel_power = flywheel_power * FLYWHEEL_FEED_FORWARD;

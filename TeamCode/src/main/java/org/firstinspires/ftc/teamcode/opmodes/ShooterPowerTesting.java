@@ -31,11 +31,11 @@ public class ShooterPowerTesting extends LinearOpMode {
 
 		while (opModeIsActive()) {
 			if (gamepad1.aWasPressed()) {
-				power += 0.01;
+				power += 0.001;
 			}
 
 			if (gamepad1.bWasPressed()) {
-				power -= 0.01;
+				power -= 0.001;
 			}
 
 			hardware.shooterMotor.setPower(power);

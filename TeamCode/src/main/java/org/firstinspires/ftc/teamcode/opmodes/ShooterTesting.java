@@ -13,7 +13,7 @@ public class ShooterTesting extends LinearOpMode {
 	LedIndicator ledIndicator;
 	Shooter shooter;
 
-	double rpms_x100 = 20.0;
+	double rpms_x100 = 30.0;
 
 	@Override
 	public void runOpMode() {
@@ -39,9 +39,9 @@ public class ShooterTesting extends LinearOpMode {
 			shooter.update_flywheel_rpm(rpms_x100 * 100.0);
 			shooter.update();
 
-			if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm_measurements.average().orElse(0.0)) > 100.0) {
+			if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm_measurements.average().orElse(0.0)) > 400.0) {
 				ledIndicator.setPosition(LedIndicator.RED_POSITION);
-			} else if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm_measurements.average().orElse(0.0)) > 20.0) {
+			} else if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm_measurements.average().orElse(0.0)) > 50.0) {
 				ledIndicator.setPosition(LedIndicator.YELLOW_POSITION);
 			} else if (shooter.flywheel_enabled) {
 				ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
