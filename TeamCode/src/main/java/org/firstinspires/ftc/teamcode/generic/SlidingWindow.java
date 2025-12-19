@@ -9,7 +9,7 @@ import java.util.Optional;
 ///
 /// Useful for averaging a reading or calculating a rate of change for a slightly larger delta t
 public class SlidingWindow<T extends Number> {
-	ArrayList<T> values;
+	public ArrayList<T> values;
 
 	int size;
 

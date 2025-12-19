@@ -26,14 +26,12 @@ public class Constants {
 		.leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
 		.leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
 		.rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-		.rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-		.xVelocity(51.345325690914876)
-		.yVelocity(48.53568959095233);
+		.rightRearMotorDirection(DcMotorSimple.Direction.REVERSE);
 
 	public static ThreeWheelIMUConstants localizerConstants = new ThreeWheelIMUConstants()
-		.forwardTicksToInches(9.159383416979394E-4)
-		.strafeTicksToInches(9.293044563544148E-4)
-		.turnTicksToInches(0.0019942341546566357)
+		.forwardTicksToInches(9.092275468167541E-4)
+		.strafeTicksToInches(9.376179748759496E-4)
+		.turnTicksToInches(0.002000318108820521)
 		.leftPodY(17.73 * CM_TO_INCH)
 		.rightPodY(-15.77 * CM_TO_INCH)
 		.strafePodX(-18.83 * CM_TO_INCH)
@@ -42,7 +40,7 @@ public class Constants {
 		.strafeEncoder_HardwareMapName("backSidewaysDeadwheel")
 		.leftEncoderDirection(Encoder.REVERSE)
 		.rightEncoderDirection(Encoder.REVERSE)
-		.strafeEncoderDirection(Encoder.REVERSE)
+		//.strafeEncoderDirection(Encoder.REVERSE)
 		.IMU_HardwareMapName("imu")
 		.IMU_Orientation(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
 

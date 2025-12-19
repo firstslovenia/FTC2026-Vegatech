@@ -10,7 +10,6 @@ import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.LedIndicator;
 import org.firstinspires.ftc.teamcode.Shooter;
-import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
 @TeleOp(name = "Main")
@@ -20,7 +19,6 @@ public class Main extends LinearOpMode {
 	Drivetrain drivetrain;
 	LedIndicator ledIndicator;
 	Shooter shooter;
-	Webcam webcam;
 
 	Follower pedroFollower;
 
@@ -40,7 +38,7 @@ public class Main extends LinearOpMode {
 
 		shooter = new Shooter(this, hardware);
 
-		webcam = new Webcam(this, hardware);
+		//webcam = new Webcam(this, hardware);
 
 		waitForStart();
 		drivetrain.resetStartingDirection();
@@ -68,14 +66,6 @@ public class Main extends LinearOpMode {
 				if (gamepad1.dpad_right) { translation_vector.x += 0.65; }
 				if (gamepad1.dpad_left) { translation_vector.x -= 0.65; }
 			}
-
-			//if (gamepad1.aWasPressed()) {
-			//	drivetrain.keepHeading = !drivetrain.keepHeading;
-			//}
-
-			//if (gamepad1.bWasPressed()) {
-			//	drivetrain.fieldCentricTranslation = !drivetrain.fieldCentricTranslation;
-			//}
 
 			// Reset robot to 90 degrees
 			if (gamepad1.a) {
@@ -113,15 +103,6 @@ public class Main extends LinearOpMode {
 
 			pedroFollower.update();
 			drivetrain.update(translation_vector, rotation_vector);
-
-			if (webcam.last_detections.isEmpty()) {
-				ledIndicator.setPosition(LedIndicator.OFF_POSITION);
-			} else {
-				ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
-			}
-
-			webcam.update();
-
 			telemetry.update();
 		}
 	}
