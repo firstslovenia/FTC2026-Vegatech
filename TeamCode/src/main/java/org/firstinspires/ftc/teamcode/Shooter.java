@@ -5,6 +5,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.generic.GenericPIDController;
 import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 
+import java.util.ArrayList;
+
 public class Shooter {
 
 	/// Nominal power to run the pusher at
@@ -15,14 +17,6 @@ public class Shooter {
 
 	/// How long the slow start takes
 	public static double FLYWHEEL_SLOW_START_TIME = 3000;
-
-	/// Multiplier to apply to negative PID values
-	///
-	/// - it seems increasing power has a much greater effect than decreasing it,
-	///  causing oscillations around the wrong value
-	///
-	/// This is a bandaid-ish fix
-	public static double FLYWHEEL_NEGATIVE_PID_MULTIPLIER = 10.0;
 
 	/// How many encoder counts mean one revolution on the output axle
 	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (45.0 / 90.0);
@@ -59,13 +53,18 @@ public class Shooter {
 	/// Our last few rpm measurements - used to average the measurement out
 	public SlidingWindow<Double> last_rpm_measurements = new SlidingWindow<>(50, 0.0);
 
+	public ArrayList<Double> last_pidf_power = new ArrayList<>();
+	public ArrayList<Double> last_pidf_power_error = new ArrayList<>();
+	public ArrayList<Double> last_pidf_power_time = new ArrayList<>();
+	public long last_pidf_power_measurement_time = 0;
+
 	public double last_slow_start_multiplier = 0.0;
 
 	public Shooter(OpMode callingOpMode, Hardware hardware) {
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherMotor.setPower(0.0);
 
-		shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.3, 0.0, 0.08, 0.0);
+		shooter_power_pid_controller = new GenericPIDController(callingOpMode, 1.0, 0.0, 0.0, 0.0);
 	}
 
 	public void disable_flywheel() {
@@ -128,21 +127,8 @@ public class Shooter {
 		shooter_power_pid_controller.update();
 		double delta_shooter_power = shooter_power_pid_controller.output;
 
-		if (delta_shooter_power < 0.0) {
-			delta_shooter_power *= FLYWHEEL_NEGATIVE_PID_MULTIPLIER;
-		}
-
 		flywheel_power = flywheel_power + (delta_shooter_power * ms_elapsed / 1000.0);
 		flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
-
-		// Map -1 (max deceleration) to 0, to naturally coast along
-		if (flywheel_power <= 0.0) {
-			flywheel_power = flywheel_power + 1.0;
-			flywheel_power = flywheel_power * FLYWHEEL_FEED_FORWARD;
-		} else {
-			double power_threshold = 1.0 - FLYWHEEL_FEED_FORWARD;
-			flywheel_power = flywheel_power * power_threshold + FLYWHEEL_FEED_FORWARD;
-		}
 
 		flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
 
@@ -158,6 +144,13 @@ public class Shooter {
 
 		if (!dry_run) {
 			hardware.shooterMotor.setPower(flywheel_power);
+		}
+
+		if (time_ms - last_pidf_power_measurement_time > 100) {
+			last_pidf_power_error.add(shooter_power_pid_controller.error);
+			last_pidf_power.add(delta_shooter_power);
+			last_pidf_power_time.add(time_ms / 1000.0);
+			last_pidf_power_measurement_time = time_ms;
 		}
 	}
 }

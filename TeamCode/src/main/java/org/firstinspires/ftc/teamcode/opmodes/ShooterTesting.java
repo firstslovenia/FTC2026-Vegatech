@@ -55,10 +55,11 @@ public class ShooterTesting extends LinearOpMode {
 			telemetry.addData("Slow start multiplier", shooter.last_slow_start_multiplier);
 			telemetry.addData("Encoder pos", shooter.last_position_ticks.average().orElse(0.0));
 			telemetry.update();
-
-
 			telemetry.addData("power", rpms_x100);
 			telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
+			telemetry.addData("Last 50 PIDF power", shooter.last_pidf_power);
+			telemetry.addData("Last 50 PIDF power error", shooter.last_pidf_power);
+			telemetry.addData("Last 50 PIDF power time", shooter.last_pidf_power_time);
 			telemetry.update();
 		}
 	}
