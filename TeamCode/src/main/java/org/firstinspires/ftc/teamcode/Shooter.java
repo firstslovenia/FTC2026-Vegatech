@@ -53,18 +53,13 @@ public class Shooter {
 	/// Our last few rpm measurements - used to average the measurement out
 	public SlidingWindow<Double> last_rpm_measurements = new SlidingWindow<>(50, 0.0);
 
-	public ArrayList<Double> last_pidf_power = new ArrayList<>();
-	public ArrayList<Double> last_pidf_power_error = new ArrayList<>();
-	public ArrayList<Double> last_pidf_power_time = new ArrayList<>();
-	public long last_pidf_power_measurement_time = 0;
-
 	public double last_slow_start_multiplier = 0.0;
 
 	public Shooter(OpMode callingOpMode, Hardware hardware) {
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherMotor.setPower(0.0);
 
-		shooter_power_pid_controller = new GenericPIDController(callingOpMode, 1.0, 0.0, 0.0, 0.0);
+		shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.08, 0.0, 0.015, 0.0);
 	}
 
 	public void disable_flywheel() {
@@ -144,13 +139,6 @@ public class Shooter {
 
 		if (!dry_run) {
 			hardware.shooterMotor.setPower(flywheel_power);
-		}
-
-		if (time_ms - last_pidf_power_measurement_time > 100) {
-			last_pidf_power_error.add(shooter_power_pid_controller.error);
-			last_pidf_power.add(delta_shooter_power);
-			last_pidf_power_time.add(time_ms / 1000.0);
-			last_pidf_power_measurement_time = time_ms;
 		}
 	}
 }
