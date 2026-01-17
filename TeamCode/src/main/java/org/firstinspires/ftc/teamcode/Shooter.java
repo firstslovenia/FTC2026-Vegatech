@@ -16,7 +16,7 @@ public class Shooter {
 	public static double FLYWHEEL_FEED_FORWARD = 0.033;
 
 	/// How long the slow start takes
-	public static double FLYWHEEL_SLOW_START_TIME = 3000;
+	public static double FLYWHEEL_SLOW_START_TIME = 1000;
 
 	/// How many encoder counts mean one revolution on the output axle
 	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (45.0 / 90.0);
@@ -54,6 +54,16 @@ public class Shooter {
 	public SlidingWindow<Double> last_rpm_measurements = new SlidingWindow<>(50, 0.0);
 
 	public double last_slow_start_multiplier = 0.0;
+
+	/// Calculates the distance we expect the shooter the hit for the given RPM
+	public static double rpm_to_distance_cm(double rpm) {
+		return -(1257301.0 * Math.pow(rpm, 5))/3727189786320000000.0 + (144811837 * Math.pow(rpm, 4))/26622784188000000.0 - (1305459600047.0 * Math.pow(rpm ,3))/37271897863200000.0 + (1198650629021.0 * Math.pow(rpm, 2))/10649113675200.0 - (933411826993.0 * rpm)/5176652481.0 + 595604859575.0/5171481.0;
+	}
+
+	/// Calculates the RPM to run the shooter at for a given distance
+	public static double distance_cm_to_rpm(double distance_cm) {
+		return (836237.0 * Math.pow(distance_cm, 5))/45067522500000.0 - (100509133.0 * Math.pow(distance_cm, 4))/4506752250000.0 + (2735851519.0 * Math.pow(distance_cm, 3))/257528700000.0 - (56390675269.0 * Math.pow(distance_cm, 2))/22533761250.0 + (5938811617.0 * distance_cm)/20030010.0 - 3273971284.0/286143.0;
+	}
 
 	public Shooter(OpMode callingOpMode, Hardware hardware) {
 		hardware.shooterMotor.setPower(0.0);

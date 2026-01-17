@@ -69,7 +69,7 @@ public class Hardware {
 		rightForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "rightForwardDeadwheel");
 
 		shooterMotor = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotor");
-		shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+		//shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 		shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 		// Hack: they use the same port

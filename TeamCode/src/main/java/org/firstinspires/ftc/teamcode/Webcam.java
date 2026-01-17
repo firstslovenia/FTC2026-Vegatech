@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -72,13 +74,15 @@ public class Webcam {
 		builder.setCamera(hardware.webcam);
 
 		// Choose a camera resolution. Not all cameras support all resolutions.
-		//builder.setCameraResolution(new Size(640, 480));
+		//builder.setCameraResolution(new Size(640, 480));a
+		builder.setCameraResolution(new Size(1280, 720));
 
 		// Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
 		//builder.enableLiveView(true);
 
 		// Set the stream format; MJPEG uses less bandwidth than default YUY2.
 		//builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
+		builder.setStreamFormat(VisionPortal.StreamFormat.MJPEG);
 
 		// Choose whether or not LiveView stops if no processors are enabled.
 		// If set "true", monitor shows solid orange screen if no processors enabled.

@@ -22,6 +22,8 @@ public class Main extends LinearOpMode {
 
 	Follower pedroFollower;
 
+	boolean flip_y = false;
+
 	@Override
 	public void runOpMode() {
 
