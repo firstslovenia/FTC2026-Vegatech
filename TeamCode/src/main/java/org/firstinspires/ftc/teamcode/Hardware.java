@@ -35,8 +35,9 @@ public class Hardware {
 	public static DcMotor backSidewaysDeadwheel = null;
 
 	public static DcMotor shooterMotor = null;
+	public static Servo shooterPusherServo = null;
 
-	public static DcMotor shooterPusherMotor = null;
+    public static DcMotor intakeMotor = null;
 
 	public static IMU imu = null;
 
@@ -69,13 +70,12 @@ public class Hardware {
 		rightForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "rightForwardDeadwheel");
 
 		shooterMotor = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotor");
-		//shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 		shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-		// Hack: they use the same port
-		shooterPusherMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backSidewaysDeadwheel");
-		shooterPusherMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-		shooterPusherMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+		shooterPusherServo = callingOpMode.hardwareMap.get(Servo.class, "shooterPusherServo");
+
+        // Hack: they are on the same port
+        intakeMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backSidewaysDeadwheel");
 
 		imu = callingOpMode.hardwareMap.get(IMU.class, "imu");
 		imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes;
+package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.Constants;
 
-@Autonomous(name = "\"Does It Work\" Autonomous")
+@Autonomous(name = "\"Does It Work\" Autonomous", group = "Testing")
 public class DoesItWorkAutonomous extends OpMode {
 	public Follower follower; // Pedro Pathing follower instance
 	private int pathState; // Current autonomous path state (state machine)

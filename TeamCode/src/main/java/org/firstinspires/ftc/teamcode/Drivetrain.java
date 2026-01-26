@@ -59,7 +59,7 @@ public class Drivetrain {
 	public double wanted_heading = Math.PI / 2.0;
 
 	/// The last robot orientation, saved so we can reset it if our readout becomes all zeroes
-	Orientation last_robot_orientation;
+	public Orientation last_robot_orientation;
 
 	/// Saved so we don't try to reset the imu 1000x times a second
 	long last_imu_reset_time = 0;
@@ -109,6 +109,13 @@ public class Drivetrain {
 			return last_robot_orientation.thirdAngle;
 		}
 	}
+
+    /// Returns how much we've turned (in radians) since the start
+    ///
+    /// effectively our current heading, based on the previous orientation
+    public float getCurrentHeading() {
+        return last_robot_orientation.thirdAngle;
+    }
 
 	/// Returns whether the IMU orientation sensors are working correctly, with an existing Orientation to avoid calling the expensive reading twice
 	public boolean isIMUOk(Orientation orientation) {

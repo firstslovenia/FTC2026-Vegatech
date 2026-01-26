@@ -12,4 +12,16 @@ public class TargetInformation {
 
 	/// How far away we are from the target
 	public double distance_m;
+
+    ///  When this information was accurate
+    public long time_ms = 0;
+
+    public boolean partial_eq(TargetInformation other) {
+
+        if (other == null) {
+            return false;
+        }
+
+        return Math.abs(other.ideal_angle_to_target - ideal_angle_to_target) < (Math.PI / 180.0);
+    }
 }

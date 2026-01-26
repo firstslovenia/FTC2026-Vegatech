@@ -27,6 +27,10 @@ public class Webcam {
 
 	public ColorOrder order = ColorOrder.Unknown;
 
+    public TargetInformation target_position = null;
+    public TargetInformation previous_target_position = null;
+    public ShooterPositioning shooter_positioning = new ShooterPositioning();
+
 	public ArrayList<AprilTagDetection> last_detections = new ArrayList<>();
 
 	/**
@@ -74,8 +78,9 @@ public class Webcam {
 		builder.setCamera(hardware.webcam);
 
 		// Choose a camera resolution. Not all cameras support all resolutions.
-		//builder.setCameraResolution(new Size(640, 480));a
-		builder.setCameraResolution(new Size(1280, 720));
+		//builder.setCameraResolution(new Size(640, 480));
+		//builder.setCameraResolution(new Size(1280, 720));
+		builder.setCameraResolution(new Size(1920, 1080));
 
 		// Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
 		//builder.enableLiveView(true);
@@ -120,6 +125,25 @@ public class Webcam {
 				case TAG_ID_PURPLE_PURPLE_GREEN:
 					order = ColorOrder.PurplePurpleGreen;
 					break;
+                case TAG_ID_BLUE | TAG_ID_RED:
+
+                    double distance_to_apriltag_m = ShooterPositioning.get_ground_distance_to_apriltag_m(detection);
+
+                    TargetInformation target_pos = shooter_positioning.compute_target_information(distance_to_apriltag_m, detection.ftcPose.yaw);
+
+                    // Check that it is not complete garbage
+                    if (shooter_positioning.x_distance_to_target_m < 0.05 ||
+                            shooter_positioning.y_distance_to_target_m < 0.05 ||
+                            target_pos.distance_m < 0.05 ||
+                            Math.abs(target_pos.angle_distance_rads) > Math.PI / 2.0) {
+                        continue;
+                    }
+
+                    if (target_position != null) {
+                        previous_target_position = target_position;
+                    }
+
+                    target_position = target_pos;
 			}
 		}
 	}

@@ -52,6 +52,7 @@ public class ShooterPositioning {
 		info.angle_distance_to_zero = angle_to_zero;
 		info.ideal_angle_to_target = angle_to_target;
 		info.angle_distance_rads = angle_diff_to_target;
+        info.time_ms = System.currentTimeMillis();
 
 		return info;
 	}

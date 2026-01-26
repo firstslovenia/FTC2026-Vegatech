@@ -5,8 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.generic.GenericPIDController;
 import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 
-import java.util.ArrayList;
-
 public class Shooter {
 
 	/// Nominal power to run the pusher at
@@ -67,7 +65,7 @@ public class Shooter {
 
 	public Shooter(OpMode callingOpMode, Hardware hardware) {
 		hardware.shooterMotor.setPower(0.0);
-		hardware.shooterPusherMotor.setPower(0.0);
+		hardware.shooterPusherServo.setPosition(0.0);
 
 		shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.08, 0.0, 0.015, 0.0);
 	}
@@ -79,6 +77,10 @@ public class Shooter {
 		started_running_time_ms = 0;
 	}
 
+    public void update_rpm_for_distance_m(double distance_m) {
+        update_flywheel_rpm(distance_cm_to_rpm(distance_m * 100.0));
+    }
+
 	public void update_flywheel_rpm(double flywheel_rpm) {
 		if (flywheel_rpm == 0.0) {
 			disable_flywheel();
@@ -88,10 +90,28 @@ public class Shooter {
 		}
 	}
 
-	public void update_pusher_power(double pusher_power) {
-		pusher_enabled = pusher_power != 0.0;
-		hardware.shooterPusherMotor.setPower(pusher_power);
+    ///  Returns how far off we are from the wanted RPM.
+    ///
+    /// Returs NaN if the shooter is not currently enabled
+    public double get_rpm_error() {
+        if (!flywheel_enabled) {
+            return Double.NaN;
+        } else {
+            return Math.abs(wanted_flywheel_rpm - last_rpm_measurements.average().orElse(0.0));
+        }
+    }
+
+    ///  Moves the shooter pusher into the up position, feeding a ball into the flywheel
+	public void feed_ball_into_shooter() {
+		pusher_enabled = true;
+		hardware.shooterPusherServo.setPosition(1.0);
 	}
+
+    ///  Moves the shooter pusher back into the down position
+    public void reset_shooter_pusher() {
+        pusher_enabled = false;
+        hardware.shooterPusherServo.setPosition(0.0);
+    }
 
 	/// Re-measures RPM and runs PID updates
 	public void update() {

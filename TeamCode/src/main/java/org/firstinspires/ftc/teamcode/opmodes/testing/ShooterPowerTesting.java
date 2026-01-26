@@ -1,13 +1,13 @@
-package org.firstinspires.ftc.teamcode.opmodes;
+package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.LedIndicator;
+import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 import org.firstinspires.ftc.teamcode.Shooter;
 
-@TeleOp(name = "Shooter Power Testing")
+@TeleOp(name = "Shooter Power Testing", group = "Testing")
 public class ShooterPowerTesting extends LinearOpMode {
 
 	Hardware hardware;

@@ -1,13 +1,13 @@
-package org.firstinspires.ftc.teamcode.opmodes;
+package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.qualcomm.robotcore.eventloop.opmode.*;
 
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.LedIndicator;
+import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.Webcam;
 
-@TeleOp(name = "Shooter Testing")
+@TeleOp(name = "Shooter Testing", group = "Testing")
 public class ShooterTesting extends LinearOpMode {
 
 	Hardware hardware;
@@ -43,9 +43,9 @@ public class ShooterTesting extends LinearOpMode {
 			shooter.update_flywheel_rpm(rpms_x100 * 100.0);
 			shooter.update();
 
-			if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm_measurements.average().orElse(0.0)) > 100.0) {
+			if (Math.abs(shooter.wanted_flywheel_rpm - shooter.last_rpm_measurements.average().orElse(0.0)) > 100.0) {
 				ledIndicator.setPosition(LedIndicator.RED_POSITION);
-			} else if (Math.abs(rpms_x100 * 100.0 - shooter.last_rpm_measurements.average().orElse(0.0)) > 20.0) {
+			} else if (Math.abs(shooter.wanted_flywheel_rpm - shooter.last_rpm_measurements.average().orElse(0.0)) > 20.0) {
 				ledIndicator.setPosition(LedIndicator.YELLOW_POSITION);
 			} else if (shooter.flywheel_enabled) {
 				ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
