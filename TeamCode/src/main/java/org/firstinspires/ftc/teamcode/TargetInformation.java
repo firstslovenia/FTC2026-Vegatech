@@ -12,6 +12,8 @@ public class TargetInformation {
 
 	/// How far away we are from the target
 	public double distance_m;
+    /// How far away we are from the apriltag
+    public double tag_distance_m;
 
     ///  When this information was accurate
     public long time_ms = 0;
@@ -23,5 +25,10 @@ public class TargetInformation {
         }
 
         return Math.abs(other.ideal_angle_to_target - ideal_angle_to_target) < (Math.PI / 180.0);
+    }
+
+    /// Returns if the target info is too old to use
+    public boolean is_old() {
+        return System.currentTimeMillis() - time_ms > 1000;
     }
 }

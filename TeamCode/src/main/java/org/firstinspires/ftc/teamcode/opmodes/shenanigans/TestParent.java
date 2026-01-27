@@ -18,6 +18,8 @@ public class TestParent extends LinearOpMode {
     @Override
     public void runOpMode() {
         hardware = new Hardware(this);
+        hardware.init();
+
         ledIndicator = new LedIndicator(this, hardware);
 
         waitForStart();

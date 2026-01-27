@@ -27,8 +27,7 @@ public class Webcam {
 
 	public ColorOrder order = ColorOrder.Unknown;
 
-    public TargetInformation target_position = null;
-    public TargetInformation previous_target_position = null;
+    public TargetInformation target_position;
     public ShooterPositioning shooter_positioning = new ShooterPositioning();
 
 	public ArrayList<AprilTagDetection> last_detections = new ArrayList<>();
@@ -61,7 +60,8 @@ public class Webcam {
 		// to load a predefined calibration for your camera.
 		//.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
 		// ... these parameters are fx, fy, cx, cy.
-
+                // 1280 x 720 for C270
+                .setLensIntrinsics(1420.13799378, 1420.13799378, 676.976315018, 340.62607304)
 		.build();
 
 		// Adjust Image Decimation to trade-off detection-range for detection-rate.
@@ -79,8 +79,9 @@ public class Webcam {
 
 		// Choose a camera resolution. Not all cameras support all resolutions.
 		//builder.setCameraResolution(new Size(640, 480));
-		//builder.setCameraResolution(new Size(1280, 720));
-		builder.setCameraResolution(new Size(1920, 1080));
+		builder.setCameraResolution(new Size(1280, 720));
+        //builder.setCameraResolution(new Size(960, 720));
+		//builder.setCameraResolution(new Size(1920, 1080));
 
 		// Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
 		//builder.enableLiveView(true);
@@ -125,9 +126,16 @@ public class Webcam {
 				case TAG_ID_PURPLE_PURPLE_GREEN:
 					order = ColorOrder.PurplePurpleGreen;
 					break;
-                case TAG_ID_BLUE | TAG_ID_RED:
+                case TAG_ID_BLUE:
+                case TAG_ID_RED:
 
-                    double distance_to_apriltag_m = ShooterPositioning.get_ground_distance_to_apriltag_m(detection);
+                    double distance_to_apriltag_m = detection.ftcPose.range;
+
+                    // Mystical magical conversion factor, actually measured in the workshop.
+                    //
+                    // Don't ask me how we got here. This works.
+                    // You wanna know where you got this? The resolution was wrong... by a factor of 0.75x!!
+                    //distance_to_apriltag_m *= 0.75;
 
                     TargetInformation target_pos = shooter_positioning.compute_target_information(distance_to_apriltag_m, detection.ftcPose.yaw);
 
@@ -139,11 +147,8 @@ public class Webcam {
                         continue;
                     }
 
-                    if (target_position != null) {
-                        previous_target_position = target_position;
-                    }
-
                     target_position = target_pos;
+                    break;
 			}
 		}
 	}

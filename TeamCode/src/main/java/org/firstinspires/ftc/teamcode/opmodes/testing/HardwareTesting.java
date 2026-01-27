@@ -63,6 +63,10 @@ public class HardwareTesting extends LinearOpMode {
                     hardware.intakeMotor.setPower(power);
                     telemetry.addData("Power", power);
                     break;
+                case spindexerMotor:
+                    hardware.spindexerMotor.setPower(power);
+                    telemetry.addData("Power", power);
+                    break;
                 case shooterPusherServo:
 
                     if (gamepad1.xWasPressed()) {

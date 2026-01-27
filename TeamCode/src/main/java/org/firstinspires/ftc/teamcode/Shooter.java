@@ -27,6 +27,8 @@ public class Shooter {
 
 	GenericPIDController shooter_power_pid_controller;
 
+    ///  What distance we are regulating for
+    public double shooting_distance_m = Double.NaN;
 	/// What RPM we want the flywheel's RPM to be
 	public double wanted_flywheel_rpm = 0.0;
 
@@ -72,6 +74,7 @@ public class Shooter {
 
 	public void disable_flywheel() {
 		flywheel_enabled = false;
+        shooting_distance_m = Double.NaN;
 		hardware.shooterMotor.setPower(0.0);
 		shooter_power_pid_controller.reset();
 		started_running_time_ms = 0;
@@ -79,6 +82,7 @@ public class Shooter {
 
     public void update_rpm_for_distance_m(double distance_m) {
         update_flywheel_rpm(distance_cm_to_rpm(distance_m * 100.0));
+        shooting_distance_m = distance_m;
     }
 
 	public void update_flywheel_rpm(double flywheel_rpm) {
