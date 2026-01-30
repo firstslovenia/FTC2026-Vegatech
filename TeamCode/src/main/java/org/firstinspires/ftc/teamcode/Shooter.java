@@ -25,6 +25,10 @@ public class Shooter {
 	/// When we started running the thingo
 	long started_running_time_ms = 0;
 
+    ///  When we pushed the pusher upwards
+    long enabled_pusher_time_ms = 0;
+    public static double RESET_SHOOTER_PUSHER_TIME_MS = 300.0;
+
 	OpMode callingOpMode;
 	Hardware hardware;
 
@@ -136,19 +140,29 @@ public class Shooter {
     }
 
     ///  Moves the shooter pusher into the up position, feeding a ball into the flywheel
-	public void feed_ball_into_shooter() {
+	public void fire() {
 		pusher_enabled = true;
+        enabled_pusher_time_ms = System.currentTimeMillis();
 		hardware.shooterPusherServo.setPosition(1.0);
 	}
 
     ///  Moves the shooter pusher back into the down position
     public void reset_shooter_pusher() {
         pusher_enabled = false;
+        enabled_pusher_time_ms = 0;
         hardware.shooterPusherServo.setPosition(0.0);
     }
 
 	/// Re-measures RPM and runs PID updates
 	public void update() {
+
+        long time_ms = System.currentTimeMillis();
+
+        if (pusher_enabled &&
+                enabled_pusher_time_ms != 0 &&
+                time_ms - enabled_pusher_time_ms > RESET_SHOOTER_PUSHER_TIME_MS) {
+            reset_shooter_pusher();
+        }
 
         if (!flywheel_enabled) {
             hardware.shooterMotor.setPower(0.0);
@@ -172,7 +186,6 @@ public class Shooter {
 		int position_ticks = hardware.shooterMotor.getCurrentPosition();
 		double delta_position_ticks = position_ticks - last_pos_ticks;
 
-		long time_ms = System.currentTimeMillis();
 		double ms_elapsed = time_ms - last_time_ms;
 
 		if (!last_position_time_ms.first().isPresent()) {

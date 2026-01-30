@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 
 @TeleOp(name = "Hardware Testing", group = "Testing")
@@ -12,6 +13,9 @@ public class HardwareTesting extends LinearOpMode {
 
     Hardware hardware;
     Shooter shooter;
+    Spindexer spindexer;
+
+    int spindexer_pos = 0;
 
     HardwareComponent component = HardwareComponent.frontLeftMotor;
 
@@ -22,6 +26,9 @@ public class HardwareTesting extends LinearOpMode {
         hardware.init();
 
         shooter = new Shooter(this, hardware);
+
+        spindexer = new Spindexer(this, hardware);
+        spindexer.init();
 
         waitForStart();
 
@@ -66,6 +73,60 @@ public class HardwareTesting extends LinearOpMode {
                 case spindexerMotor:
                     hardware.spindexerMotor.setPower(power);
                     telemetry.addData("Power", power);
+
+                    int pos = hardware.spindexerMotor.getCurrentPosition();
+                    int pos_in_loop = Spindexer.calculate_relative_loop_ticks(pos);
+
+                    telemetry.addData("Position", pos);
+                    telemetry.addData("Ticks in loop", pos_in_loop);
+                    telemetry.addData("Nearest 0 angle", Spindexer.calculate_nearest_position_at_angle(pos, 0.0));
+                    telemetry.addData("Angle", Math.toDegrees(Spindexer.calculate_current_angle(pos)));
+                    break;
+
+                case Spindexer:
+
+                    int pos_2 = hardware.spindexerMotor.getCurrentPosition();
+                    int pos_in_loop_2 = Spindexer.calculate_relative_loop_ticks(pos_2);
+
+                    if (gamepad1.yWasPressed()) {
+                        spindexer_pos += 1;
+                        spindexer_pos = Math.floorMod(spindexer_pos, 7);
+                    } else if (gamepad1.xWasPressed()) {
+                        spindexer_pos -= 1;
+                        spindexer_pos = Math.floorMod(spindexer_pos, 7);
+                    }
+
+                    switch (spindexer_pos) {
+                        case 0:
+                            spindexer.move_to_angle(0.0);
+                            break;
+                        case 1:
+                            spindexer.move_to_angle(Spindexer.ANGLE_INTAKE_BALL_2);
+                            break;
+                        case 2:
+                            spindexer.move_to_angle(Spindexer.ANGLE_INTAKE_BALL_1);
+                            break;
+                        case 3:
+                            spindexer.move_to_angle(Spindexer.ANGLE_INTAKE_BALL_0);
+                            break;
+                        case 4:
+                            spindexer.move_to_angle(Spindexer.ANGLE_SHOOT_BALL_2);
+                            break;
+                        case 5:
+                            spindexer.move_to_angle(Spindexer.ANGLE_SHOOT_BALL_1);
+                            break;
+                        case 6:
+                            spindexer.move_to_angle(Spindexer.ANGLE_SHOOT_BALL_0);
+                            break;
+                    }
+
+                    telemetry.addData("Preset Position", spindexer_pos);
+                    telemetry.addData("Position", pos_2);
+                    telemetry.addData("Ticks in loop", pos_in_loop_2);
+                    telemetry.addData("Nearest 0 angle", Spindexer.calculate_nearest_position_at_angle(pos_2, 0.0));
+                    telemetry.addData("Angle", Math.toDegrees(spindexer.current_angle()));
+                    telemetry.addData("Target Angle", Math.toDegrees(spindexer.target_angle()));
+
                     break;
                 case shooterPusherServo:
 

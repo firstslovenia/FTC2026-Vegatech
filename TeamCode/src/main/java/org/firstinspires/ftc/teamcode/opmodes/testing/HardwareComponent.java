@@ -12,6 +12,7 @@ public enum HardwareComponent {
     shooterPusherServo,
     intakeMotor,
     spindexerMotor,
+    Spindexer,
     rgbLed;
 
     private static final HardwareComponent[] values = values();

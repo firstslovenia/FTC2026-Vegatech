@@ -17,7 +17,7 @@ public class DoesItWorkAutonomous extends OpMode {
 	@Override
 	public void init() {
 		follower = Constants.createFollower(hardwareMap);
-		follower.setStartingPose(new Pose(0.0, 0.0, Math.toRadians(180)));
+		follower.setStartingPose(new Pose(0.0, 0.0, Math.PI / 2.0));
 
 		paths = new Paths(follower); // Build paths
 	}
@@ -42,9 +42,9 @@ public class DoesItWorkAutonomous extends OpMode {
 			Path1 = follower
 				.pathBuilder()
 				.addPath(
-					new BezierLine(new Pose(0.000, 0.000), new Pose(0.000, 48.000))
+					new BezierLine(new Pose(0.000, 0.000), new Pose(0.000, 30.000))
 				)
-				.setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(0))
+				.setLinearHeadingInterpolation(Math.PI / 2.0, Math.PI / 2.0)
 				.build();
 		}
 	}

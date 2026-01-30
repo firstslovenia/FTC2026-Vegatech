@@ -74,10 +74,12 @@ public class Hardware {
 
 		shooterPusherServo = callingOpMode.hardwareMap.get(Servo.class, "shooterPusherServo");
         shooterPusherServo.setDirection(Servo.Direction.REVERSE);
+        shooterPusherServo.scaleRange(0.2, 0.8);
 
         // Hack: they are on the same port
         intakeMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backSidewaysDeadwheel");
         spindexerMotor = callingOpMode.hardwareMap.get(DcMotor.class, "leftForwardDeadwheel");
+        spindexerMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
 		imu = callingOpMode.hardwareMap.get(IMU.class, "imu");
 		imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
