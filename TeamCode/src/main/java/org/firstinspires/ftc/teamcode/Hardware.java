@@ -65,20 +65,20 @@ public class Hardware {
 		frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 		backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-		backSidewaysDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "backSidewaysDeadwheel");
-		leftForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "leftForwardDeadwheel");
-		rightForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "rightForwardDeadwheel");
+        // Hack: they are on the same port
+		backSidewaysDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "backLeftMotor");
+		leftForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "frontLeftMotor");
+		rightForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "backRightMotor");
 
 		shooterMotor = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotor");
 		shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 		shooterPusherServo = callingOpMode.hardwareMap.get(Servo.class, "shooterPusherServo");
         shooterPusherServo.setDirection(Servo.Direction.REVERSE);
-        shooterPusherServo.scaleRange(0.2, 0.8);
+        shooterPusherServo.scaleRange(0.4, 0.75);
 
-        // Hack: they are on the same port
-        intakeMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backSidewaysDeadwheel");
-        spindexerMotor = callingOpMode.hardwareMap.get(DcMotor.class, "leftForwardDeadwheel");
+        intakeMotor = callingOpMode.hardwareMap.get(DcMotor.class, "intakeMotor");
+        spindexerMotor = callingOpMode.hardwareMap.get(DcMotor.class, "spindexerMotor");
         spindexerMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
 		imu = callingOpMode.hardwareMap.get(IMU.class, "imu");
