@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
+import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
@@ -30,8 +31,11 @@ public class Main extends LinearOpMode {
     TargetInformation target_to_rotate_to = null;
     /// The wanted heading of the target for target_to_rotate_to
     double wanted_heading_for_target = Double.NaN;
-    long last_updated_camera_ms = 0;
-    static long CAMERA_UPDATE_DELAY_MS = 50;
+    long last_long_loop_ms = 0;
+    static long LONG_LOOP_DELAY_MS = 100;
+
+    SlidingWindow<Long> last_loops_took = new SlidingWindow(50);
+    long last_loop_time = System.currentTimeMillis();
 
 	@Override
 	public void runOpMode() {
@@ -61,23 +65,25 @@ public class Main extends LinearOpMode {
 
             long now = System.currentTimeMillis();
 
+            boolean do_long_loop = (now - last_long_loop_ms) >= LONG_LOOP_DELAY_MS;
+
             // If shooter is on, update LED
             if (shooter.flywheel_enabled) {
 
                 double rpm_error = shooter.get_rpm_error();
 
                 if (Double.isNaN(shooter.shooting_distance_m)) {
-                    if (rpm_error > 100.0) {
+                    if (rpm_error > 200.0) {
                         ledIndicator.setPosition(LedIndicator.ORANGE_POSITION);
-                    } else if (rpm_error > 20.0) {
+                    } else if (rpm_error > 50.0) {
                         ledIndicator.setPosition(LedIndicator.INDIGO_POSITION);
                     } else {
                         ledIndicator.setPosition(LedIndicator.BLUE_POSITION);
                     }
                 } else {
-                    if (rpm_error > 100.0) {
+                    if (rpm_error > 200.0) {
                         ledIndicator.setPosition(LedIndicator.RED_POSITION);
-                    } else if (rpm_error > 20.0) {
+                    } else if (rpm_error > 50.0) {
                         ledIndicator.setPosition(LedIndicator.YELLOW_POSITION);
                     } else {
                         ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
@@ -109,7 +115,12 @@ public class Main extends LinearOpMode {
 
             // Rotate towards a target we see
             if (gamepad1.y) {
-                if (webcam.target_position != null && now - webcam.target_position.time_ms < CAMERA_UPDATE_DELAY_MS + 10) {
+
+                if (do_long_loop) {
+                    webcam.update();
+                }
+
+                if (webcam.target_position != null && now - webcam.target_position.time_ms < LONG_LOOP_DELAY_MS + 10) {
 
                     if (target_to_rotate_to == null || !target_to_rotate_to.partial_eq(webcam.target_position)) {
                         target_to_rotate_to = webcam.target_position;
@@ -149,6 +160,8 @@ public class Main extends LinearOpMode {
 				}
 			}
 
+            shooter.update();
+
 			if (gamepad1.right_trigger > 0.1) {
                 shooter.feed_ball_into_shooter();
 			} else if (gamepad1.left_trigger > 0.1) {
@@ -166,14 +179,10 @@ public class Main extends LinearOpMode {
 			//follower.updateDrivetrain();
 			//
 			// Just do not use setTeleopDrive
+            // Not needed currently
+			//pedroFollower.update();
 
-			pedroFollower.update();
 			drivetrain.update(translation_vector, rotation_vector);
-
-            if (now - last_updated_camera_ms > CAMERA_UPDATE_DELAY_MS) {
-                last_updated_camera_ms = now;
-                webcam.update();
-            }
 
             if (webcam.target_position != null) {
                 telemetry.addData("Target distance (m)", webcam.target_position.distance_m);
@@ -181,7 +190,20 @@ public class Main extends LinearOpMode {
                 telemetry.addData("Target to turn", Math.toDegrees(webcam.target_position.angle_distance_rads));
             }
 
-			telemetry.update();
+            if (do_long_loop) {
+                last_long_loop_ms = now;
+            }
+
+            long elapsed_ms = now - last_loop_time;
+            last_loop_time = now;
+            last_loops_took.push(elapsed_ms);
+
+            if (last_loops_took.average().isPresent()) {
+                telemetry.addData("Last 50 loop avg", last_loops_took.average().get());
+            }
+
+            telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
+            telemetry.update();
 		}
 	}
 }

@@ -137,7 +137,7 @@ public class Webcam {
                     // You wanna know where you got this? The resolution was wrong... by a factor of 0.75x!!
                     //distance_to_apriltag_m *= 0.75;
 
-                    TargetInformation target_pos = shooter_positioning.compute_target_information(distance_to_apriltag_m, detection.ftcPose.yaw);
+                    TargetInformation target_pos = shooter_positioning.compute_target_information(distance_to_apriltag_m, detection.ftcPose.yaw, detection.ftcPose.bearing);
 
                     // Check that it is not complete garbage
                     if (shooter_positioning.x_distance_to_target_m < 0.05 ||

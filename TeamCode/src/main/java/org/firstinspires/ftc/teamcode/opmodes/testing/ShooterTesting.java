@@ -6,6 +6,7 @@ import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.Webcam;
+import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 
 @TeleOp(name = "Shooter Testing", group = "Testing")
 public class ShooterTesting extends LinearOpMode {
@@ -56,12 +57,16 @@ public class ShooterTesting extends LinearOpMode {
 			telemetry.addData("rpms x100", rpms_x100);
 			telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
 			telemetry.addData("Powah", hardware.shooterMotor.getPower());
-			telemetry.addData("Slow start multiplier", shooter.last_slow_start_multiplier);
 			telemetry.addData("Encoder pos", shooter.last_position_ticks.average().orElse(0.0));
 			telemetry.update();
 			telemetry.addData("power", rpms_x100);
 			telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
-			telemetry.update();
+
+            /*iif (last.average().isPresent()) {
+                telemetry.addData("Last 50 loop avg", shooter.last_loops_took.average().get());
+            }*/
+
+            telemetry.update();
 		}
 	}
 }

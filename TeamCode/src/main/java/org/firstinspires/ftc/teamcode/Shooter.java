@@ -13,9 +13,6 @@ public class Shooter {
 	/// Minimum power to actually do anything on the flywheel
 	public static double FLYWHEEL_FEED_FORWARD = 0.033;
 
-	/// How long the slow start takes
-	public static double FLYWHEEL_SLOW_START_TIME = 1000;
-
 	/// How many encoder counts mean one revolution on the output axle
 	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (45.0 / 90.0);
 
@@ -44,6 +41,9 @@ public class Shooter {
 	/// Whether to not actually update motor values
 	public boolean dry_run = false;
 
+    /// Set to false before we start oscillating (before we ever go above the wanted RPM)
+    public boolean started_oscillating = false;
+
 	/// The last flywheel encoder position we measured
 	public SlidingWindow<Integer> last_position_ticks = new SlidingWindow<>(10, 0);
 
@@ -52,8 +52,6 @@ public class Shooter {
 
 	/// Our last few rpm measurements - used to average the measurement out
 	public SlidingWindow<Double> last_rpm_measurements = new SlidingWindow<>(50, 0.0);
-
-	public double last_slow_start_multiplier = 0.0;
 
 	/// Calculates the distance we expect the shooter the hit for the given RPM
 	public static double rpm_to_distance_cm(double rpm) {
@@ -69,11 +67,15 @@ public class Shooter {
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherServo.setPosition(0.0);
 
-		shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.08, 0.0, 0.015, 0.0);
-	}
+		//shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.08, 0.0, 0.015, 0.0);
+        // Še kr okej dela 0.1, 0.005, 0.05
+        //shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.2, 0.0, 0.1, 0.0);
+        shooter_power_pid_controller = new GenericPIDController(callingOpMode,  0.03, 0.0, 0.002, 0.0);
+    }
 
 	public void disable_flywheel() {
 		flywheel_enabled = false;
+        wanted_flywheel_rpm = 0.0;
         shooting_distance_m = Double.NaN;
 		hardware.shooterMotor.setPower(0.0);
 		shooter_power_pid_controller.reset();
@@ -90,6 +92,13 @@ public class Shooter {
 			disable_flywheel();
 		}	else {
 			wanted_flywheel_rpm = flywheel_rpm;
+
+            if (wanted_flywheel_rpm > 1500) {
+                // Preemtively, so the PID is faster
+                flywheel_power = 0.4;
+                hardware.shooterMotor.setPower(0.4);
+            }
+
 			flywheel_enabled = true;
 		}
 	}
@@ -119,6 +128,19 @@ public class Shooter {
 
 	/// Re-measures RPM and runs PID updates
 	public void update() {
+
+        if (!flywheel_enabled) {
+            hardware.shooterMotor.setPower(0.0);
+            return;
+        }
+
+        double current_rpm = last_rpm_measurements.average().orElse(0.0);
+
+        // Slight crutch
+        if (!started_oscillating && current_rpm > wanted_flywheel_rpm) {
+            started_oscillating = true;
+            shooter_power_pid_controller.reset();
+        }
 
 		double last_pos_ticks = last_position_ticks.average().orElse(0.0);
 		double last_time_ms = last_position_time_ms.average().orElse(0.0);
@@ -156,7 +178,12 @@ public class Shooter {
 		shooter_power_pid_controller.update();
 		double delta_shooter_power = shooter_power_pid_controller.output;
 
-		flywheel_power = flywheel_power + (delta_shooter_power * ms_elapsed / 1000.0);
+        // Magic!! Amazing!! Beatiful
+        if (Math.abs(delta_shooter_power) < 75.0) {
+            delta_shooter_power *= 0.75;
+        }
+
+		flywheel_power = flywheel_power + (delta_shooter_power * 36.0 / 1000.0);
 		flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
 
 		flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
@@ -164,12 +191,6 @@ public class Shooter {
 		if (flywheel_power > 0.0 && started_running_time_ms == 0) {
 			started_running_time_ms = time_ms;
 		}
-
-		last_slow_start_multiplier = (double) (time_ms - started_running_time_ms) / FLYWHEEL_SLOW_START_TIME;
-		last_slow_start_multiplier = Math.max(0.0, last_slow_start_multiplier);
-		last_slow_start_multiplier = Math.min(1.0, last_slow_start_multiplier);
-
-		flywheel_power = flywheel_power * last_slow_start_multiplier;
 
 		if (!dry_run) {
 			hardware.shooterMotor.setPower(flywheel_power);

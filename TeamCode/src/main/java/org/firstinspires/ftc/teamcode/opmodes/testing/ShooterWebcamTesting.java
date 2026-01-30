@@ -38,7 +38,7 @@ public class ShooterWebcamTesting extends LinearOpMode {
 
 			AprilTagDetection detection = webcam.getApriltags().get(0);
 
-			TargetInformation target_information = shooterPositioning.compute_target_information(detection.ftcPose.range, detection.ftcPose.yaw);
+			TargetInformation target_information = shooterPositioning.compute_target_information(detection.ftcPose.range, detection.ftcPose.yaw, detection.ftcPose.bearing);
 
 			telemetry.addData("Yaw   [deg]", Math.toDegrees(detection.ftcPose.yaw));
 			telemetry.addData("Pitch [deg]", Math.toDegrees(detection.ftcPose.pitch));
