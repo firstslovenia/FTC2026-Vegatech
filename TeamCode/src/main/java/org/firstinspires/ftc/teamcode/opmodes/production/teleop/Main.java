@@ -73,17 +73,17 @@ public class Main extends LinearOpMode {
                 double rpm_error = shooter.get_rpm_error();
 
                 if (Double.isNaN(shooter.shooting_distance_m)) {
-                    if (rpm_error > 200.0) {
+                    if (rpm_error > Shooter.SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE) {
                         ledIndicator.setPosition(LedIndicator.ORANGE_POSITION);
-                    } else if (rpm_error > 50.0) {
+                    } else if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
                         ledIndicator.setPosition(LedIndicator.INDIGO_POSITION);
                     } else {
                         ledIndicator.setPosition(LedIndicator.BLUE_POSITION);
                     }
                 } else {
-                    if (rpm_error > 200.0) {
+                    if (rpm_error > Shooter.SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE) {
                         ledIndicator.setPosition(LedIndicator.RED_POSITION);
-                    } else if (rpm_error > 50.0) {
+                    } else if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
                         ledIndicator.setPosition(LedIndicator.YELLOW_POSITION);
                     } else {
                         ledIndicator.setPosition(LedIndicator.GREEN_POSITION);

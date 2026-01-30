@@ -16,13 +16,25 @@ public class Shooter {
 	/// How many encoder counts mean one revolution on the output axle
 	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (45.0 / 90.0);
 
+    /// How small the RPM error has to be to be in the perfect stable range
+    public static double SHOOTER_RPM_STABLE_ERROR_RANGE = 50.0;
+
+    /// How small the RPM error has to be to be in the semi stable range
+    public static double SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE = 200.0;
+
 	/// When we started running the thingo
 	long started_running_time_ms = 0;
 
 	OpMode callingOpMode;
 	Hardware hardware;
 
+    /// Currently active PID controller
 	GenericPIDController shooter_power_pid_controller;
+
+    /// Used to quickly get the flywheel up to speed
+    GenericPIDController startup_pid_controller;
+    /// Used afterwards to keep a stable RPM
+    GenericPIDController stable_power_pid_controller;
 
     ///  What distance we are regulating for
     public double shooting_distance_m = Double.NaN;
@@ -42,7 +54,7 @@ public class Shooter {
 	public boolean dry_run = false;
 
     /// Set to false before we start oscillating (before we ever go above the wanted RPM)
-    public boolean started_oscillating = false;
+    public boolean past_startup = false;
 
 	/// The last flywheel encoder position we measured
 	public SlidingWindow<Integer> last_position_ticks = new SlidingWindow<>(10, 0);
@@ -67,18 +79,23 @@ public class Shooter {
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherServo.setPosition(0.0);
 
-		//shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.08, 0.0, 0.015, 0.0);
-        // Še kr okej dela 0.1, 0.005, 0.05
-        //shooter_power_pid_controller = new GenericPIDController(callingOpMode, 0.2, 0.0, 0.1, 0.0);
-        shooter_power_pid_controller = new GenericPIDController(callingOpMode,  0.03, 0.0, 0.002, 0.0);
+        stable_power_pid_controller = new GenericPIDController(callingOpMode,  0.03, 0.0, 0.002, 0.0);
+        startup_pid_controller = new GenericPIDController(callingOpMode, 0.1, 0.0, 0.015, 0.0);
+
+        shooter_power_pid_controller = startup_pid_controller;
     }
 
 	public void disable_flywheel() {
 		flywheel_enabled = false;
         wanted_flywheel_rpm = 0.0;
         shooting_distance_m = Double.NaN;
+
 		hardware.shooterMotor.setPower(0.0);
-		shooter_power_pid_controller.reset();
+
+        startup_pid_controller.reset();
+        stable_power_pid_controller.reset();
+        shooter_power_pid_controller = startup_pid_controller;
+
 		started_running_time_ms = 0;
 	}
 
@@ -98,6 +115,10 @@ public class Shooter {
                 flywheel_power = 0.4;
                 hardware.shooterMotor.setPower(0.4);
             }
+
+            startup_pid_controller.reset();
+            stable_power_pid_controller.reset();
+            shooter_power_pid_controller = startup_pid_controller;
 
 			flywheel_enabled = true;
 		}
@@ -135,11 +156,14 @@ public class Shooter {
         }
 
         double current_rpm = last_rpm_measurements.average().orElse(0.0);
+        double rpm_error = wanted_flywheel_rpm - current_rpm;
 
-        // Slight crutch
-        if (!started_oscillating && current_rpm > wanted_flywheel_rpm) {
-            started_oscillating = true;
-            shooter_power_pid_controller.reset();
+        if (!past_startup && Math.abs(rpm_error) < SHOOTER_RPM_STABLE_ERROR_RANGE) {
+            // Switch PID controllers
+            past_startup = true;
+            startup_pid_controller.reset();
+            stable_power_pid_controller.reset();
+            shooter_power_pid_controller = stable_power_pid_controller;
         }
 
 		double last_pos_ticks = last_position_ticks.average().orElse(0.0);
@@ -172,14 +196,14 @@ public class Shooter {
 		}
 
 		if (are_measurements_ok && wanted_flywheel_rpm != 0.0) {
-			shooter_power_pid_controller.error = (wanted_flywheel_rpm - last_rpm_measurements.average().orElse(0.0)) / 1000.0;
+			shooter_power_pid_controller.error = rpm_error / 1000.0;
 		}
 
 		shooter_power_pid_controller.update();
 		double delta_shooter_power = shooter_power_pid_controller.output;
 
-        // Magic!! Amazing!! Beatiful
-        if (Math.abs(delta_shooter_power) < 75.0) {
+        // Do slightly less if we're stable
+        if (Math.abs(rpm_error) < SHOOTER_RPM_STABLE_ERROR_RANGE) {
             delta_shooter_power *= 0.75;
         }
 
