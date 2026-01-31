@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.Spindexer;
@@ -154,6 +156,15 @@ public class HardwareTesting extends LinearOpMode {
                     hardware.rgbLed.setPosition(color);
                     telemetry.addData("Position", color);
                     break;
+                case colorSensor:
+                    NormalizedRGBA output = hardware.colorSensor.getNormalizedColors();
+                    double distance = hardware.colorSensor.getDistance(DistanceUnit.CM);
+
+                    telemetry.addData("Distance [cm]", distance);
+                    telemetry.addData("R", output.red);
+                    telemetry.addData("G", output.green);
+                    telemetry.addData("B", output.blue);
+                    telemetry.addData("A", output.alpha);
             }
 
             telemetry.update();

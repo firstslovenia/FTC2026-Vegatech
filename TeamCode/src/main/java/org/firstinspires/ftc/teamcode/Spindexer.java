@@ -2,9 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
+import org.firstinspires.ftc.teamcode.generic.AngleUtil;
 import org.firstinspires.ftc.teamcode.generic.BallColor;
-import org.firstinspires.ftc.teamcode.generic.GenericPIDController;
 
 /// Keeps track of which color balls we have and
 public class Spindexer {
@@ -28,6 +29,11 @@ public class Spindexer {
     public static double ANGLE_SHOOT_BALL_1 = ANGLE_SHOOT_BALL_0 - Math.PI * 2.0 / 3.0;
     public static double ANGLE_SHOOT_BALL_2 = ANGLE_SHOOT_BALL_0 - Math.PI * 4.0 / 3.0;
 
+    public static double ANGLE_HOLD_BALLS_0 = Math.PI / 2.0;
+
+    public static double ANGLE_HOLD_BALLS_1 = Math.PI / 2.0 + Math.PI * 2.0 / 3.0;
+    public static double ANGLE_HOLD_BALLS_2 = Math.PI / 2.0 + Math.PI * 4.0 / 3.0;
+
     /// Balls are numbered ball 0 through ball 2, counterclockwise, starting at more orange to less orange
     public BallColor balls[] = new BallColor[] {BallColor.None, BallColor.None, BallColor.None};
 
@@ -45,6 +51,140 @@ public class Spindexer {
 
     public void init() {
         hardware.spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+
+    /// Moves to the next available ball spot we can intake into.
+    ///
+    /// If none is available, ball_to_intake will still be null.
+    public void switch_to_available_intake() {
+
+        // Note: it isn't really worth optimizing this
+        if (ball_in_shooter != null) {
+            ball_in_shooter = null;
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (balls[i] == BallColor.None) {
+                ball_to_intake = i;
+                break;
+            }
+        }
+
+        if (ball_to_intake != null) {
+            switch (ball_to_intake) {
+                case 0:
+                    move_to_angle(ANGLE_INTAKE_BALL_0);
+                    break;
+                case 1:
+                    move_to_angle(ANGLE_INTAKE_BALL_1);
+                    break;
+                case 2:
+                    move_to_angle(ANGLE_INTAKE_BALL_2);
+                    break;
+            }
+        }
+    }
+
+    /// Moves to the next available green ball to shoot.
+    ///
+    /// If none is available, ball_in_shooter will still be null.
+    public void switch_to_coloured_ball(BallColor color) {
+
+        // Note: it isn't really worth optimizing this
+        if (ball_to_intake != null) {
+            ball_to_intake = null;
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (balls[i] == color) {
+                ball_in_shooter = i;
+                break;
+            }
+        }
+
+        if (ball_in_shooter != null) {
+            switch (ball_in_shooter) {
+                case 0:
+                    move_to_angle(ANGLE_SHOOT_BALL_0);
+                    break;
+                case 1:
+                    move_to_angle(ANGLE_SHOOT_BALL_1);
+                    break;
+                case 2:
+                    move_to_angle(ANGLE_SHOOT_BALL_2);
+                    break;
+            }
+        }
+    }
+
+    /// Moves to the passive holding angle.
+    ///
+    /// If available, goes to the next intake position.
+    ///
+    /// If not, goes to the nearest holding pattern for keeping all the balls inside
+    public void switch_to_holding_pattern() {
+
+        if (ball_to_intake != null) {
+            // We're already intaking a ball!
+            return;
+        }
+
+        if (ball_in_shooter != null) {
+            ball_in_shooter = null;
+        }
+
+        switch_to_available_intake();
+
+        if (ball_to_intake != null) {
+            // We've done our job; don't go into intake mode, just keep the spindexer there
+            ball_to_intake = null;
+            return;
+        }
+
+        double d1 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_0);
+        double d2 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_1);
+        double d3 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_2);
+
+        if (Math.abs(d1) < Math.abs(d2) && Math.abs(d1) < Math.abs(d3)) {
+            move_to_angle(ANGLE_HOLD_BALLS_0);
+        }
+        else if (Math.abs(d2) < Math.abs(d1) && Math.abs(d2) < Math.abs(d3)) {
+            move_to_angle(ANGLE_HOLD_BALLS_1);
+        } else {
+            move_to_angle(ANGLE_HOLD_BALLS_2);
+        }
+    }
+
+    public void update() {
+        // Finish intake, if applicable
+        if (ball_to_intake != null) {
+
+            NormalizedRGBA output = hardware.colorSensor.getNormalizedColors();
+
+            // Do some magic to check if we got something that seems like the right color
+            if (output.green > 0.5) {
+                balls[ball_to_intake] = BallColor.Green;
+                ball_to_intake = null;
+                switch_to_holding_pattern();
+
+            } else if (output.green < 0.3) {
+                balls[ball_to_intake] = BallColor.Purple;
+                ball_to_intake = null;
+                switch_to_holding_pattern();
+            }
+        }
+
+        callingOpMode.telemetry.addData("Spindexer b0", balls[0]);
+        callingOpMode.telemetry.addData("Spindexer b1", balls[1]);
+        callingOpMode.telemetry.addData("Spindexer b2", balls[2]);
+
+        if (ball_in_shooter != null) {
+            callingOpMode.telemetry.addData("Shooting ball", ball_in_shooter);
+        }
+
+        if (ball_to_intake != null) {
+            callingOpMode.telemetry.addData("Intaking ball", ball_to_intake);
+        }
     }
 
     /// Tells the spindexer to move to the set angle
@@ -79,28 +219,11 @@ public class Spindexer {
 
     /// Computes the nearest position to the given position which puts the spidexer into the wanted angle
     public static int calculate_nearest_position_at_angle(int encoder_position, double angle_rads) {
-        int moved_around_loop = calculate_relative_loop_ticks(encoder_position);
+        double current_angle_rads = calculate_current_angle(encoder_position);
+        double best_angle_diff = AngleUtil.calculate_best_angle_diff_for(current_angle_rads, angle_rads);
 
-        // Make a positive angle between 0 and 2 PI
-        if (angle_rads < 0.0) {
-            angle_rads += Math.PI * 2.0;
-        }
-
-        while (angle_rads > Math.PI * 2.0) {
-            angle_rads -= Math.PI * 2.0;
-        }
-
-        int angle_in_ticks = (int) ((angle_rads / Math.PI / 2.0) * TICKS_PER_REVOLUTION);
-        int negative_angle_in_ticks = (int) (((angle_rads - Math.PI * 2.0) / Math.PI / 2.0) * TICKS_PER_REVOLUTION);
-
-        int distance_to_this_loop = -moved_around_loop + angle_in_ticks;
-        int distance_to_previous_loop = -moved_around_loop + negative_angle_in_ticks;
-
-        if (Math.abs(distance_to_previous_loop) < distance_to_this_loop) {
-            return encoder_position + distance_to_previous_loop;
-        } else {
-            return encoder_position + distance_to_this_loop;
-        }
+        int angle_diff_ticks = (int) ((best_angle_diff / Math.PI / 2.0) * TICKS_PER_REVOLUTION);
+        return encoder_position + angle_diff_ticks;
     }
 
     /// Calculate the current angle of the spindexer

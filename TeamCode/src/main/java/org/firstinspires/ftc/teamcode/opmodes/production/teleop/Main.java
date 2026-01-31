@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.Spindexer;
+import org.firstinspires.ftc.teamcode.generic.BallColor;
 import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.TargetInformation;
@@ -22,6 +24,7 @@ public class Main extends LinearOpMode {
 	Drivetrain drivetrain;
 	LedIndicator ledIndicator;
 	Shooter shooter;
+    Spindexer spindexer;
     Webcam webcam;
 	Follower pedroFollower;
 
@@ -54,11 +57,15 @@ public class Main extends LinearOpMode {
 		ledIndicator.setPosition(LedIndicator.OFF_POSITION);
 
 		shooter = new Shooter(this, hardware);
+        shooter.reset_shooter_pusher();
+
+        spindexer = new Spindexer(this, hardware);
 
 		webcam = new Webcam(this, hardware);
 
 		waitForStart();
 		drivetrain.resetStartingDirection();
+        spindexer.switch_to_holding_pattern();
 
 		pedroFollower = Constants.createFollower(hardwareMap);
 		pedroFollower.update();
@@ -68,6 +75,25 @@ public class Main extends LinearOpMode {
             long now = System.currentTimeMillis();
 
             boolean do_long_loop = (now - last_long_loop_ms) >= LONG_LOOP_DELAY_MS;
+
+            ledIndicator.setPosition(LedIndicator.OFF_POSITION);
+
+            // If spindexer is on, update LED
+            if (spindexer.ball_to_intake != null) {
+                ledIndicator.setPosition(LedIndicator.VIOLET_POSITION);
+            }
+
+            if (spindexer.ball_in_shooter != null) {
+                BallColor color = spindexer.balls[spindexer.ball_in_shooter];
+
+                if (color == BallColor.Green) {
+                    ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
+                } else if (color == BallColor.Purple) {
+                    ledIndicator.setPosition(LedIndicator.INDIGO_POSITION);
+                } else {
+                    ledIndicator.setPosition(LedIndicator.ORANGE_POSITION);
+                }
+            }
 
             // If shooter is on, update LED
             if (shooter.flywheel_enabled) {
@@ -116,8 +142,7 @@ public class Main extends LinearOpMode {
                 intake_enabled = !intake_enabled;
 
                 if (intake_enabled) {
-                    // TODO: tweak this
-                    hardware.intakeMotor.setPower(0.5);
+                    hardware.intakeMotor.setPower(1.0);
                 } else {
                     hardware.intakeMotor.setPower(0.0);
                 }
@@ -149,9 +174,6 @@ public class Main extends LinearOpMode {
                     ledIndicator.setPosition(LedIndicator.YELLOW_POSITION);
                 }
             }
-            else if (gamepad1.yWasReleased()) {
-                ledIndicator.setPosition(LedIndicator.OFF_POSITION);
-            }
             else {
                 if (target_to_rotate_to != null) {
                     target_to_rotate_to = null;
@@ -168,11 +190,10 @@ public class Main extends LinearOpMode {
 			if (gamepad2.xWasPressed()) {
 				if (shooter.flywheel_enabled) {
 					shooter.update_flywheel_rpm(0.0);
-                    ledIndicator.setPosition(LedIndicator.OFF_POSITION);
 				} else {
                     if (target_to_rotate_to != null) {
                         shooter.update_rpm_for_distance_m(target_to_rotate_to.distance_m);
-                    } else if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
+                    } else if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
                         shooter.update_rpm_for_distance_m(webcam.target_position.distance_m);
                     } else {
                         // Screw it
@@ -184,21 +205,40 @@ public class Main extends LinearOpMode {
             // Fire balls
 			if (gamepad2.right_trigger > 0.1) {
                 shooter.fire();
+
+                if (spindexer.ball_in_shooter != null) {
+                    spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
+                    spindexer.ball_in_shooter = null;
+                }
 			}
 
             shooter.update();
 
             // Select spindexer ball
-            if (gamepad2.rightBumperWasPressed()) {
-                // Green
-            } else if (gamepad2.leftBumperWasPressed()) {
-                // Purple
+            if (gamepad2.leftBumperWasPressed()) {
+                if (spindexer.ball_in_shooter != null && spindexer.balls[spindexer.ball_in_shooter] == BallColor.Green) {
+                    spindexer.switch_to_holding_pattern();
+                } else {
+                    spindexer.switch_to_coloured_ball(BallColor.Green);
+                }
+            } else if (gamepad2.rightBumperWasPressed()) {
+                if (spindexer.ball_in_shooter != null && spindexer.balls[spindexer.ball_in_shooter] == BallColor.Purple) {
+                    spindexer.switch_to_holding_pattern();
+                } else {
+                    spindexer.switch_to_coloured_ball(BallColor.Purple);
+                }
             }
 
             // Do spindexer intake
             if (gamepad2.yWasPressed()) {
-                // Toggle intaking
+                if (spindexer.ball_to_intake != null) {
+                    spindexer.switch_to_holding_pattern();
+                } else {
+                    spindexer.switch_to_available_intake();
+                }
             }
+
+            spindexer.update();
 
 			// Also works for positioning!
 			//

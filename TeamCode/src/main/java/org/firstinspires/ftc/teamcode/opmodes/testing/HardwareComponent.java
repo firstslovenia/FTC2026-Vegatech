@@ -13,7 +13,8 @@ public enum HardwareComponent {
     intakeMotor,
     spindexerMotor,
     Spindexer,
-    rgbLed;
+    rgbLed,
+    colorSensor;
 
     private static final HardwareComponent[] values = values();
 

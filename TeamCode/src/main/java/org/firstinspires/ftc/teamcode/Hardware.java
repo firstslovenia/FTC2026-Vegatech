@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -42,6 +43,7 @@ public class Hardware {
 	public static IMU imu = null;
 
 	public static Servo rgbLed = null;
+    public static RevColorSensorV3 colorSensor = null;
 
 	public static WebcamName webcam = null;
 
@@ -86,5 +88,6 @@ public class Hardware {
 
 		rgbLed = callingOpMode.hardwareMap.get(Servo.class, "rgbLed");
 		webcam = callingOpMode.hardwareMap.get(WebcamName.class, "webcam");
+        colorSensor = callingOpMode.hardwareMap.get(RevColorSensorV3.class, "colorSensor");
 	}
 }
