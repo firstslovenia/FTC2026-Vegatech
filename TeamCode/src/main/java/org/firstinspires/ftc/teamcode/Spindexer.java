@@ -47,11 +47,6 @@ public class Spindexer {
     /// The index of the ball we're rotated to intake, if any
     public Integer ball_to_intake = null;
 
-    /// The last angle we wanted to turn to
-    public double current_target_angle = 0.0;
-
-    /// The next angle to turn to, if we are currently busy
-    public Double next_angle = null;
     public Long started_being_busy_ms = null;
 
     public Spindexer(OpMode callingOpMode, Hardware hardware) {
@@ -173,25 +168,8 @@ public class Spindexer {
         long now_ms = System.currentTimeMillis();
 
         if (started_being_busy_ms != null && now_ms - started_being_busy_ms > 100) {
-
             if (!hardware.spindexerMotor.isBusy()) {
                 started_being_busy_ms = null;
-
-                if (next_angle != null) {
-                    move_to_angle(next_angle);
-                    next_angle = null;
-                }
-            }
-
-            // Idea that mix spasms, but I can't get the spasms to even trigger so...
-            else if (now_ms - started_being_busy_ms > 2500) {
-
-                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                hardware.spindexerMotor.setPower(0.0);
-                started_being_busy_ms = now_ms;
-                next_angle = current_target_angle;
-                current_target_angle = current_angle();
-
             }
         }
 
@@ -241,7 +219,6 @@ public class Spindexer {
             hardware.spindexerMotor.setTargetPosition(calculate_nearest_position_at_angle(encoder_pos, angle_rads));
 
             started_being_busy_ms = System.currentTimeMillis();
-            current_target_angle = angle_rads;
         }
 
         hardware.spindexerMotor.setPower(1.0);

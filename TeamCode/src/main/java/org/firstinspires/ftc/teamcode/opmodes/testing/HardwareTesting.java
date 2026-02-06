@@ -135,10 +135,6 @@ public class HardwareTesting extends LinearOpMode {
                     telemetry.addData("Target Angle", Math.toDegrees(spindexer.target_angle()));
                     telemetry.addData("PID working", hardware.spindexerMotor.isBusy());
 
-                    if (spindexer.next_angle != null) {
-                        telemetry.addData("Next angle", spindexer.next_angle);
-                    }
-
                     if (spindexer.started_being_busy_ms != null) {
                         telemetry.addData("Busy for", System.currentTimeMillis() - spindexer.started_being_busy_ms);
                     }
