@@ -30,7 +30,7 @@ public class Spindexer {
     public static double ANGLE_INTAKE_BALL_2 = ANGLE_INTAKE_BALL_0 - Math.PI * 4.0 / 3.0;
 
     /// The angle to point at to shoot ball 0 - the orange one
-    public static double ANGLE_SHOOT_BALL_0 = - Math.PI / 3.0;
+    public static double ANGLE_SHOOT_BALL_0 = - Math.PI / 3.0 + Math.PI / 18.0;
     public static double ANGLE_SHOOT_BALL_1 = ANGLE_SHOOT_BALL_0 - Math.PI * 2.0 / 3.0;
     public static double ANGLE_SHOOT_BALL_2 = ANGLE_SHOOT_BALL_0 - Math.PI * 4.0 / 3.0;
 
@@ -58,7 +58,10 @@ public class Spindexer {
 
     public void init() {
         hardware.spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        ((DcMotorEx) hardware.spindexerMotor).setTargetPositionTolerance(PID_TOLERANCE);
+
+        DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
+        ex.setTargetPositionTolerance(PID_TOLERANCE);
+        ex.setPositionPIDFCoefficients(8.0);
     }
 
     /// Moves to the next available ball spot we can intake into.
@@ -213,6 +216,11 @@ public class Spindexer {
 
     /// Tells the spindexer to move to the set angle
     public void move_to_angle(double angle_rads) {
+
+        // Do NOT move!
+        if (hardware.shooterPusherServo.getPosition() > 0.3) {
+            return;
+        }
 
         if (Math.abs(target_angle() - angle_rads) > Math.PI / 180.0) {
             int encoder_pos = hardware.spindexerMotor.getCurrentPosition();

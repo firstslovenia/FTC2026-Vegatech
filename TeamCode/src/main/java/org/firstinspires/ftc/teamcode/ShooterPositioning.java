@@ -10,10 +10,10 @@ public class ShooterPositioning {
 	public static double APRILTAG_HEIGHT_CM = 16.5;
 
 	/// How far away (in field coordinates) we want the target's x coordinate relative to the april tag
-	public static double TARGET_TO_APRILTAG_X_DISTANCE_CM = 20.0;
+	public static double TARGET_TO_APRILTAG_X_DISTANCE_CM = 8.0;
 
 	/// How far away (in field coordinates) we want the target's y coordinate relative to the april tag
-	public static double TARGET_TO_APRILTAG_Y_DISTANCE_CM = 20.0;
+	public static double TARGET_TO_APRILTAG_Y_DISTANCE_CM = 6.0;
 
 	/// The angle of the apriltag to the field
 	public static double ANGLE_OF_APRILTAG_RADS = Math.toRadians(36.0);

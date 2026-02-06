@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.production.teleop;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
@@ -209,7 +210,6 @@ public class Main extends LinearOpMode {
             }
 
             // User 2
-
             // Enable / disable the shooter
 			if (gamepad2.xWasPressed()) {
 				if (shooter.flywheel_enabled) {

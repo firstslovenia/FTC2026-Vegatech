@@ -1,0 +1,52 @@
+
+// Stuttgart delujoč robot, testamo kaj cleara na homemade golu
+// Note: vsi RPMi so ~ + 30 RPM (kar pač dela naša regulacija), razdalje so zelo natančne
+// (*) - za polinom
+
+// Also note: spindexer je kinda slab s koti, maybe je ketna
+
+// Another note: to je useless, treba je testirat pod kotom da actually zadane. Kill me
+
+(razdalje do TAGA, + 28 za do targeta)
+2800 - 81 cm - lepo cleara, karkoli manj (po RPMu) ne (*)
+3000 - 100 cm - lepo cleara (*)
+3100 / 3000 - 110 cm - lepo cleara, mal visoko na 3100, decently cleanly na 3000
+3000 - 120 cm - še lepo cleara (*)
+3000 - 140 cm - še lepo cleara, precej close zdej
+3100 - 140 cm - amazingly cleara, mogoče celo mal visok
+3100 - 160 cm - še lepo cleara (*)
+3100 - 180 cm - cleara perfectly (*)
+3100 - 200 cm - še lepo cleara, maybe slightly nizko
+3200 - 220 cm - barely ne cleara!
+3300 - 220 cm - perfectly gre noter (*)
+3300 - 240 cm - barely ne gre noter
+3400 - 240 cm - perfetcly gre noter (*)
+3500 - 260 cm - perfectly gre noter (*)
+3500 (limit za 12.5 V !) - 270 cm - še zadane (*)
+3550 (limit za mal več !) - 280 cm - barely ne gre več noter
+3600 - 280 cm - zadane perfectly (*)
+3700 - 290 cm - zadane perfectly (*)
+3700 - 300 cm - zadane perfectly (*)
+3800 (limit ish za 13.3 V ) - 320 cm - zadane perfectly!! (*)
+
+Polinom točke: (do tarče)
+109 cm - 2800
+128 cm - 3000
+--148 cm - 3000--
+188 cm - 3100
+--208 cm - 3100--
+248 cm - 3300
+268 cm - 3400
+288 cm - 3500
+308 cm - 3600
+--318 cm - 3700--
+328 cm - 3700¸
+348 cm - 3800
+
+// distance -> RPM
+{{109, 2800}, {128, 3000}, {188, 3100}, {268, 3400}, {288, 3500}, {308, 3600}, {328, 3700}, {348, 3800}}
+https://www.wolframalpha.com/input?i=fit+polynomial&assumption=%7B%22F%22%2C+%22InterpolatingPolynomialCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B109%2C+2800%7D%2C+%7B128%2C+3000%7D%2C+%7B188%2C+3100%7D%2C+%7B268%2C+3400%7D%2C+%7B288%2C+3500%7D%2C+%7B308%2C+3600%7D%2C+%7B328%2C+3700%7D%2C+%7B348%2C+3800%7D%7D%22
+
+// RPM -> distance
+{{3000, 128}, {3100, 188}, {3400, 268}, {3500, 288}, {3600, 308}, {3700, 328}, {3800, 348}}
+https://www.wolframalpha.com/input?i=fit+polynomial&assumption=%7B%22F%22%2C+%22InterpolatingPolynomialCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B3000%2C+128%7D%2C+%7B3100%2C+188%7D%2C+%7B3400%2C+268%7D%2C+%7B3500%2C+288%7D%2C+%7B3600%2C+308%7D%2C+%7B3700%2C+328%7D%2C+%7B3800%2C+348%7D%7D%22

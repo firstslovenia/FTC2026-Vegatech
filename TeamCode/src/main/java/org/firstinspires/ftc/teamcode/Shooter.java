@@ -60,6 +60,9 @@ public class Shooter {
     /// Set to false before we start oscillating (before we ever go above the wanted RPM)
     public boolean past_startup = false;
 
+    /// When we started being in the semi-stable zone, so we know to switch PID regulators
+    public long started_being_semi_stable_ms = 0;
+
 	/// The last flywheel encoder position we measured
 	public SlidingWindow<Integer> last_position_ticks = new SlidingWindow<>(10, 0);
 
@@ -71,12 +74,13 @@ public class Shooter {
 
 	/// Calculates the distance we expect the shooter the hit for the given RPM
 	public static double rpm_to_distance_cm(double rpm) {
-		return -(1257301.0 * Math.pow(rpm, 5))/3727189786320000000.0 + (144811837 * Math.pow(rpm, 4))/26622784188000000.0 - (1305459600047.0 * Math.pow(rpm ,3))/37271897863200000.0 + (1198650629021.0 * Math.pow(rpm, 2))/10649113675200.0 - (933411826993.0 * rpm)/5176652481.0 + 595604859575.0/5171481.0;
+        return -Math.pow(rpm, 6.0) / 1008000000000000.0 + (73.0 * Math.pow(rpm, 5.0)) / 3360000000000.0 - (799.0 * Math.pow(rpm, 4.0)) / 4032000000.0 + (64751.0 * Math.pow(rpm, 3.0)) / 67200000.0 - (1659589.0 * Math.pow(rpm, 2.0)) / 630000.0 + (32251693.0 * rpm) / 8400.0 - 2330857.0;
 	}
 
 	/// Calculates the RPM to run the shooter at for a given distance
+    /// Note: dela samo če si dead on, če ne overshoota
 	public static double distance_cm_to_rpm(double distance_cm) {
-		return (836237.0 * Math.pow(distance_cm, 5))/45067522500000.0 - (100509133.0 * Math.pow(distance_cm, 4))/4506752250000.0 + (2735851519.0 * Math.pow(distance_cm, 3))/257528700000.0 - (56390675269.0 * Math.pow(distance_cm, 2))/22533761250.0 + (5938811617.0 * distance_cm)/20030010.0 - 3273971284.0/286143.0;
+        return (449338737877.0 * Math.pow(distance_cm, 7.0)) / 7016921487387734630400000.0 - (107277877871999.0 * Math.pow(distance_cm, 6)) / 637901953398884966400000.0 + (305060855409557521.0 * Math.pow(distance_cm, 5.0)) / 1754230371846933657600000.0 - (748963544893509427.0 * Math.pow(distance_cm, 4)) / 7973774417486062080000.0 + (1734636674534632459.0 * Math.pow(distance_cm, 3.0)) / 60076382597497728000.0 - (6295965720321880300573.0 * Math.pow(distance_cm, 2.0)) / 1245902252732197200000.0 + (133495302824634134105707.0 * distance_cm) / 285519266251128525000.0 - 2265549862932106704904.0 / 154501767451909375.0;
 	}
 
 	public Shooter(OpMode callingOpMode, Hardware hardware) {
@@ -84,7 +88,7 @@ public class Shooter {
 		hardware.shooterPusherServo.setPosition(0.0);
 
         stable_power_pid_controller = new GenericPIDController(callingOpMode,  0.03, 0.0, 0.002, 0.0);
-        startup_pid_controller = new GenericPIDController(callingOpMode, 0.15, 0.0, 0.01, 0.0);
+        startup_pid_controller = new GenericPIDController(callingOpMode, 0.1, 0.0, 0.015, 0.0);
 
         shooter_power_pid_controller = startup_pid_controller;
     }
@@ -172,12 +176,28 @@ public class Shooter {
         double current_rpm = last_rpm_measurements.average().orElse(0.0);
         double rpm_error = wanted_flywheel_rpm - current_rpm;
 
-        if (!past_startup && Math.abs(rpm_error) < SHOOTER_RPM_STABLE_ERROR_RANGE) {
-            // Switch PID controllers
-            past_startup = true;
-            startup_pid_controller.reset();
-            stable_power_pid_controller.reset();
-            shooter_power_pid_controller = stable_power_pid_controller;
+        if (!past_startup) {
+            if (Math.abs(rpm_error) < SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE) {
+
+                if (started_being_semi_stable_ms != 0) {
+                    if (time_ms - started_being_semi_stable_ms > 200) {
+                        // Switch PID controllers
+                        past_startup = true;
+                        startup_pid_controller.reset();
+                        stable_power_pid_controller.reset();
+                        shooter_power_pid_controller = stable_power_pid_controller;
+                    }
+                }
+
+                else {
+                    started_being_semi_stable_ms = time_ms;
+                }
+
+            } else {
+                if (started_being_semi_stable_ms != 0) {
+                    started_being_semi_stable_ms = 0;
+                }
+            }
         }
 
 		double last_pos_ticks = last_position_ticks.average().orElse(0.0);
@@ -217,7 +237,7 @@ public class Shooter {
 
         // Do slightly less if we're stable
         if (Math.abs(rpm_error) < SHOOTER_RPM_STABLE_ERROR_RANGE) {
-            delta_shooter_power *= 0.75;
+            delta_shooter_power *= 0.5;
         }
 
 		flywheel_power = flywheel_power + (delta_shooter_power * 36.0 / 1000.0);
