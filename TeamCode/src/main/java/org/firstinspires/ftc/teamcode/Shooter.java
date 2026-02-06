@@ -84,7 +84,7 @@ public class Shooter {
 		hardware.shooterPusherServo.setPosition(0.0);
 
         stable_power_pid_controller = new GenericPIDController(callingOpMode,  0.03, 0.0, 0.002, 0.0);
-        startup_pid_controller = new GenericPIDController(callingOpMode, 0.1, 0.0, 0.015, 0.0);
+        startup_pid_controller = new GenericPIDController(callingOpMode, 0.15, 0.0, 0.01, 0.0);
 
         shooter_power_pid_controller = startup_pid_controller;
     }

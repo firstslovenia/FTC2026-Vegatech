@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.qualcomm.robotcore.eventloop.opmode.*;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.generic.LedIndicator;
@@ -20,14 +22,14 @@ public class ShooterWebcamTesting extends LinearOpMode {
 	@Override
 	public void runOpMode() {
 
-		hardware = new Hardware(this);
-		hardware.init();
-
-		ledIndicator = new LedIndicator(this, hardware);
-
-		webcam = new Webcam(this, hardware);
-
 		waitForStart();
+
+        hardware = new Hardware(this);
+        hardware.init();
+
+        ledIndicator = new LedIndicator(this, hardware);
+
+        webcam = new Webcam(this, hardware);
 
 		while (opModeIsActive()) {
 			webcam.update();
@@ -38,12 +40,14 @@ public class ShooterWebcamTesting extends LinearOpMode {
 
 			AprilTagDetection detection = webcam.getApriltags().get(0);
 
-			TargetInformation target_information = shooterPositioning.compute_target_information(detection.ftcPose.range, detection.ftcPose.yaw, detection.ftcPose.bearing);
+			TargetInformation target_information = webcam.target_position;
 
 			telemetry.addData("Yaw   [deg]", Math.toDegrees(detection.ftcPose.yaw));
 			telemetry.addData("Pitch [deg]", Math.toDegrees(detection.ftcPose.pitch));
 			telemetry.addData("Roll  [deg]", Math.toDegrees(detection.ftcPose.roll));
 			telemetry.addData("Distance (tag)       [m]", target_information.tag_distance_m);
+            telemetry.addData("Distance (tag x)     [m]", webcam.real_x_distance_to_apriltag_m);
+            telemetry.addData("Distance (tag y)     [m]", webcam.real_y_distance_to_apriltag_m);
 			telemetry.addData("Distance (target)    [m]", target_information.distance_m);
 			telemetry.addData("Distance (target x)  [m]", shooterPositioning.x_distance_to_target_m);
 			telemetry.addData("Distance (target y)  [m]", shooterPositioning.y_distance_to_target_m);

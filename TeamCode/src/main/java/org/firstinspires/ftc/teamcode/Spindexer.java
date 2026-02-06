@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.generic.AngleUtil;
 import org.firstinspires.ftc.teamcode.generic.BallColor;
 
@@ -15,6 +17,9 @@ public class Spindexer {
 
     /// How many encoder counts mean one revolution on the output axle
     public static int TICKS_PER_REVOLUTION = (int) (28.0 * 27.4);
+
+    /// How many encoder ticks (here we calculate it from degrees) we allow the PID controller to miss
+    public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 5) / 360;
 
     /// Encoder ticks at 0 degrees, before we run anything
     //public static int STARTING_ENCODER_TICKS = 3963;
@@ -42,6 +47,13 @@ public class Spindexer {
     /// The index of the ball we're rotated to intake, if any
     public Integer ball_to_intake = null;
 
+    /// The last angle we wanted to turn to
+    public double current_target_angle = 0.0;
+
+    /// The next angle to turn to, if we are currently busy
+    public Double next_angle = null;
+    public Long started_being_busy_ms = null;
+
     public Spindexer(OpMode callingOpMode, Hardware hardware) {
         //hardware.spindexerMotor.setTargetPosition(calculate_nearest_zero_angle_position_for(hardware.spindexerMotor.getCurrentPosition()));
 
@@ -51,6 +63,7 @@ public class Spindexer {
 
     public void init() {
         hardware.spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        ((DcMotorEx) hardware.spindexerMotor).setTargetPositionTolerance(PID_TOLERANCE);
     }
 
     /// Moves to the next available ball spot we can intake into.
@@ -156,18 +169,51 @@ public class Spindexer {
     }
 
     public void update() {
+
+        long now_ms = System.currentTimeMillis();
+
+        if (started_being_busy_ms != null && now_ms - started_being_busy_ms > 100) {
+
+            if (!hardware.spindexerMotor.isBusy()) {
+                started_being_busy_ms = null;
+
+                if (next_angle != null) {
+                    move_to_angle(next_angle);
+                    next_angle = null;
+                }
+            }
+
+            // Idea that mix spasms, but I can't get the spasms to even trigger so...
+            else if (now_ms - started_being_busy_ms > 2500) {
+
+                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                hardware.spindexerMotor.setPower(0.0);
+                started_being_busy_ms = now_ms;
+                next_angle = current_target_angle;
+                current_target_angle = current_angle();
+
+            }
+        }
+
         // Finish intake, if applicable
-        if (ball_to_intake != null) {
+        if (ball_to_intake != null && !hardware.spindexerMotor.isBusy()) {
 
             NormalizedRGBA output = hardware.colorSensor.getNormalizedColors();
+            double distance_cm = hardware.colorSensor.getDistance(DistanceUnit.CM);
+
+            double koeff_rg = output.red / output.green;
+            double rg_off = Math.abs(koeff_rg - 1.0);
+
+            double koeff_gb = output.blue / output.green;
+            double gb_off = Math.abs(koeff_gb - 1.0);
 
             // Do some magic to check if we got something that seems like the right color
-            if (output.green > 0.5) {
+            if (rg_off > 0.5 && koeff_gb > 0.5 && output.green > output.red && output.blue > output.red && distance_cm < 7.0) {
                 balls[ball_to_intake] = BallColor.Green;
                 ball_to_intake = null;
                 switch_to_holding_pattern();
 
-            } else if (output.green < 0.3) {
+            } else if (koeff_gb > 1.25 && rg_off < 0.3 && distance_cm < 7.0) {
                 balls[ball_to_intake] = BallColor.Purple;
                 ball_to_intake = null;
                 switch_to_holding_pattern();
@@ -193,13 +239,13 @@ public class Spindexer {
         if (Math.abs(target_angle() - angle_rads) > Math.PI / 180.0) {
             int encoder_pos = hardware.spindexerMotor.getCurrentPosition();
             hardware.spindexerMotor.setTargetPosition(calculate_nearest_position_at_angle(encoder_pos, angle_rads));
+
+            started_being_busy_ms = System.currentTimeMillis();
+            current_target_angle = angle_rads;
         }
 
-        hardware.spindexerMotor.setPower(0.5);
-
-        if (hardware.spindexerMotor.getMode() != DcMotor.RunMode.RUN_TO_POSITION) {
-            hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
+        hardware.spindexerMotor.setPower(1.0);
+        hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public double current_angle() {
@@ -219,6 +265,7 @@ public class Spindexer {
 
     /// Computes the nearest position to the given position which puts the spidexer into the wanted angle
     public static int calculate_nearest_position_at_angle(int encoder_position, double angle_rads) {
+
         double current_angle_rads = calculate_current_angle(encoder_position);
         double best_angle_diff = AngleUtil.calculate_best_angle_diff_for(current_angle_rads, angle_rads);
 

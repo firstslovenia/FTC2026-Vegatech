@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -73,7 +75,10 @@ public class HardwareTesting extends LinearOpMode {
                     telemetry.addData("Power", power);
                     break;
                 case spindexerMotor:
-                    hardware.spindexerMotor.setPower(power);
+
+                    hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    hardware.spindexerMotor.setPower(power );
+
                     telemetry.addData("Power", power);
 
                     int pos = hardware.spindexerMotor.getCurrentPosition();
@@ -128,6 +133,19 @@ public class HardwareTesting extends LinearOpMode {
                     telemetry.addData("Nearest 0 angle", Spindexer.calculate_nearest_position_at_angle(pos_2, 0.0));
                     telemetry.addData("Angle", Math.toDegrees(spindexer.current_angle()));
                     telemetry.addData("Target Angle", Math.toDegrees(spindexer.target_angle()));
+                    telemetry.addData("PID working", hardware.spindexerMotor.isBusy());
+
+                    if (spindexer.next_angle != null) {
+                        telemetry.addData("Next angle", spindexer.next_angle);
+                    }
+
+                    if (spindexer.started_being_busy_ms != null) {
+                        telemetry.addData("Busy for", System.currentTimeMillis() - spindexer.started_being_busy_ms);
+                    }
+
+                    telemetry.addData("PID tolerance", ((DcMotorEx) hardware.spindexerMotor).getTargetPositionTolerance());
+
+                    spindexer.update();
 
                     break;
                 case shooterPusherServo:

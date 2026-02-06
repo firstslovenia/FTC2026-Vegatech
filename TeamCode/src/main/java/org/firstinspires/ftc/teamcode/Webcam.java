@@ -42,6 +42,10 @@ public class Webcam {
 	 */
 	private VisionPortal visionPortal;
 
+
+    public double real_x_distance_to_apriltag_m = 0.0;
+    public double real_y_distance_to_apriltag_m = 0.0;
+
 	public Webcam(LinearOpMode callingOpMode, Hardware hardware) {
 		aprilTag = new AprilTagProcessor.Builder()
 
@@ -129,15 +133,14 @@ public class Webcam {
                 case TAG_ID_BLUE:
                 case TAG_ID_RED:
 
-                    double distance_to_apriltag_m = detection.ftcPose.range;
+                    // Compensate for the camera positioning relative to the shooter
+                    //double real_x_distance_to_apriltag_m = detection.ftcPose.x * Math.cos(-detection.ftcPose.pitch) - 0.2;
+                    //double real_y_distance_to_apriltag_m = detection.ftcPose.y - 0.07;
+                    real_x_distance_to_apriltag_m = detection.ftcPose.x - 0.08;
+                    real_y_distance_to_apriltag_m = detection.ftcPose.y * Math.cos(-detection.ftcPose.pitch) - 0.2;
+                    double real_distance = Math.sqrt(real_x_distance_to_apriltag_m * real_x_distance_to_apriltag_m + real_y_distance_to_apriltag_m * real_y_distance_to_apriltag_m);
 
-                    // Mystical magical conversion factor, actually measured in the workshop.
-                    //
-                    // Don't ask me how we got here. This works.
-                    // You wanna know where you got this? The resolution was wrong... by a factor of 0.75x!!
-                    //distance_to_apriltag_m *= 0.75;
-
-                    TargetInformation target_pos = shooter_positioning.compute_target_information(distance_to_apriltag_m, detection.ftcPose.yaw, detection.ftcPose.bearing);
+                    TargetInformation target_pos = shooter_positioning.compute_target_information(real_distance, detection.ftcPose.yaw, detection.ftcPose.bearing);
 
                     // Check that it is not complete garbage
                     if (shooter_positioning.x_distance_to_target_m < 0.05 ||

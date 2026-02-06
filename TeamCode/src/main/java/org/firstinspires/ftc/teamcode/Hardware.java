@@ -80,6 +80,8 @@ public class Hardware {
         shooterPusherServo.scaleRange(0.4, 0.75);
 
         intakeMotor = callingOpMode.hardwareMap.get(DcMotor.class, "intakeMotor");
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
         spindexerMotor = callingOpMode.hardwareMap.get(DcMotor.class, "spindexerMotor");
         spindexerMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 

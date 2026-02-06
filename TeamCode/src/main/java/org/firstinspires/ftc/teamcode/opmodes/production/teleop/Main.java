@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
-@TeleOp(name = "Main", group = "Production")
+@TeleOp(name = "Main (No balls)", group = "Production")
 public class Main extends LinearOpMode {
 
 	Hardware hardware;
@@ -42,6 +42,13 @@ public class Main extends LinearOpMode {
     SlidingWindow<Long> last_loops_took = new SlidingWindow(50);
     long last_loop_time = System.currentTimeMillis();
 
+    double led_position_to_set = LedIndicator.OFF_POSITION;
+
+    /// Overriden to set what's in the spindexer
+    public void spindexer_override() {
+
+    }
+
 	@Override
 	public void runOpMode() {
 
@@ -54,7 +61,7 @@ public class Main extends LinearOpMode {
 		drivetrain.keepHeading = true;
 
 		ledIndicator = new LedIndicator(this, hardware);
-		ledIndicator.setPosition(LedIndicator.OFF_POSITION);
+		led_position_to_set = LedIndicator.OFF_POSITION;
 
 		shooter = new Shooter(this, hardware);
         shooter.reset_shooter_pusher();
@@ -65,6 +72,9 @@ public class Main extends LinearOpMode {
 
 		waitForStart();
 		drivetrain.resetStartingDirection();
+
+        spindexer.init();
+        spindexer_override();
         spindexer.switch_to_holding_pattern();
 
 		pedroFollower = Constants.createFollower(hardwareMap);
@@ -76,22 +86,22 @@ public class Main extends LinearOpMode {
 
             boolean do_long_loop = (now - last_long_loop_ms) >= LONG_LOOP_DELAY_MS;
 
-            ledIndicator.setPosition(LedIndicator.OFF_POSITION);
+            led_position_to_set = LedIndicator.OFF_POSITION;
 
             // If spindexer is on, update LED
             if (spindexer.ball_to_intake != null) {
-                ledIndicator.setPosition(LedIndicator.VIOLET_POSITION);
+                led_position_to_set = LedIndicator.VIOLET_POSITION;
             }
 
             if (spindexer.ball_in_shooter != null) {
                 BallColor color = spindexer.balls[spindexer.ball_in_shooter];
 
                 if (color == BallColor.Green) {
-                    ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
+                    led_position_to_set = LedIndicator.GREEN_POSITION;
                 } else if (color == BallColor.Purple) {
-                    ledIndicator.setPosition(LedIndicator.INDIGO_POSITION);
+                    led_position_to_set = LedIndicator.INDIGO_POSITION;
                 } else {
-                    ledIndicator.setPosition(LedIndicator.ORANGE_POSITION);
+                    led_position_to_set = LedIndicator.ORANGE_POSITION;
                 }
             }
 
@@ -102,19 +112,19 @@ public class Main extends LinearOpMode {
 
                 if (Double.isNaN(shooter.shooting_distance_m)) {
                     if (rpm_error > Shooter.SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE) {
-                        ledIndicator.setPosition(LedIndicator.ORANGE_POSITION);
+                        led_position_to_set = LedIndicator.ORANGE_POSITION;
                     } else if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
-                        ledIndicator.setPosition(LedIndicator.BLUE_POSITION);
+                        led_position_to_set = LedIndicator.BLUE_POSITION;
                     } else {
-                        ledIndicator.setPosition(LedIndicator.INDIGO_POSITION);
+                        led_position_to_set = LedIndicator.INDIGO_POSITION;
                     }
                 } else {
                     if (rpm_error > Shooter.SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE) {
-                        ledIndicator.setPosition(LedIndicator.RED_POSITION);
+                        led_position_to_set = LedIndicator.RED_POSITION;
                     } else if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
-                        ledIndicator.setPosition(LedIndicator.YELLOW_POSITION);
+                        led_position_to_set = LedIndicator.YELLOW_POSITION;
                     } else {
-                        ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
+                        led_position_to_set = LedIndicator.GREEN_POSITION;
                     }
 
                     telemetry.addData("Shooter distance (cm)", shooter.shooting_distance_m * 100.0);
@@ -148,6 +158,20 @@ public class Main extends LinearOpMode {
                 }
             }
 
+            if (gamepad1.bWasPressed()) {
+                if (intake_enabled && hardware.intakeMotor.getPower() > 0.9) {
+                    hardware.intakeMotor.setPower(-1.0);
+                } else {
+                    intake_enabled = !intake_enabled;
+
+                    if (intake_enabled) {
+                        hardware.intakeMotor.setPower(-1.0);
+                    } else {
+                        hardware.intakeMotor.setPower(0.0);
+                    }
+                }
+            }
+
 			// Reset robot to 90 degrees
 			if (gamepad1.a) {
 				drivetrain.wanted_heading = Math.PI / 2.0;
@@ -169,9 +193,9 @@ public class Main extends LinearOpMode {
                     }
 
                     drivetrain.wanted_heading = wanted_heading_for_target;
-                    ledIndicator.setPosition(LedIndicator.GREEN_POSITION);
+                    led_position_to_set = LedIndicator.GREEN_POSITION;
                 } else {
-                    ledIndicator.setPosition(LedIndicator.YELLOW_POSITION);
+                    led_position_to_set = LedIndicator.YELLOW_POSITION;
                 }
             }
             else {
@@ -238,6 +262,13 @@ public class Main extends LinearOpMode {
                 }
             }
 
+            // Reset spindexer
+            if (gamepad2.bWasPressed()) {
+                spindexer.ball_to_intake = null;
+                spindexer.ball_in_shooter = null;
+                spindexer.move_to_angle(0.0);
+            }
+
             spindexer.update();
 
 			// Also works for positioning!
@@ -269,6 +300,8 @@ public class Main extends LinearOpMode {
             if (last_loops_took.average().isPresent()) {
                 telemetry.addData("Last 50 loop avg", last_loops_took.average().get());
             }
+
+            hardware.rgbLed.setPosition(led_position_to_set);
 
             telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
             telemetry.update();
