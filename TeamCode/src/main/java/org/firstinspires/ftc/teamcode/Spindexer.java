@@ -57,6 +57,9 @@ public class Spindexer {
     }
 
     public void init() {
+
+        hardware.shooterPusherServo.setPosition(0.0);
+
         hardware.spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
@@ -147,11 +150,11 @@ public class Spindexer {
         switch_to_available_intake();
 
         if (ball_to_intake != null) {
-            // We've done our job; don't go into intake mode, just keep the spindexer there
-            ball_to_intake = null;
+            // We've done our job
             return;
         }
 
+        // There is no available intake, move to the closest holding angle
         double d1 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_0);
         double d2 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_1);
         double d3 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_2);
@@ -171,13 +174,13 @@ public class Spindexer {
         long now_ms = System.currentTimeMillis();
 
         if (started_being_busy_ms != null && now_ms - started_being_busy_ms > 100) {
-            if (!hardware.spindexerMotor.isBusy()) {
+            if (!is_motor_busy()) {
                 started_being_busy_ms = null;
             }
         }
 
         // Finish intake, if applicable
-        if (ball_to_intake != null && !hardware.spindexerMotor.isBusy()) {
+        if (ball_to_intake != null && started_being_busy_ms == null) {
 
             NormalizedRGBA output = hardware.colorSensor.getNormalizedColors();
             double distance_cm = hardware.colorSensor.getDistance(DistanceUnit.CM);
@@ -239,6 +242,10 @@ public class Spindexer {
 
     public double target_angle() {
         return calculate_current_angle(hardware.spindexerMotor.getTargetPosition());
+    }
+
+    public boolean is_motor_busy() {
+        return hardware.spindexerMotor.isBusy() || Math.abs(hardware.spindexerMotor.getCurrentPosition() - hardware.spindexerMotor.getTargetPosition()) > PID_TOLERANCE;
     }
 
     /// Returns how far (via ticks) we are into the current loop

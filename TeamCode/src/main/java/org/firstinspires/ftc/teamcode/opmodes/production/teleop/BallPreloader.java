@@ -43,13 +43,6 @@ public class BallPreloader extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            // If spindexer is on, update LED
-            if (spindexer.ball_to_intake != null) {
-                ledIndicator.setPosition(LedIndicator.VIOLET_POSITION);
-            } else {
-                ledIndicator.setPosition(LedIndicator.OFF_POSITION);
-            }
-
             // Enable / disable intake
             if (gamepad1.xWasPressed()) {
                 intake_enabled = !intake_enabled;
@@ -65,11 +58,7 @@ public class BallPreloader extends LinearOpMode {
 
             // Do spindexer intake
             if (gamepad1.yWasPressed()) {
-                if (spindexer.ball_to_intake != null) {
-                    spindexer.switch_to_holding_pattern();
-                } else {
-                    spindexer.switch_to_available_intake();
-                }
+                spindexer.switch_to_holding_pattern();
             }
 
             // Get ready for match position

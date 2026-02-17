@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.production.teleop;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.Constants;
@@ -253,13 +254,9 @@ public class Main extends LinearOpMode {
                 }
             }
 
-            // Do spindexer intake
+            // Go to spindexer holding / intake (out of ex. shooting)
             if (gamepad2.yWasPressed()) {
-                if (spindexer.ball_to_intake != null) {
-                    spindexer.switch_to_holding_pattern();
-                } else {
-                    spindexer.switch_to_available_intake();
-                }
+                spindexer.switch_to_holding_pattern();
             }
 
             // Reset spindexer
@@ -267,6 +264,17 @@ public class Main extends LinearOpMode {
                 spindexer.ball_to_intake = null;
                 spindexer.ball_in_shooter = null;
                 spindexer.move_to_angle(0.0);
+            }
+
+            // Manually turn spindexer
+            if (gamepad2.dpad_up) {
+                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                hardware.spindexerMotor.setPower(0.5);
+            } else if (gamepad2.dpad_down) {
+                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                hardware.spindexerMotor.setPower(-0.5);
+            } else if (hardware.spindexerMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                hardware.spindexerMotor.setPower(0.0);
             }
 
             spindexer.update();
