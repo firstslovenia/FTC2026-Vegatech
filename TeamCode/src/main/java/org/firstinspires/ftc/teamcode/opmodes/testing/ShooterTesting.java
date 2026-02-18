@@ -35,13 +35,14 @@ public class ShooterTesting extends LinearOpMode {
 		while (opModeIsActive()) {
 			if (gamepad1.aWasPressed()) {
 				rpms_x100 += 1.0;
+                shooter.update_flywheel_rpm(rpms_x100 * 100.0);
 			}
 
 			if (gamepad1.bWasPressed()) {
 				rpms_x100 -= 1.0;
+                shooter.update_flywheel_rpm(rpms_x100 * 100.0);
 			}
 
-			shooter.update_flywheel_rpm(rpms_x100 * 100.0);
 			shooter.update();
 
 			if (Math.abs(shooter.wanted_flywheel_rpm - shooter.last_rpm_measurements.average().orElse(0.0)) > 100.0) {
@@ -54,13 +55,13 @@ public class ShooterTesting extends LinearOpMode {
 				ledIndicator.setPosition(LedIndicator.OFF_POSITION);
 			}
 
-			telemetry.addData("rpms x100", rpms_x100);
-			telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
+			telemetry.addData("Wanted RPMs", rpms_x100 * 100.0);
+			telemetry.addData("RPMs", shooter.last_rpm_measurements.average().orElse(0.0));
+            telemetry.addData("Past startup", shooter.past_startup ? 1 : 0);
 			telemetry.addData("Powah", hardware.shooterMotor.getPower());
 			telemetry.addData("Encoder pos", shooter.last_position_ticks.average().orElse(0.0));
 			telemetry.update();
 			telemetry.addData("power", rpms_x100);
-			telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
 
             /*iif (last.average().isPresent()) {
                 telemetry.addData("Last 50 loop avg", shooter.last_loops_took.average().get());

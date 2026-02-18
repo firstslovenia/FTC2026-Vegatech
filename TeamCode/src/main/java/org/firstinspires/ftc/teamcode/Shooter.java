@@ -84,11 +84,17 @@ public class Shooter {
 	}
 
 	public Shooter(OpMode callingOpMode, Hardware hardware) {
+
+        this.hardware = hardware;
+        this.callingOpMode = callingOpMode;
+
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherServo.setPosition(0.0);
 
         stable_power_pid_controller = new GenericPIDController(callingOpMode,  0.03, 0.0, 0.002, 0.0);
-        startup_pid_controller = new GenericPIDController(callingOpMode, 0.1, 0.0, 0.015, 0.0);
+        // 0.3 0.2 kinda ok?
+        // 0.3 0.25
+        startup_pid_controller = new GenericPIDController(callingOpMode, 0.2, 0.0, 0.14, 0.0);
 
         shooter_power_pid_controller = startup_pid_controller;
     }
@@ -177,7 +183,11 @@ public class Shooter {
         double rpm_error = wanted_flywheel_rpm - current_rpm;
 
         if (!past_startup) {
-            if (Math.abs(rpm_error) < SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE) {
+
+            // Note: a negative derivative of *the error* means we're getting closer to the desired value
+            boolean is_getting_closer = shooter_power_pid_controller.epsilon_derivative < 0.0;
+
+            if (Math.abs(rpm_error) < SHOOTER_RPM_STABLE_ERROR_RANGE && is_getting_closer) {
 
                 if (started_being_semi_stable_ms != 0) {
                     if (time_ms - started_being_semi_stable_ms > 200) {
@@ -228,7 +238,7 @@ public class Shooter {
 			last_position_ticks.push(position_ticks);
 		}
 
-		if (are_measurements_ok && wanted_flywheel_rpm != 0.0) {
+		if (are_measurements_ok && wanted_flywheel_rpm > 0.0) {
 			shooter_power_pid_controller.error = rpm_error / 1000.0;
 		}
 

@@ -42,6 +42,8 @@ public abstract class PIDController {
 
 	public double epsilon_integral = 0.0;
 
+    public double epsilon_derivative = 0.0;
+
 	public double previous_epsilon = 0.0;
 
 	public long previous_epsilon_time = 0;
@@ -84,10 +86,11 @@ public abstract class PIDController {
 	/// Runs the update loop, calling output with the calculated control value
 	public void update() {
 		update_integral();
+        epsilon_derivative = calculate_derivative().orElse(0.0);
 
 		double p = get_coefficient_p() * epsilon();
 		double i = get_coefficient_i() * epsilon_integral;
-		double d = get_coefficient_d() * calculate_derivative().orElse(0.0);
+		double d = get_coefficient_d() * epsilon_derivative;
 		double f = get_coefficient_f();
 
 		// Compensate for derivate jumping randomly (2 PI -> 0)

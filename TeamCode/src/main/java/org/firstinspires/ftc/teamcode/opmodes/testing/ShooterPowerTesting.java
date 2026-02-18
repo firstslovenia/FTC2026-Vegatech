@@ -76,6 +76,7 @@ public class ShooterPowerTesting extends LinearOpMode {
 
             telemetry.addData("Wanted RPMs", wanted_power_rpms);
             telemetry.addData("RPMs", shooter.last_rpm_measurements.average().orElse(0.0));
+            telemetry.addData("Past startup", shooter.past_startup ? 1 : 0);
 
             if (webcam.target_position != null) {
                 telemetry.addData("Distance [m]", webcam.target_position.tag_distance_m);
@@ -215,6 +216,12 @@ public class ShooterPowerTesting extends LinearOpMode {
                 wanted_power_rpms += 100.0;
             } else if (gamepad2.dpadDownWasPressed()) {
                 wanted_power_rpms -= 100.0;
+            }
+
+            if (gamepad2.dpadLeftWasPressed()) {
+                wanted_power_rpms -= 10.0;
+            } else if (gamepad2.dpadRightWasPressed()) {
+                wanted_power_rpms += 10.0;
             }
 
             // Enable / disable the shooter
