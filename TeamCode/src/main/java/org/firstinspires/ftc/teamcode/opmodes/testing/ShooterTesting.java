@@ -59,7 +59,7 @@ public class ShooterTesting extends LinearOpMode {
 			telemetry.addData("RPMs", shooter.last_rpm_measurements.average().orElse(0.0));
             telemetry.addData("Past startup", shooter.past_startup ? 1 : 0);
 			telemetry.addData("Powah", hardware.shooterMotor.getPower());
-			telemetry.addData("Encoder pos", shooter.last_position_ticks.average().orElse(0.0));
+			telemetry.addData("Encoder pos", shooter.last_position_ticks);
 			telemetry.update();
 			telemetry.addData("power", rpms_x100);
 

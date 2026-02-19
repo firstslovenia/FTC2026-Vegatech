@@ -13,6 +13,13 @@ public class SlidingWindow<T extends Number> {
 
 	int size;
 
+    /// An optional low pass filter value (filters out all values that are >=)
+    public Optional<T> low_pass = Optional.empty();
+
+
+    /// An optional high pass filter value (filters out all values that are <=)
+    public Optional<T> high_pass = Optional.empty();
+
 	/// Creates the window with the provided size and a starting value
 	public SlidingWindow(int window_size, T first_value) {
 		size = window_size;
@@ -26,6 +33,25 @@ public class SlidingWindow<T extends Number> {
 		values = new ArrayList<T>(window_size);
 	}
 
+    /// Creates the window with the provided size, starting value, and low and high pass values
+    public SlidingWindow(int window_size, T first_value, Optional<T> high_pass, Optional<T> low_pass) {
+        size = window_size;
+        this.high_pass = high_pass;
+        this.low_pass = low_pass;
+
+        values = new ArrayList<T>(window_size);
+        values.add(first_value);
+    }
+
+    /// Creates the window with the provided size and low and high pass values
+    public SlidingWindow(int window_size, Optional<T> high_pass, Optional<T> low_pass) {
+        size = window_size;
+        this.high_pass = high_pass;
+        this.low_pass = low_pass;
+
+        values = new ArrayList<T>(window_size);
+    }
+
 	/// Returned the number of elements pushed inside the window
 	public int length() {
 		return values.size();
@@ -33,6 +59,19 @@ public class SlidingWindow<T extends Number> {
 
 	/// Pushes an element to the end of the window
 	public void push(T element) {
+
+        if (low_pass.isPresent()) {
+            if (element.doubleValue() >= low_pass.get().doubleValue()) {
+                return;
+            }
+        }
+
+        if (high_pass.isPresent()) {
+            if (element.doubleValue() <= high_pass.get().doubleValue()) {
+                return;
+            }
+        }
+
 		if (length() == size) {
 			values.remove(0);
 		}

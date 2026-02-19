@@ -5,13 +5,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.generic.GenericPIDController;
 import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 
+import java.util.Optional;
+
 public class Shooter {
-
-	/// Nominal power to run the pusher at
-	public static double PUSHER_NOMINAL_POWER = 0.4;
-
-	/// Minimum power to actually do anything on the flywheel
-	public static double FLYWHEEL_FEED_FORWARD = 0.033;
 
 	/// How many encoder counts mean one revolution on the output axle
 	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (45.0 / 90.0);
@@ -61,16 +57,18 @@ public class Shooter {
     public boolean past_startup = false;
 
     /// When we started being in the semi-stable zone, so we know to switch PID regulators
-    public long started_being_semi_stable_ms = 0;
+    public long started_being_stable_ms = 0;
+
+    /// How long we wait while stable before handing off to the second PID regulator
+    public static long PID_HANDOFF_TIME_MS = 200;
 
 	/// The last flywheel encoder position we measured
-	public SlidingWindow<Integer> last_position_ticks = new SlidingWindow<>(10, 0);
+	public SlidingWindow<Integer> last_position_ticks = new SlidingWindow<>(1, 0);
 
 	/// When we measured last_position_ticks
-	public SlidingWindow<Long> last_position_time_ms = new SlidingWindow<>(10, 0L);
-
+	public SlidingWindow<Long> last_position_time_ms = new SlidingWindow<>(1, 0L);
 	/// Our last few rpm measurements - used to average the measurement out
-	public SlidingWindow<Double> last_rpm_measurements = new SlidingWindow<>(50, 0.0);
+	public SlidingWindow<Double> last_rpm_measurements = new SlidingWindow<>(5, 0.0, Optional.of(-6000.0), Optional.of(6000.0));
 
 	/// Calculates the distance we expect the shooter the hit for the given RPM
 	public static double rpm_to_distance_cm(double rpm) {
@@ -91,10 +89,8 @@ public class Shooter {
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherServo.setPosition(0.0);
 
-        stable_power_pid_controller = new GenericPIDController(callingOpMode,  0.03, 0.0, 0.002, 0.0);
-        // 0.3 0.2 kinda ok?
-        // 0.3 0.25
-        startup_pid_controller = new GenericPIDController(callingOpMode, 0.2, 0.0, 0.14, 0.0);
+        stable_power_pid_controller = new GenericPIDController(callingOpMode,  0.07, 0.0, 0.07, 0.0);
+        startup_pid_controller = new GenericPIDController(callingOpMode, 0.4, 0.0, 0.16, 0.0);
 
         shooter_power_pid_controller = startup_pid_controller;
     }
@@ -184,13 +180,10 @@ public class Shooter {
 
         if (!past_startup) {
 
-            // Note: a negative derivative of *the error* means we're getting closer to the desired value
-            boolean is_getting_closer = shooter_power_pid_controller.epsilon_derivative < 0.0;
+            if (Math.abs(rpm_error) < SHOOTER_RPM_STABLE_ERROR_RANGE) {
 
-            if (Math.abs(rpm_error) < SHOOTER_RPM_STABLE_ERROR_RANGE && is_getting_closer) {
-
-                if (started_being_semi_stable_ms != 0) {
-                    if (time_ms - started_being_semi_stable_ms > 200) {
+                if (started_being_stable_ms != 0) {
+                    if (time_ms - started_being_stable_ms >= PID_HANDOFF_TIME_MS) {
                         // Switch PID controllers
                         past_startup = true;
                         startup_pid_controller.reset();
@@ -200,12 +193,12 @@ public class Shooter {
                 }
 
                 else {
-                    started_being_semi_stable_ms = time_ms;
+                    started_being_stable_ms = time_ms;
                 }
 
             } else {
-                if (started_being_semi_stable_ms != 0) {
-                    started_being_semi_stable_ms = 0;
+                if (started_being_stable_ms != 0) {
+                    started_being_stable_ms = 0;
                 }
             }
         }
