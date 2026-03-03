@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Size;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -46,7 +47,7 @@ public class Webcam {
     public double real_x_distance_to_apriltag_m = 0.0;
     public double real_y_distance_to_apriltag_m = 0.0;
 
-	public Webcam(LinearOpMode callingOpMode, Hardware hardware) {
+	public Webcam(OpMode callingOpMode, Hardware hardware) {
 		aprilTag = new AprilTagProcessor.Builder()
 
 		// The following default settings are available to un-comment and edit as needed.

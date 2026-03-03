@@ -56,10 +56,10 @@ public class ShooterPowerTesting extends LinearOpMode {
         ledIndicator = new LedIndicator(this, hardware);
         led_position_to_set = LedIndicator.OFF_POSITION;
 
-        shooter = new Shooter(this, hardware);
-        shooter.reset_shooter_pusher();
-
         spindexer = new Spindexer(this, hardware);
+
+        shooter = new Shooter(this, hardware, spindexer);
+        shooter.reset_shooter_pusher();
 
         webcam = new Webcam(this, hardware);
 

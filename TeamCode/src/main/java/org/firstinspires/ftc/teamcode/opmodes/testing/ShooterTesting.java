@@ -28,7 +28,7 @@ public class ShooterTesting extends LinearOpMode {
 
 		ledIndicator = new LedIndicator(this, hardware);
 
-		shooter = new Shooter(this, hardware);
+		shooter = new Shooter(this, hardware, null);
 
 		waitForStart();
 

@@ -12,6 +12,8 @@ import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.Spindexer;
+import org.firstinspires.ftc.teamcode.Webcam;
 
 @Autonomous(name = "NO TOUCHIE!!", group = "Examples")
 public class ShootingAuto extends OpMode {
@@ -35,6 +37,10 @@ public class ShootingAuto extends OpMode {
 
     Hardware hardware;
     Shooter shooter;
+    Spindexer spindexer;
+    Webcam webcam;
+
+    int balls_scored = 0;
 
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
@@ -70,12 +76,18 @@ public class ShootingAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
                     setPathState(2);
-                    shooter.update_flywheel_rpm(3600.0);
+
+                    // TODO: insert the actual distance here
+                    shooter.update_rpm_for_distance_m(150.0);
                 }
                 break;
 
             // At score position, scoring
             case 2:
+
+                // Pretend we know the pattern
+
+
 
                 if (pathTimer.getElapsedTime() >= 5000) {
                     // TODO: update this to properly select balls
@@ -142,13 +154,16 @@ public class ShootingAuto extends OpMode {
         hardware = new Hardware(this);
         hardware.init();
 
-        shooter = new Shooter(this, hardware);
-        shooter.update_flywheel_rpm(0.0);
+        spindexer = new Spindexer(this, hardware);
+
+        shooter = new Shooter(this, hardware, null);
+        shooter.reset_shooter_pusher();
+
+        webcam = new Webcam(this, hardware);
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);
-
     }
 
     /**
@@ -166,6 +181,9 @@ public class ShootingAuto extends OpMode {
     public void start() {
         opmodeTimer.resetTimer();
         setPathState(0);
+
+        spindexer.init();
+        spindexer.start_survey();
     }
 
     /**

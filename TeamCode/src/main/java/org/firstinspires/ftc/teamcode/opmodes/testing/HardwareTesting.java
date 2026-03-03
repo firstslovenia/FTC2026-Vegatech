@@ -29,10 +29,10 @@ public class HardwareTesting extends LinearOpMode {
         hardware = new Hardware(this);
         hardware.init();
 
-        shooter = new Shooter(this, hardware);
-
         spindexer = new Spindexer(this, hardware);
         spindexer.init();
+
+        shooter = new Shooter(this, hardware, spindexer);
 
         waitForStart();
 

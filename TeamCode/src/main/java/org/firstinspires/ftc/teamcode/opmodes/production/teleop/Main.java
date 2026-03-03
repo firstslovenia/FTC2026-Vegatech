@@ -65,10 +65,10 @@ public class Main extends LinearOpMode {
 		ledIndicator = new LedIndicator(this, hardware);
 		led_position_to_set = LedIndicator.OFF_POSITION;
 
-		shooter = new Shooter(this, hardware);
-        shooter.reset_shooter_pusher();
-
         spindexer = new Spindexer(this, hardware);
+
+		shooter = new Shooter(this, hardware, spindexer);
+        shooter.reset_shooter_pusher();
 
 		webcam = new Webcam(this, hardware);
 
@@ -213,18 +213,21 @@ public class Main extends LinearOpMode {
                         shooter.update_rpm_for_distance_m(webcam.target_position.distance_m);
                     } else {
                         // Screw it
-                        shooter.update_flywheel_rpm(3600.0);
+                        shooter.update_flywheel_rpm(3000.0);
                     }
 				}
 			}
 
             // Fire balls
 			if (gamepad2.right_trigger > 0.1) {
-                shooter.fire();
 
-                if (spindexer.ball_in_shooter != null) {
-                    spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
-                    spindexer.ball_in_shooter = null;
+                if (shooter.is_ready_to_fire()) {
+                    shooter.fire();
+
+                    if (spindexer.ball_in_shooter != null) {
+                        spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
+                        spindexer.ball_in_shooter = null;
+                    }
                 }
 			}
 

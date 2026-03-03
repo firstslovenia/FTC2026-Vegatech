@@ -198,7 +198,7 @@ public class Spindexer {
         }
 
         // Mark the survey ball as empty
-        if (in_survey && stopped_being_busy_ms != null && (now_ms - stopped_being_busy_ms >= 100)) {
+        if (in_survey && stopped_being_busy_ms != null && (now_ms - stopped_being_busy_ms >= 50)) {
 
             // The motor is not busy, and we didn't trigger the intake, so there is no ball there
             if (ball_to_intake != null) {
