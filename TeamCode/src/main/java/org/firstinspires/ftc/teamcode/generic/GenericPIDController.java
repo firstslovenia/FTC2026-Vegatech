@@ -28,10 +28,11 @@ public class GenericPIDController extends PIDController {
 		this.f_coefficient = f;
 	}
 
-	double p_coefficient = 0.0;
-	double i_coefficient = 0.0;
-	double d_coefficient = 0.0;
-	double f_coefficient = 0.0;
+	public double p_coefficient = 0.0;
+	public double i_coefficient = 0.0;
+	public double d_coefficient = 0.0;
+	public double f_coefficient = 0.0;
+    public double i_zone_size = Double.MAX_VALUE;
 
 	/// Our proportional (k_p * e) coefficient
 	public double get_coefficient_p() {
@@ -52,6 +53,11 @@ public class GenericPIDController extends PIDController {
 	public double get_coefficient_f() {
 		return f_coefficient;
 	}
+
+    /// The range our error has to be in to contribute to the I coefficient
+    public double get_i_zone_size() {
+        return i_zone_size;
+    }
 
 	/// Our manually set epsilon / error value
 	public double error = 0.0;

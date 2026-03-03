@@ -67,7 +67,7 @@ public class ShooterPowerTesting extends LinearOpMode {
         drivetrain.resetStartingDirection();
 
         spindexer.init();
-        spindexer.switch_to_holding_pattern();
+        spindexer.start_survey();
 
         pedroFollower = Constants.createFollower(hardwareMap);
         pedroFollower.update();
@@ -76,6 +76,7 @@ public class ShooterPowerTesting extends LinearOpMode {
 
             telemetry.addData("Wanted RPMs", wanted_power_rpms);
             telemetry.addData("RPMs", shooter.last_rpm_measurements.average().orElse(0.0));
+            telemetry.addData("Motor PWR", shooter.flywheel_power);
             telemetry.addData("Past startup", shooter.past_startup ? 1 : 0);
 
             if (webcam.target_position != null) {
@@ -276,7 +277,6 @@ public class ShooterPowerTesting extends LinearOpMode {
             if (gamepad2.aWasPressed()) {
                 spindexer.start_survey();
             }
-
 
             // Reset spindexer
             if (gamepad2.bWasPressed()) {

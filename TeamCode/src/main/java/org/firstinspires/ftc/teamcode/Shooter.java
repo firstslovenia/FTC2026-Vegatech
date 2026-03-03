@@ -12,6 +12,9 @@ public class Shooter {
 	/// How many encoder counts mean one revolution on the output axle
 	static double TICKS_PER_REVOLUTION = 28.0 * 3.0 * (45.0 / 90.0);
 
+    /// A constant that gives a rough estimation of needed power / wanted RPM
+    static double POWER_PER_RPM_COEFF = 0.893 / 3000.0;
+
     /// How small the RPM error has to be to be in the perfect stable range
     public static double SHOOTER_RPM_STABLE_ERROR_RANGE = 50.0;
 
@@ -24,6 +27,9 @@ public class Shooter {
     ///  When we pushed the pusher upwards
     long enabled_pusher_time_ms = 0;
     public static double RESET_SHOOTER_PUSHER_TIME_MS = 300.0;
+
+    /// Baseline voltage to apply power for
+    public static double NOMINAL_VOLTAGE_V = 12.0;
 
 	OpMode callingOpMode;
 	Hardware hardware;
@@ -60,7 +66,7 @@ public class Shooter {
     public long started_being_stable_ms = 0;
 
     /// How long we wait while stable before handing off to the second PID regulator
-    public static long PID_HANDOFF_TIME_MS = 200;
+    public static long PID_HANDOFF_TIME_MS = 500;
 
 	/// The last flywheel encoder position we measured
 	public SlidingWindow<Integer> last_position_ticks = new SlidingWindow<>(1, 0);
@@ -89,7 +95,7 @@ public class Shooter {
 		hardware.shooterMotor.setPower(0.0);
 		hardware.shooterPusherServo.setPosition(0.0);
 
-        stable_power_pid_controller = new GenericPIDController(callingOpMode,  0.07, 0.0, 0.07, 0.0);
+        stable_power_pid_controller = new GenericPIDController(callingOpMode,  0.25, 0.0, 0.3, 0.0);
         startup_pid_controller = new GenericPIDController(callingOpMode, 0.4, 0.0, 0.16, 0.0);
 
         shooter_power_pid_controller = startup_pid_controller;
@@ -109,6 +115,13 @@ public class Shooter {
 		started_running_time_ms = 0;
 	}
 
+    /// Sets the flywheel to a given power level for the nominal voltage
+    public void set_flywheel_power(double power) {
+        flywheel_power = power;
+        double voltage_v = callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage();
+        hardware.shooterMotor.setPower(power * (NOMINAL_VOLTAGE_V / voltage_v));
+    }
+
     public void update_rpm_for_distance_m(double distance_m) {
         update_flywheel_rpm(distance_cm_to_rpm(distance_m * 100.0));
         shooting_distance_m = distance_m;
@@ -122,8 +135,7 @@ public class Shooter {
 
             if (wanted_flywheel_rpm > 1500) {
                 // Preemtively, so the PID is faster
-                flywheel_power = 0.4;
-                hardware.shooterMotor.setPower(0.4);
+                set_flywheel_power(POWER_PER_RPM_COEFF * flywheel_rpm);
             }
 
             startup_pid_controller.reset();
@@ -253,7 +265,7 @@ public class Shooter {
 		}
 
 		if (!dry_run) {
-			hardware.shooterMotor.setPower(flywheel_power);
+            set_flywheel_power(flywheel_power);
 		}
 	}
 }

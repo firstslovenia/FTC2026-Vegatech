@@ -40,6 +40,9 @@ public abstract class PIDController {
 	/// Our feed-forward (+ k_f) coefficient
 	public abstract double get_coefficient_f();
 
+    /// The range our error has to be in to contribute to the I coefficient
+    public abstract double get_i_zone_size();
+
 	public double epsilon_integral = 0.0;
 
     public double epsilon_derivative = 0.0;
@@ -61,8 +64,14 @@ public abstract class PIDController {
 			return;
 		}
 
+        double epsilon = epsilon();
 		double delta_time = (System.currentTimeMillis() - previous_epsilon_time) / 1000.0;
-		epsilon_integral += delta_time * epsilon();
+
+        if (Math.abs(epsilon) > get_i_zone_size()) {
+            return;
+        }
+
+		epsilon_integral += epsilon * delta_time;
 	}
 
 	/// Calculates d epsilon / dt, if we have the previous value
