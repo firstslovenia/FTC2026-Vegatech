@@ -77,7 +77,10 @@ public class Hardware {
 
 		shooterPusherServo = callingOpMode.hardwareMap.get(Servo.class, "shooterPusherServo");
         shooterPusherServo.setDirection(Servo.Direction.REVERSE);
-        shooterPusherServo.scaleRange(0.4, 0.75);
+        // towards 0 -> more up
+        // towards 1 -> more down
+        // This range doesn't seem to obey the reversed direction
+        shooterPusherServo.scaleRange(0.5, 1.0);
 
         intakeMotor = callingOpMode.hardwareMap.get(DcMotor.class, "intakeMotor");
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);

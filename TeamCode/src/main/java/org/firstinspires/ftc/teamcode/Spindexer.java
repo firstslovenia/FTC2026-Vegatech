@@ -47,7 +47,14 @@ public class Spindexer {
     /// The index of the ball we're rotated to intake, if any
     public Integer ball_to_intake = null;
 
-    public Long started_being_busy_ms = null;
+    /// Set to true when we're spinning the entire spindexer around to see which balls we have
+    public boolean in_survey = false;
+
+    /// What time in millis the motor arrived at the correct position
+    public Long stopped_being_busy_ms = null;
+
+    /// Whether or not we were busy in the last loop, used to set stopped_being_busy_ms
+    boolean last_was_busy = false;
 
     public Spindexer(OpMode callingOpMode, Hardware hardware) {
         //hardware.spindexerMotor.setTargetPosition(calculate_nearest_zero_angle_position_for(hardware.spindexerMotor.getCurrentPosition()));
@@ -85,17 +92,7 @@ public class Spindexer {
         }
 
         if (ball_to_intake != null) {
-            switch (ball_to_intake) {
-                case 0:
-                    move_to_angle(ANGLE_INTAKE_BALL_0);
-                    break;
-                case 1:
-                    move_to_angle(ANGLE_INTAKE_BALL_1);
-                    break;
-                case 2:
-                    move_to_angle(ANGLE_INTAKE_BALL_2);
-                    break;
-            }
+            move_to_intake_for(ball_to_intake);
         }
     }
 
@@ -117,17 +114,7 @@ public class Spindexer {
         }
 
         if (ball_in_shooter != null) {
-            switch (ball_in_shooter) {
-                case 0:
-                    move_to_angle(ANGLE_SHOOT_BALL_0);
-                    break;
-                case 1:
-                    move_to_angle(ANGLE_SHOOT_BALL_1);
-                    break;
-                case 2:
-                    move_to_angle(ANGLE_SHOOT_BALL_2);
-                    break;
-            }
+            move_to_shoot_for(ball_in_shooter);
         }
     }
 
@@ -172,15 +159,10 @@ public class Spindexer {
     public void update() {
 
         long now_ms = System.currentTimeMillis();
-
-        if (started_being_busy_ms != null && now_ms - started_being_busy_ms > 100) {
-            if (!is_motor_busy()) {
-                started_being_busy_ms = null;
-            }
-        }
+        boolean is_busy = is_motor_busy();
 
         // Finish intake, if applicable
-        if (ball_to_intake != null && started_being_busy_ms == null) {
+        if (ball_to_intake != null && !is_motor_busy()) {
 
             NormalizedRGBA output = hardware.colorSensor.getNormalizedColors();
             double distance_cm = hardware.colorSensor.getDistance(DistanceUnit.CM);
@@ -191,18 +173,50 @@ public class Spindexer {
             double koeff_gb = output.blue / output.green;
             double gb_off = Math.abs(koeff_gb - 1.0);
 
+            BallColor ball_color = BallColor.None;
+
             // Do some magic to check if we got something that seems like the right color
             if (rg_off > 0.5 && koeff_gb > 0.5 && output.green > output.red && output.blue > output.red && distance_cm < 7.0) {
-                balls[ball_to_intake] = BallColor.Green;
-                ball_to_intake = null;
-                switch_to_holding_pattern();
+                ball_color = BallColor.Green;
 
             } else if (koeff_gb > 1.25 && rg_off < 0.3 && distance_cm < 7.0) {
-                balls[ball_to_intake] = BallColor.Purple;
-                ball_to_intake = null;
-                switch_to_holding_pattern();
+                ball_color = BallColor.Purple;
+            }
+
+            if (ball_color != BallColor.None) {
+
+                if (in_survey) {
+                    mark_survey_ball(ball_color);
+                }
+
+                else {
+                    balls[ball_to_intake] = ball_color;
+                    ball_to_intake = null;
+                    switch_to_holding_pattern();
+                }
             }
         }
+
+        // Mark the survey ball as empty
+        if (in_survey && stopped_being_busy_ms != null && (now_ms - stopped_being_busy_ms >= 100)) {
+
+            // The motor is not busy, and we didn't trigger the intake, so there is no ball there
+            if (ball_to_intake != null) {
+                mark_survey_ball(BallColor.None);
+            } else {
+                move_to_intake_for(0);
+            }
+        }
+
+        if (stopped_being_busy_ms == null && !is_busy && last_was_busy) {
+            stopped_being_busy_ms = now_ms;
+        }
+
+        if (is_busy) {
+            stopped_being_busy_ms = null;
+        }
+
+        last_was_busy = is_busy;
 
         callingOpMode.telemetry.addData("Spindexer b0", balls[0]);
         callingOpMode.telemetry.addData("Spindexer b1", balls[1]);
@@ -214,6 +228,32 @@ public class Spindexer {
 
         if (ball_to_intake != null) {
             callingOpMode.telemetry.addData("Intaking ball", ball_to_intake);
+        }
+
+        if (in_survey) {
+            callingOpMode.telemetry.addLine("Surveying balls we have");
+        }
+    }
+
+    /// Tells the spindexer to start surveying which balls we have
+    public void start_survey() {
+        in_survey = true;
+        move_to_intake_for(0);
+    }
+
+    /// Marks the current ball we're surveying as a specific color and moves on to the next one
+    void mark_survey_ball(BallColor color) {
+        if (in_survey && ball_to_intake != null) {
+
+            balls[ball_to_intake] = color;
+
+            if (ball_to_intake == 2) {
+                in_survey = false;
+                ball_to_intake = null;
+                switch_to_holding_pattern();
+            } else {
+                move_to_intake_for(ball_to_intake + 1);
+            }
         }
     }
 
@@ -228,12 +268,43 @@ public class Spindexer {
         if (Math.abs(target_angle() - angle_rads) > Math.PI / 180.0) {
             int encoder_pos = hardware.spindexerMotor.getCurrentPosition();
             hardware.spindexerMotor.setTargetPosition(calculate_nearest_position_at_angle(encoder_pos, angle_rads));
-
-            started_being_busy_ms = System.currentTimeMillis();
+            stopped_being_busy_ms = null;
         }
 
         hardware.spindexerMotor.setPower(1.0);
         hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+    public void move_to_shoot_for(int ball) {
+        ball_in_shooter = ball;
+
+        switch (ball_in_shooter) {
+                case 0:
+                    move_to_angle(ANGLE_SHOOT_BALL_0);
+                    break;
+                case 1:
+                    move_to_angle(ANGLE_SHOOT_BALL_1);
+                    break;
+                case 2:
+                    move_to_angle(ANGLE_SHOOT_BALL_2);
+                    break;
+            }
+    }
+
+    public void move_to_intake_for(int ball) {
+        ball_to_intake = ball;
+
+        switch (ball_to_intake) {
+            case 0:
+                move_to_angle(ANGLE_INTAKE_BALL_0);
+                break;
+            case 1:
+                move_to_angle(ANGLE_INTAKE_BALL_1);
+                break;
+            case 2:
+                move_to_angle(ANGLE_INTAKE_BALL_2);
+                break;
+        }
     }
 
     public double current_angle() {

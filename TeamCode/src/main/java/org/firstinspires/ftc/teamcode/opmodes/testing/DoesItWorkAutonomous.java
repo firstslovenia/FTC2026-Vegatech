@@ -6,6 +6,8 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
 import org.firstinspires.ftc.teamcode.Constants;
 
 @Autonomous(name = "\"Does It Work\" Autonomous", group = "Testing")
@@ -20,17 +22,22 @@ public class DoesItWorkAutonomous extends OpMode {
 		follower.setStartingPose(new Pose(0.0, 0.0, Math.PI / 2.0));
 
 		paths = new Paths(follower); // Build paths
+        autonomousPathUpdate();
 	}
 
 	@Override
 	public void loop() {
 		follower.update(); // Update Pedro Pathing
-		autonomousPathUpdate(); // Update autonomous state machine
+
+        if (!follower.isBusy()) {
+            autonomousPathUpdate();
+        }
 
 		telemetry.addData("Path State", pathState);
 		telemetry.addData("X", follower.getPose().getX());
 		telemetry.addData("Y", follower.getPose().getY());
 		telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.addData("Front Left power", hardwareMap.get(DcMotor.class, "frontLeftMotor").getPower());
 		telemetry.update();
 	}
 
@@ -46,7 +53,7 @@ public class DoesItWorkAutonomous extends OpMode {
 				)
 				.setLinearHeadingInterpolation(Math.PI / 2.0, Math.PI / 2.0)
 				.build();
-		}
+        }
 	}
 
 	public int autonomousPathUpdate() {

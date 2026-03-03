@@ -90,43 +90,34 @@ public class ShooterPowerTesting extends LinearOpMode {
 
             led_position_to_set = LedIndicator.OFF_POSITION;
 
-            // If spindexer is on, update LED
-            if (spindexer.ball_to_intake != null) {
-                led_position_to_set = LedIndicator.VIOLET_POSITION;
-            }
-
-            if (spindexer.ball_in_shooter != null) {
-                BallColor color = spindexer.balls[spindexer.ball_in_shooter];
-
-                if (color == BallColor.Green) {
-                    led_position_to_set = LedIndicator.GREEN_POSITION;
-                } else if (color == BallColor.Purple) {
-                    led_position_to_set = LedIndicator.INDIGO_POSITION;
-                } else {
-                    led_position_to_set = LedIndicator.ORANGE_POSITION;
-                }
-            }
-
             // If shooter is on, update LED
             if (shooter.flywheel_enabled) {
 
                 double rpm_error = shooter.get_rpm_error();
 
                 if (Double.isNaN(shooter.shooting_distance_m)) {
-                    if (rpm_error > Shooter.SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE) {
+                    if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
                         led_position_to_set = LedIndicator.ORANGE_POSITION;
-                    } else if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
-                        led_position_to_set = LedIndicator.BLUE_POSITION;
                     } else {
-                        led_position_to_set = LedIndicator.INDIGO_POSITION;
+                        led_position_to_set = LedIndicator.YELLOW_POSITION;
                     }
                 } else {
-                    if (rpm_error > Shooter.SHOOTER_RPM_SEMI_STABLE_ERROR_RANGE) {
+                    if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
                         led_position_to_set = LedIndicator.RED_POSITION;
-                    } else if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
-                        led_position_to_set = LedIndicator.YELLOW_POSITION;
                     } else {
-                        led_position_to_set = LedIndicator.GREEN_POSITION;
+                        if (spindexer.ball_in_shooter != null) {
+                            BallColor color = spindexer.balls[spindexer.ball_in_shooter];
+
+                            if (color == BallColor.Green) {
+                                led_position_to_set = LedIndicator.GREEN_POSITION;
+                            } else if (color == BallColor.Purple) {
+                                led_position_to_set = LedIndicator.INDIGO_POSITION;
+                            } else {
+                                led_position_to_set = LedIndicator.ORANGE_POSITION;
+                            }
+                        } else {
+                            led_position_to_set = LedIndicator.LIGHT_GREEN_POSITION;
+                        }
                     }
 
                     telemetry.addData("Shooter distance (cm)", shooter.shooting_distance_m * 100.0);
@@ -197,7 +188,7 @@ public class ShooterPowerTesting extends LinearOpMode {
                     drivetrain.wanted_heading = wanted_heading_for_target;
                     led_position_to_set = LedIndicator.GREEN_POSITION;
                 } else {
-                    led_position_to_set = LedIndicator.YELLOW_POSITION;
+                    led_position_to_set = LedIndicator.RED_POSITION;
                 }
             }
             else {
@@ -280,6 +271,12 @@ public class ShooterPowerTesting extends LinearOpMode {
                     spindexer.switch_to_available_intake();
                 }
             }
+
+            // Run spindexer survey
+            if (gamepad2.aWasPressed()) {
+                spindexer.start_survey();
+            }
+
 
             // Reset spindexer
             if (gamepad2.bWasPressed()) {
