@@ -247,6 +247,15 @@ public class ShooterPowerTesting extends LinearOpMode {
                 }
             }
 
+            if (gamepad2.left_trigger > 0.1) {
+                shooter.fire();
+
+                if (spindexer.ball_in_shooter != null) {
+                    spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
+                    spindexer.ball_in_shooter = null;
+                }
+            }
+
             shooter.update();
 
             // Select spindexer ball

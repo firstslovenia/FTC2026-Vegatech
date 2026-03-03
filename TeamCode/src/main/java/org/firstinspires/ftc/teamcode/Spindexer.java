@@ -198,7 +198,7 @@ public class Spindexer {
         }
 
         // Mark the survey ball as empty
-        if (in_survey && stopped_being_busy_ms != null && (now_ms - stopped_being_busy_ms >= 50)) {
+        if (in_survey && stopped_being_busy_ms != null && (now_ms - stopped_being_busy_ms >= 200)) {
 
             // The motor is not busy, and we didn't trigger the intake, so there is no ball there
             if (ball_to_intake != null) {
@@ -257,11 +257,16 @@ public class Spindexer {
         }
     }
 
+    /// Returns whether the spindexer can physically move without damaging stuff
+    public boolean can_move() {
+        return hardware.shooterPusherServo.getPosition() <= 0.3;
+    }
+
     /// Tells the spindexer to move to the set angle
     public void move_to_angle(double angle_rads) {
 
         // Do NOT move!
-        if (hardware.shooterPusherServo.getPosition() > 0.3) {
+        if (!can_move()) {
             return;
         }
 

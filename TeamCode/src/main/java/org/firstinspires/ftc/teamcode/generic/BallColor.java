@@ -4,5 +4,16 @@ public enum BallColor {
     Purple,
     Green,
     ///  No ball is loaded into the spindexer currently
-    None
+    None;
+
+    public BallColor other() {
+        switch (this) {
+            case Purple:
+                return Green;
+            case Green:
+                return Purple;
+            default:
+                return None;
+        }
+    }
 }

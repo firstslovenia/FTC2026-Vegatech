@@ -220,7 +220,6 @@ public class Main extends LinearOpMode {
 
             // Fire balls
 			if (gamepad2.right_trigger > 0.1) {
-
                 if (shooter.is_ready_to_fire()) {
                     shooter.fire();
 
@@ -230,6 +229,15 @@ public class Main extends LinearOpMode {
                     }
                 }
 			}
+
+            if (gamepad2.left_trigger > 0.1) {
+                shooter.fire();
+
+                if (spindexer.ball_in_shooter != null) {
+                    spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
+                    spindexer.ball_in_shooter = null;
+                }
+            }
 
             shooter.update();
 
