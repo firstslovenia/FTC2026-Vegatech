@@ -46,8 +46,12 @@ public class Spindexer {
 
     /// The index of the ball we're rotated to shoot, if any
     public Integer ball_in_shooter = null;
+
     /// The index of the ball we're rotated to intake, if any
     public Integer ball_to_intake = null;
+
+    /// The index of the ball we're double checking, if any
+    public Integer ball_to_check = null;
 
     /// Set to true when we're spinning the entire spindexer around to see which balls we have
     public boolean in_survey = false;
@@ -164,7 +168,7 @@ public class Spindexer {
         boolean is_busy = is_motor_busy();
 
         // Finish intake, if applicable
-        if (ball_to_intake != null && !is_motor_busy()) {
+        if ((ball_to_intake != null || ball_to_check != null) && !is_motor_busy()) {
 
             NormalizedRGBA output = hardware.colorSensor.getNormalizedColors();
             double distance_cm = hardware.colorSensor.getDistance(DistanceUnit.CM);
@@ -191,7 +195,11 @@ public class Spindexer {
                     mark_survey_ball(ball_color);
                 }
 
-                else {
+                else if (ball_to_check != null) {
+                    mark_ball_to_check(ball_color);
+                }
+
+                else if (ball_to_intake != null) {
                     balls[ball_to_intake] = ball_color;
                     ball_to_intake = null;
                     switch_to_holding_pattern();
@@ -199,14 +207,21 @@ public class Spindexer {
             }
         }
 
-        // Mark the survey ball as empty
-        if (in_survey && stopped_being_busy_ms != null && (now_ms - stopped_being_busy_ms >= 200)) {
+        // Mark the survey or check ball as empty
+        if (stopped_being_busy_ms != null && (now_ms - stopped_being_busy_ms >= 200)) {
 
-            // The motor is not busy, and we didn't trigger the intake, so there is no ball there
-            if (ball_to_intake != null) {
-                mark_survey_ball(BallColor.None);
-            } else {
-                move_to_intake_for(0);
+            if (in_survey) {
+                // The motor is not busy, and we didn't trigger the intake, so there is no ball there
+                if (ball_to_intake != null) {
+                    mark_survey_ball(BallColor.None);
+                } else {
+                    move_to_intake_for(0);
+                }
+            }
+
+            else if (ball_to_check != null) {
+                // The motor is not busy, and we didn't trigger the intake, so there is no ball there
+               mark_ball_to_check(BallColor.None);
             }
         }
 
@@ -230,6 +245,10 @@ public class Spindexer {
 
         if (ball_to_intake != null) {
             callingOpMode.telemetry.addData("Intaking ball", ball_to_intake);
+        }
+
+        if (ball_to_check != null) {
+            callingOpMode.telemetry.addData("Checking ball", ball_to_check);
         }
 
         if (in_survey) {
@@ -256,6 +275,25 @@ public class Spindexer {
             } else {
                 move_to_intake_for(ball_to_intake + 1);
             }
+        }
+    }
+
+    /// Checks a ball to see it's color
+    public void check_ball(int ball) {
+
+        move_to_intake_for(ball);
+
+        ball_to_intake = null;
+        ball_in_shooter = null;
+        ball_to_check = ball;
+    }
+
+    /// Marks the current ball we're checking as a specific color
+    void mark_ball_to_check(BallColor color) {
+        if (ball_to_check != null) {
+            balls[ball_to_check] = color;
+            ball_to_check = null;
+            switch_to_holding_pattern();
         }
     }
 

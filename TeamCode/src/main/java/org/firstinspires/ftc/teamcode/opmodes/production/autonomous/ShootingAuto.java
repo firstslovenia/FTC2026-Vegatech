@@ -153,7 +153,7 @@ public class ShootingAuto extends OpMode {
 
                 long now = System.currentTimeMillis();
 
-                if (spindexer.in_survey || !spindexer.can_move()) {
+                if (spindexer.in_survey || !spindexer.can_move() || spindexer.ball_to_check != null) {
                     return;
                 }
 
@@ -173,6 +173,7 @@ public class ShootingAuto extends OpMode {
                    shooter.fire();
 
                    spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
+                   spindexer.check_ball(spindexer.ball_in_shooter);
                    spindexer.ball_in_shooter = null;
 
                    balls_scored += 1;
