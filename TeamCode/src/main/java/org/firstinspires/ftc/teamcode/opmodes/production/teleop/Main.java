@@ -84,6 +84,8 @@ public class Main extends LinearOpMode {
 
 		while (opModeIsActive()) {
 
+            telemetry.addData("order", webcam.order);
+
             long now = System.currentTimeMillis();
 
             boolean do_long_loop = (now - last_long_loop_ms) >= LONG_LOOP_DELAY_MS;

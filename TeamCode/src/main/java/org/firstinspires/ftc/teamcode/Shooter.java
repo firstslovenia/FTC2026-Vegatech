@@ -26,7 +26,7 @@ public class Shooter {
 
     ///  When we pushed the pusher upwards
     long enabled_pusher_time_ms = 0;
-    public static double RESET_SHOOTER_PUSHER_TIME_MS = 300.0;
+    public static double RESET_SHOOTER_PUSHER_TIME_MS = 400.0;
 
     /// Baseline voltage to apply power for
     public static double NOMINAL_VOLTAGE_V = 12.0;
@@ -70,7 +70,7 @@ public class Shooter {
     public static long PID_HANDOFF_TIME_MS = 500;
 
     /// How long we have to be stable for to shoot
-    public static long STABLE_SHOOTING_TIME_MS = 500;
+    public static long STABLE_SHOOTING_TIME_MS = 300;
 
     /// The last flywheel encoder position we measured
     public SlidingWindow<Integer> last_position_ticks = new SlidingWindow<>(1, 0);
@@ -122,9 +122,14 @@ public class Shooter {
 
     /// Sets the flywheel to a given power level for the nominal voltage
     public void set_flywheel_power(double power) {
-        flywheel_power = power;
         double voltage_v = callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage();
-        hardware.shooterMotor.setPower(power * (NOMINAL_VOLTAGE_V / voltage_v));
+        double voltage_coeff = NOMINAL_VOLTAGE_V / voltage_v;
+
+        double compensated_power = power * voltage_coeff;
+        compensated_power = Math.min(Math.max(compensated_power, -1.0), 1.0);
+        flywheel_power = compensated_power / voltage_coeff;
+
+        hardware.shooterMotor.setPower(compensated_power);
     }
 
     public void update_rpm_for_distance_m(double distance_m) {
@@ -183,10 +188,9 @@ public class Shooter {
 
         boolean flywheel_ready = flywheel_enabled && Math.abs(get_rpm_error()) < SHOOTER_RPM_STABLE_ERROR_RANGE;
         boolean flywheel_stable = started_being_stable_ms != 0 && System.currentTimeMillis() - started_being_stable_ms > STABLE_SHOOTING_TIME_MS;
-        boolean shooter_pusher_not_up = enabled_pusher_time_ms == 0 && hardware.shooterPusherServo.getPosition() < 0.01;
-        boolean spindexer_not_busy = !spindexer.is_motor_busy();
+        boolean spindexer_not_busy = !spindexer.is_motor_busy() && spindexer.can_move();
 
-        return flywheel_ready && flywheel_stable && shooter_pusher_not_up && spindexer_not_busy;
+        return flywheel_ready && flywheel_stable && spindexer_not_busy;
     }
 
     /// Re-measures RPM and runs PID updates
@@ -266,9 +270,6 @@ public class Shooter {
         }
 
         flywheel_power = flywheel_power + (delta_shooter_power * 36.0 / 1000.0);
-        flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
-
-        flywheel_power = Math.min(Math.max(flywheel_power, -1.0), 1.0);
 
         if (flywheel_power > 0.0 && started_running_time_ms == 0) {
             started_running_time_ms = time_ms;

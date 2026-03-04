@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Thread.sleep;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -64,14 +66,14 @@ public class Spindexer {
     }
 
     public void init() {
-
         hardware.shooterPusherServo.setPosition(0.0);
-
-        hardware.spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
         ex.setTargetPositionTolerance(PID_TOLERANCE);
         ex.setPositionPIDFCoefficients(8.0);
+
+        hardware.spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hardware.spindexerMotor.setTargetPosition(0);
     }
 
     /// Moves to the next available ball spot we can intake into.

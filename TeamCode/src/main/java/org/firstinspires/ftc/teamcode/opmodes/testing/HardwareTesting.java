@@ -24,7 +24,7 @@ public class HardwareTesting extends LinearOpMode {
     HardwareComponent component = HardwareComponent.frontLeftMotor;
 
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
 
         hardware = new Hardware(this);
         hardware.init();

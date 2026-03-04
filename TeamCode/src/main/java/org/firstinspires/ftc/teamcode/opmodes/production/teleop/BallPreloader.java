@@ -27,7 +27,7 @@ public class BallPreloader extends LinearOpMode {
     boolean intake_enabled = false;
 
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
 
         hardware = new Hardware(this);
         hardware.init();
