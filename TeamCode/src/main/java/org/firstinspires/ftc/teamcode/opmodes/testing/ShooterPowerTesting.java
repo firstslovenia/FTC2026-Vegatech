@@ -312,10 +312,10 @@ public class ShooterPowerTesting extends LinearOpMode {
                 telemetry.addData("Target distance (m)", webcam.target_position.distance_m);
                 telemetry.addData("Target ideal angle", Math.toDegrees(webcam.target_position.ideal_angle_to_target));
                 telemetry.addData("Target to turn", Math.toDegrees(webcam.target_position.angle_distance_rads));
+            }
 
-                if (webcam.last_detections.toArray().length != 0) {
-                    telemetry.addData("Camera pitch", Math.toDegrees(webcam.last_detections.iterator().next().ftcPose.pitch));
-                }
+            if (webcam.last_detections.toArray().length != 0) {
+                telemetry.addData("Camera pitch", Math.toDegrees(webcam.last_detections.iterator().next().ftcPose.pitch));
             }
 
             if (do_long_loop) {

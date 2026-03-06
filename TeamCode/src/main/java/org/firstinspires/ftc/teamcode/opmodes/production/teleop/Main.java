@@ -190,7 +190,7 @@ public class Main extends LinearOpMode {
             }
 
             // Rotate towards a target we see
-            if (gamepad1.y) {
+            if (gamepad1.y || gamepad1.right_bumper) {
 
                 if (do_long_loop) {
                     webcam.update();
