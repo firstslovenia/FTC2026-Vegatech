@@ -10,11 +10,13 @@ public class BlueAutoNearGoal extends ShootingAuto {
         super();
 
         final Pose start_pose = new Pose(24.3, 130, Math.toRadians(144));
-        final Pose shoot_pose = new Pose(56.6, 106, Math.toRadians(144));
-        final Pose end_pose = new Pose(56.6, 60, Math.toRadians(180));
+        final Pose shoot_pose = new Pose(60.0, 95.0, Math.toRadians(0));
+        final Pose end_pose = new Pose(48.0, 60.0, Math.toRadians(180));
 
         startPose = start_pose;
         shootPose = shoot_pose;
         endPose = end_pose;
+        goalPose = blueGoalPose;
+        ballPickupXOffset = ballPickupXOffsetBlue;
     }
 }

@@ -46,7 +46,8 @@ public class Constants {
 		.leftEncoder_HardwareMapName("frontLeftMotor")
 		.rightEncoder_HardwareMapName("backRightMotor")
 		.strafeEncoder_HardwareMapName("backLeftMotor")
-		.leftEncoderDirection(Encoder.REVERSE)
+            // Apparently ok?
+		 //.leftEncoderDirection(Encoder.REVERSE)
 		.rightEncoderDirection(Encoder.REVERSE)
 		.strafeEncoderDirection(Encoder.REVERSE)
 		.IMU_HardwareMapName("imu")

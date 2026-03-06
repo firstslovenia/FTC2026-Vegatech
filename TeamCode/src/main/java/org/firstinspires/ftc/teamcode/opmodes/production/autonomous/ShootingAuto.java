@@ -32,16 +32,27 @@ public class ShootingAuto extends OpMode {
     public Pose lookAtObeliskPose;
     public Pose shootPose;
     public Pose endPose;
+    public Pose pickupPose;
 
     public Pose goalPose;
+
+    public double ballPickupXOffsetRed = 30.0;
+    public double ballPickupXOffsetBlue = -30.0;
+
+    /// X offset to apply to final position to pickup balls
+    public double ballPickupXOffset = ballPickupXOffsetRed;
 
     // The plus here adds the range to the actual board of the goal
     // instead of its center.
     //
     // We add that because the pose we're calculating with is the center of the robot
     // and not the shooter front.
-    public Pose blueGoalPose = new Pose(12.0, 137.0);
-    public Pose redGoalPose = new Pose(132.0, 137.0);
+    public Pose blueGoalPose = new Pose(8.0, 135.0);
+    public Pose redGoalPose = new Pose(136.0, 135.0);
+
+    // Target poses for far autonomous modes
+    public Pose blueGoalFarPose = new Pose(15.0, 136.0);
+    public Pose redGoalFarPose = new Pose(129.0, 136.0);
 
     public Pose obeliskPose = new Pose(72.0, 144.0);
 
@@ -53,6 +64,8 @@ public class ShootingAuto extends OpMode {
     private Path move_to_shoot;
 
     private Path rotate_to_correct_heading;
+
+    private Path move_to_pickup;
     private PathChain end;
 
     Hardware hardware;
@@ -83,7 +96,7 @@ public class ShootingAuto extends OpMode {
         shootPose = shootPose.setHeading(angle);
 
         // the added factor here is to slightly compensate for the distance being from the center of the robot and not the shooter
-        double shooting_distance_in = Math.sqrt(shooting_delta_x * shooting_delta_x + shooting_delta_y + shooting_delta_y) - 7.2;
+        double shooting_distance_in = Math.sqrt(shooting_delta_x * shooting_delta_x + shooting_delta_y * shooting_delta_y) - 7.2;
         shooting_distance_m = shooting_distance_in / 39.37;
 
         // Pedropathing doesn't work if it has no work to do
@@ -95,12 +108,18 @@ public class ShootingAuto extends OpMode {
 
         lookAtObeliskPose = lookAtObeliskPose.setHeading(obelisk_angle);
 
+        // Calculate pickup pose
+        pickupPose = endPose.withX(endPose.getX() + ballPickupXOffset);
+
         // -- actually build paths
         move_to_look_at_obelisk = new Path(new BezierLine(startPose, lookAtObeliskPose));
         move_to_look_at_obelisk.setConstantHeadingInterpolation(lookAtObeliskPose.getHeading());
 
         move_to_shoot = new Path(new BezierLine(lookAtObeliskPose, shootPose));
         move_to_shoot.setConstantHeadingInterpolation(shootPose.getHeading());
+
+        move_to_pickup = new Path(new BezierLine(endPose, pickupPose));
+        move_to_pickup.setConstantHeadingInterpolation(pickupPose.getHeading());
 
         end = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, endPose))
@@ -182,7 +201,9 @@ public class ShootingAuto extends OpMode {
                 // After 24s in the opmode, stop trying to score
                 if ((balls_scored >= 3 && now - last_shot_time_ms > 1000) || opmodeTimer.getElapsedTime() >= 24000) {
                     shooter.update_flywheel_rpm(0.0);
+
                     spindexer.switch_to_holding_pattern();
+                    spindexer.move_to_angle(0.0);
 
                     follower.followPath(end, true);
                     setPathState(5);
@@ -192,12 +213,42 @@ public class ShootingAuto extends OpMode {
             // Going to the end position
             case 5:
                 if (!follower.isBusy()) {
+
+                    if (opmodeTimer.getElapsedTime() >= 26000) {
+                        setPathState(7);
+                    }
+
+                    // Try in to intake before
+                    spindexer.switch_to_holding_pattern();
+
+                    if (spindexer.ball_to_intake == null) {
+                        setPathState(7);
+                    }
+
+                    hardware.intakeMotor.setPower(1.0);
+                    follower.followPath(move_to_pickup);
                     setPathState(6);
                 }
                 break;
 
-            // Finished
+            // Try to pickup balls
             case 6:
+
+                if (opmodeTimer.getElapsedTime() >= 27000) {
+                    setPathState(7);
+                }
+
+                break;
+
+            // Finished
+            case 7:
+
+                follower.breakFollowing();
+
+                hardware.intakeMotor.setPower(0.0);
+
+                spindexer.switch_to_holding_pattern();
+                spindexer.move_to_angle(0.0);
                 break;
         }
     }
@@ -224,6 +275,9 @@ public class ShootingAuto extends OpMode {
         spindexer.update();
 
         // Feedback to Driver Hub for debugging
+        telemetry.addData("shoot dist [cm]", shooting_distance_m);
+        telemetry.addData("shooter is ready", shooter.is_ready_to_fire());
+        telemetry.addData("shooter RPM delta", shooter.get_rpm_error());
         telemetry.addData("path state", pathState);
         telemetry.addData("balls shot", balls_scored);
         telemetry.addData("spx can move", spindexer.can_move());

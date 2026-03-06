@@ -8,12 +8,14 @@ public class RedAutoBottomTriangle extends ShootingAuto {
     public RedAutoBottomTriangle() {
         super();
 
-        final Pose start_pose = new Pose(87.8, 8.5, Math.toRadians(90));
-        final Pose shoot_pose = new Pose(87.5, 108, Math.toRadians(36));
-        final Pose end_pose = new Pose(87.5, 60, Math.toRadians(0));
+        final Pose start_pose = new Pose(88.0, 8.0, Math.toRadians(90));
+        final Pose shoot_pose = new Pose(86.0, 20.0, Math.toRadians(0));
+        final Pose end_pose = new Pose(84.0, 36.0, Math.toRadians(0));
 
         startPose = start_pose;
         shootPose = shoot_pose;
         endPose = end_pose;
+        goalPose = redGoalFarPose;
+        ballPickupXOffset = ballPickupXOffsetRed;
     }
 }

@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
-@TeleOp(name = "Main (No balls)", group = "Production")
+@TeleOp(name = "Main (Unknown Team)", group = "Production")
 public class Main extends LinearOpMode {
 
 	Hardware hardware;
@@ -171,6 +171,23 @@ public class Main extends LinearOpMode {
 			if (gamepad1.a) {
 				drivetrain.wanted_heading = Math.PI / 2.0;
 			}
+
+            // Set robot to goal's angle
+            if (team == null) {
+                if (gamepad1.left_trigger > 0.1) {
+                    drivetrain.wanted_heading = Math.toRadians(90.0 - 36.0);
+                } else if (gamepad1.right_trigger > 0.1) {
+                    drivetrain.wanted_heading = Math.toRadians(90.0 + 36.0);
+                }
+            } else {
+                if (gamepad1.left_trigger > 0.1 || gamepad1.right_trigger > 0.1) {
+                    if (team == Team.Blue) {
+                        drivetrain.wanted_heading = Math.toRadians(90.0 - 36.0);
+                    } else if (team == Team.Red) {
+                        drivetrain.wanted_heading = Math.toRadians(90.0 + 36.0);
+                    }
+                }
+            }
 
             // Rotate towards a target we see
             if (gamepad1.y) {

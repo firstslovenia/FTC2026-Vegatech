@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.Constants;
 
-@Autonomous(name = "\"Does It Work\" Autonomous", group = "Testing")
+@Autonomous(name = "Move Forward Autonomous", group = "Testing")
 public class DoesItWorkAutonomous extends OpMode {
 	public Follower follower; // Pedro Pathing follower instance
 	private int pathState; // Current autonomous path state (state machine)
@@ -49,7 +49,7 @@ public class DoesItWorkAutonomous extends OpMode {
 			Path1 = follower
 				.pathBuilder()
 				.addPath(
-					new BezierLine(new Pose(0.000, 0.000), new Pose(0.000, 40.000))
+					new BezierLine(new Pose(0.000, 0.000), new Pose(0.000, 30.000))
 				)
 				.setLinearHeadingInterpolation(Math.PI / 2.0, Math.PI / 2.0)
 				.build();
