@@ -212,14 +212,16 @@ public class ShootingAuto extends OpMode {
 
             // Going to the end position
             case 5:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 27000) {
 
-                    if (opmodeTimer.getElapsedTime() >= 26000) {
+                    /*if (opmodeTimer.getElapsedTime() >= 26000) {
                         setPathState(7);
-                    }
+                    }*/
+
+                    setPathState(7);
 
                     // Try in to intake before
-                    spindexer.switch_to_holding_pattern();
+                    /*spindexer.switch_to_holding_pattern();
 
                     if (spindexer.ball_to_intake == null) {
                         setPathState(7);
@@ -227,7 +229,7 @@ public class ShootingAuto extends OpMode {
 
                     hardware.intakeMotor.setPower(1.0);
                     follower.followPath(move_to_pickup);
-                    setPathState(6);
+                    setPathState(6);*/
                 }
                 break;
 
@@ -247,7 +249,9 @@ public class ShootingAuto extends OpMode {
 
                 hardware.intakeMotor.setPower(0.0);
 
-                spindexer.switch_to_holding_pattern();
+                spindexer.ball_to_intake = null;
+                spindexer.ball_in_shooter = null;
+                spindexer.in_survey = false;
                 spindexer.move_to_angle(0.0);
                 break;
         }
