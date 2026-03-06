@@ -48,7 +48,7 @@ public class ShootingAuto extends OpMode {
     // We add that because the pose we're calculating with is the center of the robot
     // and not the shooter front.
     public Pose blueGoalPose = new Pose(8.0, 135.0);
-    public Pose redGoalPose = new Pose(136.0, 135.0);
+    public Pose redGoalPose = new Pose(132.0, 136.0);
 
     // Target poses for far autonomous modes
     public Pose blueGoalFarPose = new Pose(15.0, 136.0);
@@ -100,7 +100,7 @@ public class ShootingAuto extends OpMode {
         shooting_distance_m = shooting_distance_in / 39.37;
 
         // Pedropathing doesn't work if it has no work to do
-        lookAtObeliskPose = shootPose.withY(shootPose.getY() + 1.0);
+        lookAtObeliskPose = shootPose.withY(shootPose.getY() + 10.0);
 
         double obelisk_delta_y = obeliskPose.getY() - lookAtObeliskPose.getY();
         double obelisk_delta_x = obeliskPose.getX() - lookAtObeliskPose.getX();
