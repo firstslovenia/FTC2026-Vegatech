@@ -169,7 +169,8 @@ public class Main extends LinearOpMode {
 
 			// Reset robot to 90 degrees
 			if (gamepad1.a) {
-				drivetrain.wanted_heading = Math.PI / 2.0;
+				//drivetrain.wanted_heading = Math.PI / 2.0;
+                drivetrain.wanted_heading = -Math.PI / 2.0;
 			}
 
             // Set robot to goal's angle
@@ -205,7 +206,7 @@ public class Main extends LinearOpMode {
                     }
 
                     drivetrain.wanted_heading = wanted_heading_for_target;
-                    led_position_to_set = LedIndicator.GREEN_POSITION;
+                    led_position_to_set = LedIndicator.AQUA_POSITION;
                 } else {
                     led_position_to_set = LedIndicator.RED_POSITION;
                 }
