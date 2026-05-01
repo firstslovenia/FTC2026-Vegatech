@@ -11,6 +11,21 @@ public class ShooterPlusPlus {
     /// How many encoder counts mean one revolution on the output axle
     static double TICKS_PER_REVOLUTION = 28.0;
 
+    /// Tau for our startup regulation
+    static double STARTUP_TAU = 0.5;
+
+    /// The factor times x in the power to rpm conversion
+    static double REGULATOR_POW_TO_RPM_K = 56.58;
+
+    /// The factor times 1 in the power to rpm conversion
+    static double REGULATOR_POW_TO_RPM_C = -389.6;
+
+    /// The voltage used for the power to rpm convesion
+    static double REGULATOR_BASE_VOLTAGE = 13.43;
+
+    /// The max flywheel power we have
+    double flywheel_gain = 1.0;
+
     /// When we started running the thingo
     long started_running_time_ms = 0;
 
@@ -45,6 +60,16 @@ public class ShooterPlusPlus {
 
         hardware.shooterMotorA.setPower(0.0);
         hardware.shooterMotorB.setPower(0.0);
+    }
+
+    /// Calculates the expected RPM from the motor's power and voltage
+    public double calculate_rpm(double power, double voltage_v) {
+        return ((REGULATOR_POW_TO_RPM_K * power * 100.0) + REGULATOR_POW_TO_RPM_C) * (voltage_v / REGULATOR_BASE_VOLTAGE);
+    }
+
+    /// Calculates the power to set for wanted rpm on the motor with the given voltage
+    public double calculate_power_for_rpm(double wanted_rpm, double voltage_v) {
+        return ((wanted_rpm * REGULATOR_BASE_VOLTAGE / voltage_v) - REGULATOR_POW_TO_RPM_C ) / REGULATOR_POW_TO_RPM_K / 100.0;
     }
 
     public void disable_flywheel() {
@@ -122,17 +147,17 @@ public class ShooterPlusPlus {
             started_running_time_ms = time_ms;
         }
 
-        if (started_running_time_ms != 0 && Math.abs(flywheel_power) != 1.0) {
+        if (started_running_time_ms != 0 && Math.abs(flywheel_power) != flywheel_gain) {
 
             double elapsed_s = (System.currentTimeMillis() - started_running_time_ms) / 1000.0;
 
-            flywheel_power = Math.pow(2.718, -2.0 * elapsed_s);
+            flywheel_power = Math.pow(2.718, elapsed_s / (-STARTUP_TAU));
 
             if (Math.abs(flywheel_power) < 0.01) {
                 flywheel_power = 0.0;
             }
-            if (Math.abs(flywheel_power) > 0.95) {
-                flywheel_power = Math.signum(flywheel_power);
+            if (Math.abs(flywheel_power) > 0.95 * flywheel_gain) {
+                flywheel_power = Math.signum(flywheel_power) * flywheel_gain;
             }
         }
 

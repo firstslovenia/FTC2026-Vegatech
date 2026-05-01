@@ -18,6 +18,8 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
     @Override
     public void runOpMode() {
 
+        telemetry.setMsTransmissionInterval(100);
+
         hardware = new Hardware(this);
         hardware.init();
 
@@ -30,12 +32,14 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
         while (opModeIsActive()) {
             shooter.update();
 
+            double voltage = hardwareMap.voltageSensor.iterator().next().getVoltage();
+
             telemetry.addData("RPMs (a)", shooter.last_a_rpm_measurements.average().orElse(0.0));
             telemetry.addData("RPMs (b)", shooter.last_b_rpm_measurements.average().orElse(0.0));
+            telemetry.addData("Calculated RPMs", shooter.calculate_rpm(shooter.flywheel_power, voltage));
             telemetry.addData("Power    ", shooter.flywheel_power);
             telemetry.addData("Power (a)", hardware.shooterMotorA.getPower());
             telemetry.addData("Power (b)", hardware.shooterMotorB.getPower());
-
             telemetry.update();
         }
     }
