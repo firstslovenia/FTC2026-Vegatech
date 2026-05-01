@@ -35,7 +35,8 @@ public class Hardware {
 	public static DcMotor rightForwardDeadwheel = null;
 	public static DcMotor backSidewaysDeadwheel = null;
 
-	public static DcMotor shooterMotor = null;
+	public static DcMotor shooterMotorA = null;
+    public static DcMotor shooterMotorB = null;
 	public static Servo shooterPusherServo = null;
 
     public static DcMotor intakeMotor = null;
@@ -52,7 +53,7 @@ public class Hardware {
 	}
 
 	public void init()    {
-		frontLeftMotor = callingOpMode.hardwareMap.get(DcMotor.class, "frontLeftMotor");
+		/*frontLeftMotor = callingOpMode.hardwareMap.get(DcMotor.class, "frontLeftMotor");
 		frontRightMotor = callingOpMode.hardwareMap.get(DcMotor.class, "frontRightMotor");
 		backLeftMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backLeftMotor");
 		backRightMotor = callingOpMode.hardwareMap.get(DcMotor.class, "backRightMotor");
@@ -70,12 +71,17 @@ public class Hardware {
         // Hack: they are on the same port
 		backSidewaysDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "backLeftMotor");
 		leftForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "frontLeftMotor");
-		rightForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "backRightMotor");
+		rightForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "backRightMotor");*/
 
-		shooterMotor = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotor");
-		shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+		shooterMotorA = callingOpMode.hardwareMap.get(DcMotor.class, "a");
+		shooterMotorA.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooterMotorA.setDirection(DcMotorSimple.Direction.REVERSE);
 
-		shooterPusherServo = callingOpMode.hardwareMap.get(Servo.class, "shooterPusherServo");
+        shooterMotorB = callingOpMode.hardwareMap.get(DcMotor.class, "b");
+        shooterMotorB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooterMotorB.setDirection(DcMotorSimple.Direction.REVERSE);
+
+		/*shooterPusherServo = callingOpMode.hardwareMap.get(Servo.class, "shooterPusherServo");
         shooterPusherServo.setDirection(Servo.Direction.REVERSE);
         // towards 0 -> more up
         // towards 1 -> more down
@@ -93,6 +99,6 @@ public class Hardware {
 
 		rgbLed = callingOpMode.hardwareMap.get(Servo.class, "rgbLed");
 		webcam = callingOpMode.hardwareMap.get(WebcamName.class, "webcam");
-        colorSensor = callingOpMode.hardwareMap.get(RevColorSensorV3.class, "colorSensor");
+        colorSensor = callingOpMode.hardwareMap.get(RevColorSensorV3.class, "colorSensor");*/
 	}
 }

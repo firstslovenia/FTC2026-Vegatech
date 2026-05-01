@@ -97,8 +97,8 @@ public class Shooter {
         this.callingOpMode = callingOpMode;
         this.spindexer = spindexer;
 
-        hardware.shooterMotor.setPower(0.0);
-        hardware.shooterPusherServo.setPosition(0.0);
+        //hardware.shooterMotor.setPower(0.0);
+        //hardware.shooterPusherServo.setPosition(0.0);
 
         stable_power_pid_controller = new GenericPIDController(callingOpMode, 0.25, 0.0, 0.3, 0.0);
         startup_pid_controller = new GenericPIDController(callingOpMode, 0.4, 0.0, 0.16, 0.0);
@@ -111,7 +111,7 @@ public class Shooter {
         wanted_flywheel_rpm = 0.0;
         shooting_distance_m = Double.NaN;
 
-        hardware.shooterMotor.setPower(0.0);
+        //hardware.shooterMotor.setPower(0.0);
 
         startup_pid_controller.reset();
         stable_power_pid_controller.reset();
@@ -129,7 +129,7 @@ public class Shooter {
         compensated_power = Math.min(Math.max(compensated_power, -1.0), 1.0);
         flywheel_power = compensated_power / voltage_coeff;
 
-        hardware.shooterMotor.setPower(compensated_power);
+        //hardware.shooterMotor.setPower(compensated_power);
     }
 
     public void update_rpm_for_distance_m(double distance_m) {
@@ -195,6 +195,8 @@ public class Shooter {
 
     /// Re-measures RPM and runs PID updates
     public void update() {
+
+        /*
 
         long time_ms = System.currentTimeMillis();
 
@@ -278,5 +280,6 @@ public class Shooter {
         if (!dry_run) {
             set_flywheel_power(flywheel_power);
         }
+         */
     }
 }

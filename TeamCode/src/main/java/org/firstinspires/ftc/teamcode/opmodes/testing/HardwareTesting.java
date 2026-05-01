@@ -67,7 +67,7 @@ public class HardwareTesting extends LinearOpMode {
                     telemetry.addData("Power", power);
                     break;
                 case shooterMotor:
-                    hardware.shooterMotor.setPower(power);
+                    //hardware.shooterMotor.setPower(power);
                     telemetry.addData("Power", power);
                     break;
                 case intakeMotor:
