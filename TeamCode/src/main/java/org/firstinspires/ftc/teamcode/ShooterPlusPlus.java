@@ -157,8 +157,10 @@ public class ShooterPlusPlus {
                 flywheel_power = 0.0;
             }
             if (Math.abs(flywheel_power) > 0.95 * flywheel_gain) {
-                flywheel_power = Math.signum(flywheel_power) * flywheel_gain;
+                flywheel_power = Math.signum(flywheel_power);
             }
+
+            flywheel_power *= flywheel_gain;
         }
 
         if (!dry_run) {

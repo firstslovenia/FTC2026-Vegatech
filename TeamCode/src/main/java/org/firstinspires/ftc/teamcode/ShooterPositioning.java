@@ -23,7 +23,7 @@ public class ShooterPositioning {
 	public double x_distance_to_target_m = 0.0;
 	public double y_distance_to_target_m = 0.0;
 
-	/// Caluclates the target information we need to shoot at it;
+	/// Calculates the target information we need to shoot;
 	///
 	/// yaw_rads is how much we need to turn to be facing directly
 	/// at the apriltag (the apriltag pose yaw).

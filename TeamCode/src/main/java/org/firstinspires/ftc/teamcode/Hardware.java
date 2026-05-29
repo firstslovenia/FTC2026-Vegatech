@@ -37,6 +37,8 @@ public class Hardware {
 
 	public static DcMotor shooterMotorA = null;
     public static DcMotor shooterMotorB = null;
+	public static Servo shooterAngleServo = null;
+
 	public static Servo shooterPusherServo = null;
 
     public static DcMotor intakeMotor = null;
@@ -73,13 +75,13 @@ public class Hardware {
 		leftForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "frontLeftMotor");
 		rightForwardDeadwheel = callingOpMode.hardwareMap.get(DcMotor.class, "backRightMotor");*/
 
-		shooterMotorA = callingOpMode.hardwareMap.get(DcMotor.class, "a");
+		shooterMotorA = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotorA");
 		shooterMotorA.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        shooterMotorA.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        shooterMotorB = callingOpMode.hardwareMap.get(DcMotor.class, "b");
+        shooterMotorB = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotorB");
         shooterMotorB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        shooterMotorB.setDirection(DcMotorSimple.Direction.REVERSE);
+
+		shooterAngleServo = callingOpMode.hardwareMap.get(Servo.class, "shooterAngleServo");
 
 		/*shooterPusherServo = callingOpMode.hardwareMap.get(Servo.class, "shooterPusherServo");
         shooterPusherServo.setDirection(Servo.Direction.REVERSE);
@@ -97,8 +99,8 @@ public class Hardware {
 		imu = callingOpMode.hardwareMap.get(IMU.class, "imu");
 		imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
 
-		rgbLed = callingOpMode.hardwareMap.get(Servo.class, "rgbLed");
+		rgbLed = callingOpMode.hardwareMap.get(Servo.class, "rgbLed");*/
 		webcam = callingOpMode.hardwareMap.get(WebcamName.class, "webcam");
-        colorSensor = callingOpMode.hardwareMap.get(RevColorSensorV3.class, "colorSensor");*/
+        //colorSensor = callingOpMode.hardwareMap.get(RevColorSensorV3.class, "colorSensor");
 	}
 }
