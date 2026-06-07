@@ -14,17 +14,19 @@ public class ShooterPlusPlus {
     /// Tau for our startup regulation
     static double STARTUP_TAU = 0.5;
 
+    // Power to rpm conversion: power is in percentages, rpm just rpm
+    // See graph: https://www.wolframalpha.com/input?i=fit+linear&assumption=%7B%22F%22%2C+%22LinearFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B100.0%2C+4950%7D%2C%7B90.0%2C+4450%7D%2C%7B80.0%2C+4050%7D%2C%7B70.0%2C+3460%7D%2C%7B60.0%2C+2950%7D%2C+%7B50.0%2C+2450%7D%7D%22
     /// The factor times x in the power to rpm conversion
-    static double REGULATOR_POW_TO_RPM_K = 56.58;
+    static double REGULATOR_POW_TO_RPM_K = 50.2571;
 
     /// The factor times 1 in the power to rpm conversion
-    static double REGULATOR_POW_TO_RPM_C = -389.6;
+    static double REGULATOR_POW_TO_RPM_C = -50.9524;
 
-    /// The voltage used for the power to rpm convesion
-    static double REGULATOR_BASE_VOLTAGE = 13.43;
+    /// The voltage (under load) used for the power to rpm convesion
+    static double REGULATOR_BASE_VOLTAGE = 11.18;
 
     /// The max flywheel power we have
-    double flywheel_gain = 1.0;
+    public double flywheel_gain = 1.0;
 
     /// When we started running the thingo
     long started_running_time_ms = 0;
@@ -35,6 +37,9 @@ public class ShooterPlusPlus {
 
     /// The current flywheel's power - what we're regulating
     public double flywheel_power = 0.0;
+
+    /// The relative power of the flywheel, used only for startup
+    public double flywheel_rel_power = 0.0;
 
     /// Whether we are powering the flywheel currently
     public boolean flywheel_enabled = false;
@@ -81,10 +86,11 @@ public class ShooterPlusPlus {
         started_running_time_ms = 0;
     }
 
-    /// Sets the flywheel to a given power level for the nominal voltage
+    /// Sets the flywheel to a given power level for the current voltage
     public void set_flywheel_power(double power) {
         hardware.shooterMotorA.setPower(power);
         hardware.shooterMotorB.setPower(power);
+        flywheel_power = power;
     }
 
     public void run() {
@@ -147,21 +153,20 @@ public class ShooterPlusPlus {
             started_running_time_ms = time_ms;
         }
 
-        if (started_running_time_ms != 0 && Math.abs(flywheel_power) != flywheel_gain) {
-
+        if (started_running_time_ms != 0 && Math.abs(flywheel_rel_power) != 1.0) {
             double elapsed_s = (System.currentTimeMillis() - started_running_time_ms) / 1000.0;
 
-            flywheel_power = Math.pow(2.718, elapsed_s / (-STARTUP_TAU));
+            flywheel_rel_power = Math.pow(2.718, elapsed_s / (-STARTUP_TAU));
 
-            if (Math.abs(flywheel_power) < 0.01) {
-                flywheel_power = 0.0;
+            if (Math.abs(flywheel_rel_power) < 0.01) {
+                flywheel_rel_power = 0.0;
             }
-            if (Math.abs(flywheel_power) > 0.95 * flywheel_gain) {
-                flywheel_power = Math.signum(flywheel_power);
+            if (Math.abs(flywheel_rel_power) > 0.95) {
+                flywheel_rel_power = Math.signum(flywheel_rel_power);
             }
-
-            flywheel_power *= flywheel_gain;
         }
+
+        flywheel_power = flywheel_rel_power * flywheel_gain;
 
         if (!dry_run) {
             set_flywheel_power(flywheel_power);

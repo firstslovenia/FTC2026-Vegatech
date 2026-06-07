@@ -20,6 +20,9 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
 
     double servo_position = 0.0;
 
+    long last_fire = 0;
+    boolean pusher_up = false;
+
     @Override
     public void runOpMode() {
 
@@ -31,6 +34,8 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
         shooter = new ShooterPlusPlus(this, hardware, null);
 
         webcam = new Webcam(this, hardware);
+
+        hardware.shooterPusherServo.setPosition(0.0);
 
         waitForStart();
 
@@ -45,6 +50,24 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
             } else if (gamepad1.bWasPressed()) {
                 servo_position = Math.min(1.0, servo_position + 0.1);
             }
+
+            if (gamepad1.xWasPressed()) {
+                shooter.flywheel_gain = Math.max(0.0, shooter.flywheel_gain - 0.1);
+            } else if (gamepad1.yWasPressed()) {
+                shooter.flywheel_gain = Math.min(1.0, shooter.flywheel_gain + 0.1);
+            }
+
+            if (gamepad1.rightTriggerWasPressed()) {
+                hardware.shooterPusherServo.setPosition(1.0);
+                pusher_up = true;
+                last_fire = System.currentTimeMillis();
+            }
+
+            if (pusher_up && (System.currentTimeMillis() - last_fire) > 1000) {
+                hardware.shooterPusherServo.setPosition(0.0);
+                pusher_up = false;
+            }
+
             hardware.shooterAngleServo.setPosition(servo_position);
 
             double voltage = hardwareMap.voltageSensor.iterator().next().getVoltage();
@@ -54,6 +77,8 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
             telemetry.addData("Calculated RPMs", shooter.calculate_rpm(shooter.flywheel_power, voltage));
             telemetry.addData("Power    ", shooter.flywheel_power);
             telemetry.addData("Power (a)", hardware.shooterMotorA.getPower());
+            telemetry.addData("Shooter gain", shooter.flywheel_gain);
+            telemetry.addData("Voltage [V]", voltage);
 
             TargetInformation target_information = webcam.target_position;
 
