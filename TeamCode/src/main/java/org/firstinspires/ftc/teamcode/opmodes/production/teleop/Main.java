@@ -51,6 +51,8 @@ public class Main extends LinearOpMode {
     public boolean updated_position = false;
     static long LONG_LOOP_DELAY_MS = 100;
 
+    double servo_position = 0.0;
+
     SlidingWindow<Long> last_loops_took = new SlidingWindow(50);
     long last_loop_time = System.currentTimeMillis();
 
@@ -218,12 +220,6 @@ public class Main extends LinearOpMode {
                 drivetrain.wanted_heading = wanted_heading_for_target;
                 led_position_to_set = LedIndicator.AQUA_POSITION;
 
-                telemetry.addData("AAA X", ShootingAuto.blueGoalPose.getX());
-                telemetry.addData("AAA y", ShootingAuto.blueGoalPose.getY());
-                telemetry.addData("BBB X", ShooterPositioning.to_pose2d(ShootingAuto.blueGoalPose).getX(DistanceUnit.INCH));
-                telemetry.addData("BBB Y", ShooterPositioning.to_pose2d(ShootingAuto.blueGoalPose).getY(DistanceUnit.INCH));
-                telemetry.addData("CCC X", drivetrain.last_robot_position.getX(DistanceUnit.INCH));
-                telemetry.addData("CCC Y", drivetrain.last_robot_position.getY(DistanceUnit.INCH));
                 telemetry.addData("Target distance (m)", target_to_rotate_to.distance_m);
                 telemetry.addData("Target ideal angle", Math.toDegrees(target_to_rotate_to.ideal_angle_to_target));
                 telemetry.addData("Target y diff", target_to_rotate_to.y);
@@ -245,8 +241,10 @@ public class Main extends LinearOpMode {
             // Enable / disable the shooter
 			if (gamepad2.xWasPressed()) {
 				if (shooter.flywheel_enabled) {
-					shooter.update_flywheel_rpm(3000.0);
-				} /*else {
+					shooter.update_flywheel_rpm(0.0);
+				} else {
+                    shooter.update_flywheel_rpm(3000.0);
+                } /*else {
                     if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
                         shooter.update_for_target(webcam.target_position);
                     }
@@ -272,12 +270,31 @@ public class Main extends LinearOpMode {
                 shooter.wanted_flywheel_rpm = 5000.0;
             }
 
+            // Angle
+            if (gamepad2.leftBumperWasPressed()) {
+                servo_position -= 0.1;
+            } else if (gamepad1.bWasPressed()) {
+                servo_position += 0.1;
+            }
+
+            servo_position = Math.max(Math.min(servo_position, 1.0), 0.0);
+
+            hardware.shooterAngleServo.setPosition(servo_position);
+
+            double servo_angle = ShooterPlusPlus.calculate_rad_angle_for_servo_pos(servo_position);
+            double dist_factor = ShooterPlusPlus.calculate_dist_factor_for_angle(servo_angle);
+
+            telemetry.addData("Angle servo pos", servo_position);
+            telemetry.addData("Angle servo deg", Math.toDegrees(servo_angle));
+            telemetry.addData("Angle servo factor", dist_factor);
+
             // Fire balls
 			if (gamepad2.right_trigger > 0.1) {
                 hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                hardware.spindexerMotor.setPower(1.0);
+                hardware.spindexerMotor.setPower(-1.0);
 			} else if (hardware.spindexerMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                 hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                hardware.spindexerMotor.setTargetPosition(hardware.spindexerMotor.getCurrentPosition());
                 spindexer.switch_to_holding_pattern();
             }
 
