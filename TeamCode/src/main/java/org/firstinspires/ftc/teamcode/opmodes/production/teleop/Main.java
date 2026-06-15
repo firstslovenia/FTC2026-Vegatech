@@ -290,13 +290,12 @@ public class Main extends LinearOpMode {
 
             // Fire balls
 			if (gamepad2.right_trigger > 0.1) {
-                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                hardware.spindexerMotor.setPower(-0.5);
-			} else if (hardware.spindexerMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                hardware.spindexerMotor.setTargetPosition(hardware.spindexerMotor.getCurrentPosition());
-                spindexer.switch_to_holding_pattern();
-            }
+                if (spindexer.ball_in_shooter != null) {
+                    spindexer.shoot_active_ball();
+                } else {
+                    spindexer.switch_to_shooting();
+                }
+			}
 
             shooter.update();
 
