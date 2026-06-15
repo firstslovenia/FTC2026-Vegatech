@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
@@ -33,6 +35,15 @@ public class Webcam {
 
 	public ArrayList<AprilTagDetection> last_detections = new ArrayList<>();
 
+    public double real_x_distance_to_apriltag_m = 0.0;
+    public double real_y_distance_to_apriltag_m = 0.0;
+
+    /// The last pose we were able to calculate from seeing apriltags and when
+    public Pose2D last_calculated_pos = null;
+    public long last_calculated_pos_time = 0;
+
+    public long same_pos_since = 0;
+
 	/**
 	 * The variable to store our instance of the AprilTag processor.
 	 */
@@ -44,8 +55,6 @@ public class Webcam {
 	private VisionPortal visionPortal;
 
 
-    public double real_x_distance_to_apriltag_m = 0.0;
-    public double real_y_distance_to_apriltag_m = 0.0;
 
 	public Webcam(OpMode callingOpMode, Hardware hardware) {
 		aprilTag = new AprilTagProcessor.Builder()
@@ -66,7 +75,7 @@ public class Webcam {
 		//.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
 		// ... these parameters are fx, fy, cx, cy.
                 // 1280 x 720 for C270
-                .setLensIntrinsics(1420.13799378, 1420.13799378, 676.976315018, 340.62607304)
+                .setLensIntrinsics(1417.77439153, 1417.77439153, 687.701775668, 327.579325334)
 		.build();
 
 		// Adjust Image Decimation to trade-off detection-range for detection-rate.
@@ -137,19 +146,36 @@ public class Webcam {
                     // Compensate for the camera positioning relative to the shooter
                     //double real_x_distance_to_apriltag_m = detection.ftcPose.x * Math.cos(-detection.ftcPose.pitch) - 0.2;
                     //double real_y_distance_to_apriltag_m = detection.ftcPose.y - 0.07;
-                    real_x_distance_to_apriltag_m = detection.ftcPose.x - 0.08;
-                    real_y_distance_to_apriltag_m = detection.ftcPose.y * Math.cos(-detection.ftcPose.pitch) - 0.2;
+
+                    real_x_distance_to_apriltag_m = detection.ftcPose.x;
+                    real_y_distance_to_apriltag_m = detection.ftcPose.y * Math.cos(-detection.ftcPose.pitch);
                     double real_distance = Math.sqrt(real_x_distance_to_apriltag_m * real_x_distance_to_apriltag_m + real_y_distance_to_apriltag_m * real_y_distance_to_apriltag_m);
 
-                    TargetInformation target_pos = shooter_positioning.compute_target_information(real_distance, detection.ftcPose.yaw, detection.ftcPose.bearing);
+                    TargetInformation target_pos = shooter_positioning.compute_target_information_from_camera(real_distance, detection.ftcPose.yaw, detection.ftcPose.bearing);
 
                     // Check that it is not complete garbage
-                    if (shooter_positioning.x_distance_to_target_m < 0.05 ||
-                            shooter_positioning.y_distance_to_target_m < 0.05 ||
+                    if (shooter_positioning.x_distance_to_target_in < 0.05 ||
+                            shooter_positioning.y_distance_to_target_in < 0.05 ||
                             target_pos.distance_m < 0.05 ||
                             Math.abs(target_pos.angle_distance_rads) > Math.PI / 2.0) {
                         continue;
                     }
+
+                    Team team = detection.id == TAG_ID_BLUE ? Team.Blue : Team.Red;
+                    Pose2D pos = shooter_positioning.compute_current_pos_from_camera(real_distance, detection.ftcPose.yaw, detection.ftcPose.bearing, team);
+
+                    long now = System.currentTimeMillis();
+
+                    if (last_calculated_pos != null) {
+                        if (!ShooterPositioning.pose2d_rougly_eq(last_calculated_pos, pos)) {
+                            same_pos_since = now;
+                        }
+                    } else {
+                        same_pos_since = now;
+                    }
+
+                    last_calculated_pos = pos;
+                    last_calculated_pos_time = now;
 
                     target_position = target_pos;
                     break;

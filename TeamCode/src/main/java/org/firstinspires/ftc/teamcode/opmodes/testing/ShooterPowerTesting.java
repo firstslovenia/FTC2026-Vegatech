@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.opmodes.production.teleop;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
@@ -14,8 +13,6 @@ import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
-import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
-import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
 @TeleOp(name = "Shooter Power Testing", group = "Production")
@@ -230,9 +227,9 @@ public class ShooterPowerTesting extends LinearOpMode {
 					shooter.update_flywheel_rpm(0.0);
 				} else {
                     if (target_to_rotate_to != null) {
-                        shooter.update_rpm_for_distance_m(target_to_rotate_to.distance_m);
+                        shooter.update_for_distance(target_to_rotate_to.distance_m);
                     } else if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
-                        shooter.update_rpm_for_distance_m(webcam.target_position.distance_m);
+                        shooter.update_for_target(webcam.target_position);
                     }
 				}
             }
@@ -291,7 +288,7 @@ public class ShooterPowerTesting extends LinearOpMode {
             if (gamepad2.bWasPressed()) {
                 spindexer.ball_to_intake = null;
                 spindexer.ball_in_shooter = null;
-                spindexer.move_to_angle(0.0);
+                spindexer.move_to_angle_sortwise(0.0);
             }
 
             spindexer.update();

@@ -15,6 +15,9 @@ public class TargetInformation {
     /// How far away we are from the apriltag
     public double tag_distance_m;
 
+    public double x;
+    public double y;
+
     ///  When this information was accurate
     public long time_ms = 0;
 

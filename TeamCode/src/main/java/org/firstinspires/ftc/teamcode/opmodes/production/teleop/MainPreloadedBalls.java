@@ -8,6 +8,6 @@ import org.firstinspires.ftc.teamcode.generic.Team;
 public class MainPreloadedBalls extends Main {
     @Override
     public void spindexer_override() {
-        spindexer.balls = new BallColor[] { BallColor.Purple, BallColor.Purple, BallColor.Green };
+        //spindexer.balls = new BallColor[] { BallColor.Purple, BallColor.Purple, BallColor.Green };
     }
 }

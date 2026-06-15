@@ -15,24 +15,31 @@ public class AngleUtil {
         return angle_rads;
     }
 
-    /// Computes the smaller angle difference to the given position which puts the spidexer into the wanted angle
-    public static double calculate_best_angle_diff_for(double angle_rads, double wanted_angle_rads) {
+    /// Computes the negative angle difference to the given position which puts the spidexer into the wanted angle
+    public static double ensure_negative_diff(double angle_rads, double wanted_angle_rads) {
         angle_rads = to_positive(angle_rads);
         wanted_angle_rads = to_positive(wanted_angle_rads);
 
         double diff = wanted_angle_rads - angle_rads;
-        double diff_other_way;
+
+        if (diff > 0.0) {
+            diff -= Math.PI * 2.0;
+        }
+
+        return diff;
+    }
+
+    /// Computes the positive angle difference to the given position which puts the spidexer into the wanted angle
+    public static double ensure_positive_diff(double angle_rads, double wanted_angle_rads) {
+        angle_rads = to_positive(angle_rads);
+        wanted_angle_rads = to_positive(wanted_angle_rads);
+
+        double diff = wanted_angle_rads - angle_rads;
 
         if (diff < 0.0) {
-            diff_other_way = diff + Math.PI * 2.0;
-        } else {
-            diff_other_way = diff - Math.PI * 2.0;
+            diff += Math.PI * 2.0;
         }
 
-        if (Math.abs(diff_other_way) < Math.abs(diff)) {
-            return diff_other_way;
-        } else {
-            return diff;
-        }
+        return diff;
     }
 }

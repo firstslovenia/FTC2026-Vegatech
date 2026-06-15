@@ -26,7 +26,6 @@ public class DrivetrainTest extends LinearOpMode {
 		drivetrain.keepHeading = true;
 
 		waitForStart();
-		hardware.imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.DOWN, RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
 		drivetrain.resetStartingDirection();
 
 		while (opModeIsActive()) {

@@ -63,7 +63,7 @@ public class BallPreloader extends LinearOpMode {
 
             // Get ready for match position
             if (gamepad1.aWasPressed()) {
-                spindexer.move_to_angle(0.0);
+                spindexer.move_to_angle_sortwise(0.0);
             }
 
             spindexer.update();

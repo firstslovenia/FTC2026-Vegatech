@@ -11,7 +11,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.generic.AngleUtil;
 import org.firstinspires.ftc.teamcode.generic.BallColor;
 
-/// Keeps track of which color balls we have and
+/// Keeps track of which color balls we have and shoots them
+///
+/// + dir - spin
+/// - dir - shoot
 public class Spindexer {
 
     OpMode callingOpMode;
@@ -22,6 +25,9 @@ public class Spindexer {
 
     /// How many encoder ticks (here we calculate it from degrees) we allow the PID controller to miss
     public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 5) / 360;
+    public static double TOLERANCE_RADS = 5.0 * Math.PI / 180.0;
+
+    public static double STARTING_ANGLE = Math.PI / 180.0 * 3.0;
 
     /// Encoder ticks at 0 degrees, before we run anything
     //public static int STARTING_ENCODER_TICKS = 3963;
@@ -32,9 +38,9 @@ public class Spindexer {
     public static double ANGLE_INTAKE_BALL_2 = ANGLE_INTAKE_BALL_0 - Math.PI * 4.0 / 3.0;
 
     /// The angle to point at to shoot ball 0 - the orange one
-    public static double ANGLE_SHOOT_BALL_0 = - Math.PI / 3.0 + Math.PI / 18.0;
-    public static double ANGLE_SHOOT_BALL_1 = ANGLE_SHOOT_BALL_0 - Math.PI * 2.0 / 3.0;
-    public static double ANGLE_SHOOT_BALL_2 = ANGLE_SHOOT_BALL_0 - Math.PI * 4.0 / 3.0;
+    public static double ANGLE_SHOOT_BALL_1 = - Math.PI / 180.0 * 103.0;
+    public static double ANGLE_SHOOT_BALL_2 = ANGLE_SHOOT_BALL_1 - Math.PI * 2.0 / 3.0;
+    public static double ANGLE_SHOOT_BALL_0 = ANGLE_SHOOT_BALL_1 - Math.PI * 4.0 / 3.0;
 
     public static double ANGLE_HOLD_BALLS_0 = Math.PI / 2.0;
 
@@ -44,7 +50,9 @@ public class Spindexer {
     /// Balls are numbered ball 0 through ball 2, counterclockwise, starting at more orange to less orange
     public BallColor balls[] = new BallColor[] {BallColor.None, BallColor.None, BallColor.None};
 
-    /// The index of the ball we're rotated to shoot, if any
+    /// The index of the ball we're actively shooting, if any
+    public Integer ball_being_shot = null;
+    /// The index of the ball we're prepared to shoot, if any
     public Integer ball_in_shooter = null;
     /// The index of the ball we're rotated to intake, if any
     public Integer ball_to_intake = null;
@@ -66,7 +74,6 @@ public class Spindexer {
     }
 
     public void init() {
-        hardware.shooterPusherServo.setPosition(0.0);
 
         DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
         ex.setTargetPositionTolerance(PID_TOLERANCE);
@@ -116,7 +123,7 @@ public class Spindexer {
         }
 
         if (ball_in_shooter != null) {
-            move_to_shoot_for(ball_in_shooter);
+            move_to_shoot_ball(ball_in_shooter);
         }
     }
 
@@ -144,17 +151,39 @@ public class Spindexer {
         }
 
         // There is no available intake, move to the closest holding angle
-        double d1 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_0);
-        double d2 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_1);
-        double d3 = AngleUtil.calculate_best_angle_diff_for(current_angle(), ANGLE_HOLD_BALLS_2);
+        double d1 = AngleUtil.ensure_positive_diff(current_angle(), ANGLE_HOLD_BALLS_0);
+        double d2 = AngleUtil.ensure_positive_diff(current_angle(), ANGLE_HOLD_BALLS_1);
+        double d3 = AngleUtil.ensure_positive_diff(current_angle(), ANGLE_HOLD_BALLS_2);
 
         if (Math.abs(d1) < Math.abs(d2) && Math.abs(d1) < Math.abs(d3)) {
-            move_to_angle(ANGLE_HOLD_BALLS_0);
+            move_to_angle_sortwise(ANGLE_HOLD_BALLS_0);
         }
         else if (Math.abs(d2) < Math.abs(d1) && Math.abs(d2) < Math.abs(d3)) {
-            move_to_angle(ANGLE_HOLD_BALLS_1);
+            move_to_angle_sortwise(ANGLE_HOLD_BALLS_1);
         } else {
-            move_to_angle(ANGLE_HOLD_BALLS_2);
+            move_to_angle_sortwise(ANGLE_HOLD_BALLS_2);
+        }
+    }
+
+    /// Goes to shoot balls that we have
+    public void switch_to_shooting() {
+        if (ball_to_intake != null) {
+            // We're already intaking a ball!
+            return;
+        }
+
+        if (ball_in_shooter != null) {
+            return;
+        }
+
+        if (balls[0] != null) {
+            move_to_shoot_ball(0);
+        } else if (balls[1] != null) {
+            move_to_shoot_ball(1);
+        } else if (balls[2] != null) {
+            move_to_shoot_ball(2);
+        } else {
+            switch_to_holding_pattern();
         }
     }
 
@@ -224,8 +253,12 @@ public class Spindexer {
         callingOpMode.telemetry.addData("Spindexer b1", balls[1]);
         callingOpMode.telemetry.addData("Spindexer b2", balls[2]);
 
+        if (ball_being_shot != null) {
+            callingOpMode.telemetry.addData("Shooting ball", ball_being_shot);
+        }
+
         if (ball_in_shooter != null) {
-            callingOpMode.telemetry.addData("Shooting ball", ball_in_shooter);
+            callingOpMode.telemetry.addData("Prepared for ball", ball_in_shooter);
         }
 
         if (ball_to_intake != null) {
@@ -261,20 +294,21 @@ public class Spindexer {
 
     /// Returns whether the spindexer can physically move without damaging stuff
     public boolean can_move() {
-        return hardware.shooterPusherServo.getPosition() <= 0.3;
+        //return hardware.shooterPusherServo.getPosition() <= 0.3;
+        return true;
     }
 
-    /// Tells the spindexer to move to the set angle
-    public void move_to_angle(double angle_rads) {
+    /// Tells the spindexer to move to the set angle shootwise
+    public void move_to_angle_shootwise(double angle_rads) {
 
         // Do NOT move!
         if (!can_move()) {
             return;
         }
 
-        if (Math.abs(target_angle() - angle_rads) > Math.PI / 180.0) {
+        if (Math.abs(target_angle() - angle_rads) > TOLERANCE_RADS) {
             int encoder_pos = hardware.spindexerMotor.getCurrentPosition();
-            hardware.spindexerMotor.setTargetPosition(calculate_nearest_position_at_angle(encoder_pos, angle_rads));
+            hardware.spindexerMotor.setTargetPosition(nearest_shootwise_pos_at_angle(encoder_pos, angle_rads));
             stopped_being_busy_ms = null;
         }
 
@@ -282,20 +316,74 @@ public class Spindexer {
         hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
-    public void move_to_shoot_for(int ball) {
+    /// Tells the spindexer to move to the set angle sortwise
+    public void move_to_angle_sortwise(double angle_rads) {
+
+        // Do NOT move!
+        if (!can_move()) {
+            return;
+        }
+
+        if (Math.abs(target_angle() - angle_rads) > TOLERANCE_RADS) {
+            int encoder_pos = hardware.spindexerMotor.getCurrentPosition();
+            hardware.spindexerMotor.setTargetPosition(nearest_sortwise_pos_at_angle(encoder_pos, angle_rads));
+            stopped_being_busy_ms = null;
+        }
+
+        hardware.spindexerMotor.setPower(1.0);
+        hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+    public void move_to_shoot_ball(int ball) {
         ball_in_shooter = ball;
 
         switch (ball_in_shooter) {
                 case 0:
-                    move_to_angle(ANGLE_SHOOT_BALL_0);
+                    move_to_angle_sortwise(ANGLE_SHOOT_BALL_0);
                     break;
                 case 1:
-                    move_to_angle(ANGLE_SHOOT_BALL_1);
+                    move_to_angle_sortwise(ANGLE_SHOOT_BALL_1);
                     break;
                 case 2:
-                    move_to_angle(ANGLE_SHOOT_BALL_2);
+                    move_to_angle_sortwise(ANGLE_SHOOT_BALL_2);
                     break;
             }
+    }
+
+    public void move_to_shoot_ball_shootwise(int ball) {
+        ball_in_shooter = ball;
+
+        switch (ball_in_shooter) {
+            case 0:
+                move_to_angle_shootwise(ANGLE_SHOOT_BALL_0);
+                break;
+            case 1:
+                move_to_angle_shootwise(ANGLE_SHOOT_BALL_1);
+                break;
+            case 2:
+                move_to_angle_shootwise(ANGLE_SHOOT_BALL_2);
+                break;
+        }
+    }
+
+    public void shoot_active_ball() {
+        if (ball_in_shooter == null) {
+            return;
+        }
+
+        ball_being_shot = ball_in_shooter;
+
+        switch (ball_in_shooter) {
+            case 0:
+                move_to_shoot_ball_shootwise(2);
+                break;
+            case 1:
+                move_to_shoot_ball_shootwise(0);
+                break;
+            case 2:
+                move_to_shoot_ball_shootwise(1);
+                break;
+        }
     }
 
     public void move_to_intake_for(int ball) {
@@ -303,13 +391,13 @@ public class Spindexer {
 
         switch (ball_to_intake) {
             case 0:
-                move_to_angle(ANGLE_INTAKE_BALL_0);
+                move_to_angle_sortwise(ANGLE_INTAKE_BALL_0);
                 break;
             case 1:
-                move_to_angle(ANGLE_INTAKE_BALL_1);
+                move_to_angle_sortwise(ANGLE_INTAKE_BALL_1);
                 break;
             case 2:
-                move_to_angle(ANGLE_INTAKE_BALL_2);
+                move_to_angle_sortwise(ANGLE_INTAKE_BALL_2);
                 break;
         }
     }
@@ -333,13 +421,23 @@ public class Spindexer {
         return Math.floorMod(moved_since_zero, TICKS_PER_REVOLUTION);
     }
 
-    /// Computes the nearest position to the given position which puts the spidexer into the wanted angle
-    public static int calculate_nearest_position_at_angle(int encoder_position, double angle_rads) {
+    /// Computes the nearest position to the given position which puts the spidexer into the wanted angle, going shootwise
+    public static int nearest_shootwise_pos_at_angle(int encoder_position, double angle_rads) {
 
         double current_angle_rads = calculate_current_angle(encoder_position);
-        double best_angle_diff = AngleUtil.calculate_best_angle_diff_for(current_angle_rads, angle_rads);
+        double angle_diff = AngleUtil.ensure_negative_diff(current_angle_rads, angle_rads);
 
-        int angle_diff_ticks = (int) ((best_angle_diff / Math.PI / 2.0) * TICKS_PER_REVOLUTION);
+        int angle_diff_ticks = (int) ((angle_diff / Math.PI / 2.0) * TICKS_PER_REVOLUTION);
+        return encoder_position + angle_diff_ticks;
+    }
+
+    /// Computes the nearest position to the given position which puts the spidexer into the wanted angle, going sortwise
+    public static int nearest_sortwise_pos_at_angle(int encoder_position, double angle_rads) {
+
+        double current_angle_rads = calculate_current_angle(encoder_position);
+        double angle_diff = AngleUtil.ensure_positive_diff(current_angle_rads, angle_rads);
+
+        int angle_diff_ticks = (int) ((angle_diff / Math.PI / 2.0) * TICKS_PER_REVOLUTION);
         return encoder_position + angle_diff_ticks;
     }
 

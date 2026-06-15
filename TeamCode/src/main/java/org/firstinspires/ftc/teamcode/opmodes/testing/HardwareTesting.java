@@ -6,9 +6,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 
@@ -16,7 +18,6 @@ import org.firstinspires.ftc.teamcode.generic.LedIndicator;
 public class HardwareTesting extends LinearOpMode {
 
     Hardware hardware;
-    Shooter shooter;
     Spindexer spindexer;
 
     int spindexer_pos = 0;
@@ -31,8 +32,6 @@ public class HardwareTesting extends LinearOpMode {
 
         spindexer = new Spindexer(this, hardware);
         spindexer.init();
-
-        shooter = new Shooter(this, hardware, spindexer);
 
         waitForStart();
 
@@ -67,8 +66,11 @@ public class HardwareTesting extends LinearOpMode {
                     telemetry.addData("Power", power);
                     break;
                 case shooterMotor:
-                    //hardware.shooterMotor.setPower(power);
+                    hardware.shooterMotorA.setPower(power);
+                    hardware.shooterMotorB.setPower(power);
                     telemetry.addData("Power", power);
+                    telemetry.addData("A ticks", hardware.shooterMotorA.getCurrentPosition());
+                    telemetry.addData("B ticks", hardware.shooterMotorB.getCurrentPosition());
                     break;
                 case intakeMotor:
                     hardware.intakeMotor.setPower(power);
@@ -77,7 +79,7 @@ public class HardwareTesting extends LinearOpMode {
                 case spindexerMotor:
 
                     hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    hardware.spindexerMotor.setPower(power );
+                    hardware.spindexerMotor.setPower(power);
 
                     telemetry.addData("Power", power);
 
@@ -86,7 +88,7 @@ public class HardwareTesting extends LinearOpMode {
 
                     telemetry.addData("Position", pos);
                     telemetry.addData("Ticks in loop", pos_in_loop);
-                    telemetry.addData("Nearest 0 angle", Spindexer.calculate_nearest_position_at_angle(pos, 0.0));
+                    telemetry.addData("Nearest 0 angle", Spindexer.nearest_shootwise_pos_at_angle(pos, 0.0));
                     telemetry.addData("Angle", Math.toDegrees(Spindexer.calculate_current_angle(pos)));
                     break;
 
@@ -103,34 +105,44 @@ public class HardwareTesting extends LinearOpMode {
                         spindexer_pos = Math.floorMod(spindexer_pos, 7);
                     }
 
-                    switch (spindexer_pos) {
-                        case 0:
-                            spindexer.move_to_angle(0.0);
-                            break;
-                        case 1:
-                            spindexer.move_to_angle(Spindexer.ANGLE_INTAKE_BALL_2);
-                            break;
-                        case 2:
-                            spindexer.move_to_angle(Spindexer.ANGLE_INTAKE_BALL_1);
-                            break;
-                        case 3:
-                            spindexer.move_to_angle(Spindexer.ANGLE_INTAKE_BALL_0);
-                            break;
-                        case 4:
-                            spindexer.move_to_angle(Spindexer.ANGLE_SHOOT_BALL_2);
-                            break;
-                        case 5:
-                            spindexer.move_to_angle(Spindexer.ANGLE_SHOOT_BALL_1);
-                            break;
-                        case 6:
-                            spindexer.move_to_angle(Spindexer.ANGLE_SHOOT_BALL_0);
-                            break;
+                    if (gamepad1.left_bumper) {
+                        switch (spindexer_pos) {
+                            case 0:
+                                spindexer.move_to_angle_sortwise(0.0);
+                                break;
+                            case 1:
+                                spindexer.move_to_angle_sortwise(Spindexer.ANGLE_INTAKE_BALL_2);
+                                break;
+                            case 2:
+                                spindexer.move_to_angle_sortwise(Spindexer.ANGLE_INTAKE_BALL_1);
+                                break;
+                            case 3:
+                                spindexer.move_to_angle_sortwise(Spindexer.ANGLE_INTAKE_BALL_0);
+                                break;
+                            case 4:
+                                spindexer.move_to_angle_sortwise(Spindexer.ANGLE_SHOOT_BALL_2);
+                                break;
+                            case 5:
+                                spindexer.move_to_angle_sortwise(Spindexer.ANGLE_SHOOT_BALL_1);
+                                break;
+                            case 6:
+                                spindexer.move_to_angle_sortwise(Spindexer.ANGLE_SHOOT_BALL_0);
+                                break;
+                        }
+                    }
+
+                    if (gamepad1.rightTriggerWasPressed()) {
+                        if (spindexer.ball_in_shooter != null) {
+                            spindexer.shoot_active_ball();
+                        } else {
+                            spindexer.move_to_shoot_ball(0);
+                        }
                     }
 
                     telemetry.addData("Preset Position", spindexer_pos);
                     telemetry.addData("Position", pos_2);
                     telemetry.addData("Ticks in loop", pos_in_loop_2);
-                    telemetry.addData("Nearest 0 angle", Spindexer.calculate_nearest_position_at_angle(pos_2, 0.0));
+                    telemetry.addData("Nearest 0 angle", Spindexer.nearest_sortwise_pos_at_angle(pos_2, 0.0));
                     telemetry.addData("Angle", Math.toDegrees(spindexer.current_angle()));
                     telemetry.addData("Target Angle", Math.toDegrees(spindexer.target_angle()));
                     telemetry.addData("PID working", hardware.spindexerMotor.isBusy());
@@ -144,26 +156,71 @@ public class HardwareTesting extends LinearOpMode {
                     spindexer.update();
 
                     break;
-                case shooterPusherServo:
+                case odometry:
+                    hardware.odometry.update();
+
+                    Pose2D position = hardware.odometry.getPosition();
+
+                    telemetry.addData("orientation           ", position.getHeading(AngleUnit.DEGREES));
+                    telemetry.addData("x pos (m)             ", position.getX(DistanceUnit.METER));
+                    telemetry.addData("y pos (m)             ", position.getY(DistanceUnit.METER));
+
+                    break;
+                case cameraAngleServo:
+
+                    double servo_pos = hardware.cameraAngleServo.getPosition();
+
+                    telemetry.addData("servo position", servo_pos);
 
                     if (gamepad1.xWasPressed()) {
-                        hardware.shooterPusherServo.setPosition(0.0);
-                    } else if (gamepad1.yWasReleased()) {
-                        hardware.shooterPusherServo.setPosition(1.0);
+                        servo_pos = servo_pos + 0.1;
+                    } else if (gamepad1.yWasPressed()) {
+                        servo_pos = servo_pos - 0.1;
                     }
 
-                    telemetry.addData("Position", hardware.shooterPusherServo.getPosition());
+                    servo_pos = Math.min(Math.max(0.0, servo_pos), 1.0);
 
-                    break;
-                case leftForwardDeadwheel:
-                    telemetry.addData("Ticks", hardware.leftForwardDeadwheel.getCurrentPosition());
-                    break;
-                case rightForwardDeadwheel:
-                    telemetry.addData("Ticks", hardware.rightForwardDeadwheel.getCurrentPosition());
-                    break;
-                case backSidewaysDeadwheel:
-                    telemetry.addData("Ticks", hardware.backSidewaysDeadwheel.getCurrentPosition());
-                    break;
+                    hardware.cameraAngleServo.setPosition(servo_pos);
+
+
+                case shooterAngleServo:
+
+                    double servo_pos_3 = hardware.shooterAngleServo.getPosition();
+
+                    telemetry.addData("servo position", servo_pos_3);
+
+                    if (gamepad1.xWasPressed()) {
+                        servo_pos_3 = servo_pos_3 + 0.1;
+                    } else if (gamepad1.yWasPressed()) {
+                        servo_pos_3 = servo_pos_3 - 0.1;
+                    }
+
+                    servo_pos_3 = Math.min(Math.max(0.0, servo_pos_3), 1.0);
+
+                    double servo_angle = ShooterPlusPlus.calculate_rad_angle_for_servo_pos(servo_pos_3);
+                    double dist_factor = ShooterPlusPlus.calculate_dist_factor_for_angle(servo_angle);
+
+                    telemetry.addData("Angle servo deg", Math.toDegrees(servo_angle));
+                    telemetry.addData("Angle servo factor", dist_factor);
+
+                    hardware.shooterAngleServo.setPosition(servo_pos_3);
+
+                case lifterServo:
+
+                    /*double servo_pos_2 = hardware.lifterServo.getPosition();
+
+                    telemetry.addData("servo position", servo_pos_2);
+
+                    if (gamepad1.xWasPressed()) {
+                        servo_pos_2 = servo_pos_2 + 0.1;
+                    } else if (gamepad1.yWasPressed()) {
+                        servo_pos_2 = servo_pos_2 - 0.1;
+                    }
+
+                    servo_pos_2 = Math.min(Math.max(0.0, servo_pos_2), 1.0);
+
+                    hardware.lifterServo.setPosition(servo_pos_2);*/
+
                 case rgbLed:
                     double color = LedIndicator.RED_POSITION + (LedIndicator.VIOLET_POSITION - LedIndicator.RED_POSITION) * ((double)(System.currentTimeMillis() % 10000) / 10000.0);
 

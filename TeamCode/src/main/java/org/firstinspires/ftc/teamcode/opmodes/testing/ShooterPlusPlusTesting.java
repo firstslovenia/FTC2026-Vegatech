@@ -2,14 +2,14 @@ package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.qualcomm.robotcore.eventloop.opmode.*;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
-import org.firstinspires.ftc.teamcode.ShooterPositioning;
+import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.TargetInformation;
-import org.firstinspires.ftc.teamcode.generic.LedIndicator;
-import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.Webcam;
-import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 
 @TeleOp(name = "Shooter++ Testing", group = "Testing")
 public class ShooterPlusPlusTesting extends LinearOpMode {
@@ -17,11 +17,15 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
     Hardware hardware;
     ShooterPlusPlus shooter;
     Webcam webcam;
+    Spindexer spindexer;
 
     double servo_position = 0.0;
+    double rpm_x100 = 1.0;
 
     long last_fire = 0;
-    boolean pusher_up = false;
+    boolean firing = false;
+
+    boolean intake_enabled = false;
 
     @Override
     public void runOpMode() {
@@ -31,13 +35,16 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
         hardware = new Hardware(this);
         hardware.init();
 
-        shooter = new ShooterPlusPlus(this, hardware, null);
-
         webcam = new Webcam(this, hardware);
 
-        hardware.shooterPusherServo.setPosition(0.0);
+        spindexer = new Spindexer(this, hardware);
+
+        shooter = new ShooterPlusPlus(this, hardware, spindexer);
 
         waitForStart();
+
+        spindexer.init();
+        spindexer.switch_to_holding_pattern();
 
         shooter.run();
 
@@ -45,34 +52,102 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
             shooter.update();
             webcam.update();
 
-            if (gamepad1.aWasPressed()) {
-                servo_position = Math.max(0.0, servo_position - 0.1);
-            } else if (gamepad1.bWasPressed()) {
-                servo_position = Math.min(1.0, servo_position + 0.1);
+            // Fire balls
+            if (gamepad1.right_trigger > 0.1) {
+
+                if (spindexer.ball_in_shooter == null) {
+                    spindexer.switch_to_shooting();
+                }
+
+                if (shooter.is_ready_to_fire()) {
+                    spindexer.shoot_active_ball();
+                }
             }
 
-            if (gamepad1.xWasPressed()) {
-                shooter.flywheel_gain = Math.max(0.0, shooter.flywheel_gain - 0.1);
-            } else if (gamepad1.yWasPressed()) {
-                shooter.flywheel_gain = Math.min(1.0, shooter.flywheel_gain + 0.1);
+
+            // Go to spindexer holding / intake (out of ex. shooting)
+            if (gamepad1.dpadUpWasPressed()) {
+                spindexer.switch_to_holding_pattern();
             }
+
+            // Reset spindexer
+            if (gamepad1.dpadDownWasPressed()) {
+                spindexer.ball_to_intake = null;
+                spindexer.ball_in_shooter = null;
+                spindexer.in_survey = false;
+                spindexer.move_to_angle_sortwise(Spindexer.STARTING_ANGLE);
+            }
+
+            spindexer.update();
+            shooter.update();
+
+            if (gamepad1.aWasPressed()) {
+                if (gamepad1.left_bumper) {
+                    servo_position -= 0.01;
+                } else {
+                    servo_position -= 0.1;
+                }
+            } else if (gamepad1.bWasPressed()) {
+                if (gamepad1.left_bumper) {
+                    servo_position += 0.01;
+                } else {
+                    servo_position += 0.1;
+                }
+            }
+
+            servo_position = Math.max(Math.min(servo_position, 1.0), 0.0);
+
+            if (gamepad1.dpadRightWasPressed()) {
+                intake_enabled = !intake_enabled;
+
+                if (intake_enabled) {
+                    hardware.intakeMotor.setPower(0.6);
+                } else {
+                    hardware.intakeMotor.setPower(0.0);
+                }
+            }
+
+            if (gamepad1.dpadLeftWasPressed()) {
+                if (intake_enabled && hardware.intakeMotor.getPower() > 0.5) {
+                    hardware.intakeMotor.setPower(-0.6);
+                } else {
+                    intake_enabled = !intake_enabled;
+
+                    if (intake_enabled) {
+                        hardware.intakeMotor.setPower(-0.6);
+                    } else {
+                        hardware.intakeMotor.setPower(0.0);
+                    }
+                }
+            }
+            if (gamepad1.xWasPressed()) {
+                rpm_x100 += 1.0;
+            } else if (gamepad1.yWasPressed()) {
+                rpm_x100 -= 1.0;
+            }
+
+            shooter.wanted_flywheel_rpm = rpm_x100 * 100.0;
 
             if (gamepad1.rightTriggerWasPressed()) {
-                hardware.shooterPusherServo.setPosition(1.0);
-                pusher_up = true;
+                hardware.spindexerMotor.setPower(1.0);
+                firing = true;
                 last_fire = System.currentTimeMillis();
             }
 
-            if (pusher_up && (System.currentTimeMillis() - last_fire) > 1000) {
-                hardware.shooterPusherServo.setPosition(0.0);
-                pusher_up = false;
+            if (firing && (System.currentTimeMillis() - last_fire) > 1000) {
+                hardware.spindexerMotor.setPower(0.0);
+                firing = false;
             }
 
             hardware.shooterAngleServo.setPosition(servo_position);
 
             double voltage = hardwareMap.voltageSensor.iterator().next().getVoltage();
+            double servo_angle = ShooterPlusPlus.calculate_rad_angle_for_servo_pos(servo_position);
+            double dist_factor = ShooterPlusPlus.calculate_dist_factor_for_angle(servo_angle);
 
-            telemetry.addData("Angle servo pos", hardware.shooterAngleServo.getPosition());
+            telemetry.addData("Angle servo pos", servo_position);
+            telemetry.addData("Angle servo deg", Math.toDegrees(servo_angle));
+            telemetry.addData("Angle servo factor", dist_factor);
             telemetry.addData("RPMs (a)", shooter.last_a_rpm_measurements.average().orElse(0.0));
             telemetry.addData("Calculated RPMs", shooter.calculate_rpm(shooter.flywheel_power, voltage));
             telemetry.addData("Power    ", shooter.flywheel_power);

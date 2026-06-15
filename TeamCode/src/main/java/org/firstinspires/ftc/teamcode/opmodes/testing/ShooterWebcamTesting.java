@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.qualcomm.robotcore.eventloop.opmode.*;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.generic.LedIndicator;
@@ -49,8 +47,8 @@ public class ShooterWebcamTesting extends LinearOpMode {
             telemetry.addData("Distance (tag x)     [m]", webcam.real_x_distance_to_apriltag_m);
             telemetry.addData("Distance (tag y)     [m]", webcam.real_y_distance_to_apriltag_m);
 			telemetry.addData("Distance (target)    [m]", target_information.distance_m);
-			telemetry.addData("Distance (target x)  [m]", shooterPositioning.x_distance_to_target_m);
-			telemetry.addData("Distance (target y)  [m]", shooterPositioning.y_distance_to_target_m);
+			telemetry.addData("Distance (target x)  [m]", shooterPositioning.x_distance_to_target_in);
+			telemetry.addData("Distance (target y)  [m]", shooterPositioning.y_distance_to_target_in);
 			telemetry.addData("To turn for zero   [deg]", Math.toDegrees(target_information.angle_distance_to_zero));
 			telemetry.addData("Ideal target angle [deg]", Math.toDegrees(target_information.ideal_angle_to_target));
 			telemetry.addData("To turn for target [deg]", Math.toDegrees(target_information.angle_distance_rads));

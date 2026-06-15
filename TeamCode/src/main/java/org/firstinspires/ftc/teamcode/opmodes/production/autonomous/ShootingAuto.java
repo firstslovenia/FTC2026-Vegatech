@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.opmodes.production.autonomous;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
@@ -15,7 +14,9 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.Spindexer;
+import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.BallColor;
 
@@ -33,28 +34,25 @@ public class ShootingAuto extends OpMode {
     public Pose shootPose;
     public Pose endPose;
     public Pose pickupPose;
-
     public Pose goalPose;
 
-    public double ballPickupXOffsetRed = 30.0;
-    public double ballPickupXOffsetBlue = -30.0;
+    public ShooterPositioning positioning = new ShooterPositioning();
+    public TargetInformation targetInformation = null;
+
+    public static double ballPickupXOffsetRed = 30.0;
+    public static double ballPickupXOffsetBlue = -30.0;
 
     /// X offset to apply to final position to pickup balls
     public double ballPickupXOffset = ballPickupXOffsetRed;
 
-    // The plus here adds the range to the actual board of the goal
-    // instead of its center.
-    //
-    // We add that because the pose we're calculating with is the center of the robot
-    // and not the shooter front.
-    public Pose blueGoalPose = new Pose(8.0, 135.0);
-    public Pose redGoalPose = new Pose(132.0, 136.0);
+    public static Pose blueGoalPose = new Pose(8.0, 135.0);
+    public static Pose redGoalPose = new Pose(132.0, 136.0);
 
     // Target poses for far autonomous modes
-    public Pose blueGoalFarPose = new Pose(15.0, 136.0);
-    public Pose redGoalFarPose = new Pose(129.0, 136.0);
+    public static Pose blueGoalFarPose = new Pose(15.0, 136.0);
+    public static Pose redGoalFarPose = new Pose(129.0, 136.0);
 
-    public Pose obeliskPose = new Pose(72.0, 144.0);
+    public static Pose obeliskPose = new Pose(72.0, 144.0);
 
     //private final Pose startPose = new Pose(119.6, 130, Math.toRadians(36));
     //private final Pose shootPose = new Pose(87.5, 108, Math.toRadians(36));
@@ -87,17 +85,8 @@ public class ShootingAuto extends OpMode {
 
     public void buildPaths() {
 
-        double shooting_delta_y = goalPose.getY() - shootPose.getY();
-        double shooting_delta_x = goalPose.getX() - shootPose.getX();
-
-        // LOL!
-        double angle = Drivetrain.getMagnitudeAndPhiFor(shooting_delta_x, shooting_delta_y).second;
-
-        shootPose = shootPose.setHeading(angle);
-
-        // the added factor here is to slightly compensate for the distance being from the center of the robot and not the shooter
-        double shooting_distance_in = Math.sqrt(shooting_delta_x * shooting_delta_x + shooting_delta_y * shooting_delta_y) - 7.2;
-        shooting_distance_m = shooting_distance_in / 39.37;
+        targetInformation = positioning.compute_target_information_for_two_pos(ShooterPositioning.to_pose2d(shootPose), ShooterPositioning.to_pose2d(goalPose));
+        shootPose = shootPose.setHeading(targetInformation.ideal_angle_to_target);
 
         // Pedropathing doesn't work if it has no work to do
         lookAtObeliskPose = shootPose.withY(shootPose.getY() + 10.0);
@@ -162,7 +151,7 @@ public class ShootingAuto extends OpMode {
             // Go to the shooting position
             case 3:
                 if (!follower.isBusy()) {
-                    shooter.update_rpm_for_distance_m(shooting_distance_m);
+                    shooter.update_for_target(targetInformation);
                     setPathState(4);
                 }
                 break;
@@ -203,7 +192,7 @@ public class ShootingAuto extends OpMode {
                     shooter.update_flywheel_rpm(0.0);
 
                     spindexer.switch_to_holding_pattern();
-                    spindexer.move_to_angle(0.0);
+                    spindexer.move_to_angle_sortwise(0.0);
 
                     follower.followPath(end, true);
                     setPathState(5);
@@ -252,7 +241,7 @@ public class ShootingAuto extends OpMode {
                 spindexer.ball_to_intake = null;
                 spindexer.ball_in_shooter = null;
                 spindexer.in_survey = false;
-                spindexer.move_to_angle(0.0);
+                spindexer.move_to_angle_sortwise(0.0);
                 break;
         }
     }
@@ -288,7 +277,7 @@ public class ShootingAuto extends OpMode {
         telemetry.addData("spx busy", spindexer.is_motor_busy());
         telemetry.addData("spx Position", hardware.spindexerMotor.getCurrentPosition());
         telemetry.addData("spx Wanted pos", hardware.spindexerMotor.getTargetPosition());
-        telemetry.addData("spx Nearest 0 angle", spindexer.calculate_nearest_position_at_angle(hardware.spindexerMotor.getCurrentPosition(), 0.0));
+        telemetry.addData("spx Nearest 0 angle", spindexer.nearest_shootwise_pos_at_angle(hardware.spindexerMotor.getCurrentPosition(), 0.0));
         telemetry.addData("spx Angle", Math.toDegrees(spindexer.current_angle()));
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());

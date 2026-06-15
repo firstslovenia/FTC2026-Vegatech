@@ -5,16 +5,17 @@ public enum HardwareComponent {
     frontRightMotor,
     backLeftMotor,
     backRightMotor,
-    leftForwardDeadwheel,
-    rightForwardDeadwheel,
-    backSidewaysDeadwheel,
+    odometry,
     shooterMotor,
-    shooterPusherServo,
     intakeMotor,
     spindexerMotor,
     Spindexer,
+    shooterAngleServo,
     rgbLed,
-    colorSensor;
+    colorSensor,
+    // Giblje med tko 0.3 in 1.0
+    cameraAngleServo,
+    lifterServo;
 
     private static final HardwareComponent[] values = values();
 

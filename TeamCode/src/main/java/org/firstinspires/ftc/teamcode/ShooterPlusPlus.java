@@ -14,6 +14,7 @@ public class ShooterPlusPlus {
     /// Tau for our startup regulation
     static double STARTUP_TAU = 0.5;
 
+    // --- Measured constants ------
     // Power to rpm conversion: power is in percentages, rpm just rpm
     // See graph: https://www.wolframalpha.com/input?i=fit+linear&assumption=%7B%22F%22%2C+%22LinearFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B100.0%2C+4950%7D%2C%7B90.0%2C+4450%7D%2C%7B80.0%2C+4050%7D%2C%7B70.0%2C+3460%7D%2C%7B60.0%2C+2950%7D%2C+%7B50.0%2C+2450%7D%7D%22
     /// The factor times x in the power to rpm conversion
@@ -25,15 +26,42 @@ public class ShooterPlusPlus {
     /// The voltage (under load) used for the power to rpm convesion
     static double REGULATOR_BASE_VOLTAGE = 11.18;
 
+    /// The lowest and highest angles (servo 0.0 and 1.0 respectively)
+    static double ANGLE_SERVO_START = 20.0 / 180.0 * Math.PI;
+    static double ANGLE_SERVO_END = 38.5 / 180.0 * Math.PI;
+
+    /// Coefficients from the best fit quadratic for distance_factor(angle in rads), where the distance factor is multiplied
+    /// times the lowest angle we can shoot
+    ///
+    /// See [...](https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0.349%2C+1.0%7D%2C+%7B0.435%2C+0.943%7D%2C+%7B0.521%2C+0.795%7D%2C+%7B0.607%2C+0.614%7D%2C+%7B0.672%2C+0.400%7D%7D%22)
+    /// largest residual: 1.2%, 5.28 cm
+    static double DISTANCE_ANGLE_FUNC_A = -4.72322;
+    static double DISTANCE_ANGLE_FUNC_B = 2.9753;
+    static double DISTANCE_ANGLE_FUNC_C = 0.537631;
+
+    /// Coefficients for the inverse function of the one above.
+    ///
+    /// See
+    static double INVERSE_DIST_ANGLE_FUNC_A = -0.64999;
+    static double INVERSE_DIST_ANGLE_FUNC_B = 0.403191;
+    static double INVERSE_DIST_ANGLE_FUNC_C = 0.611814;
+
+    // ------------------------------
+
     /// The max flywheel power we have
     public double flywheel_gain = 1.0;
 
     /// When we started running the thingo
     long started_running_time_ms = 0;
-
     OpMode callingOpMode;
     Hardware hardware;
     Spindexer spindexer;
+
+    ///  What distance we are regulating for
+    public double shooting_distance_m = Double.NaN;
+
+    /// What RPM we want the flywheel's RPM to be
+    public double wanted_flywheel_rpm = 0.0;
 
     /// The current flywheel's power - what we're regulating
     public double flywheel_power = 0.0;
@@ -68,13 +96,81 @@ public class ShooterPlusPlus {
     }
 
     /// Calculates the expected RPM from the motor's power and voltage
-    public double calculate_rpm(double power, double voltage_v) {
+    public static double calculate_rpm(double power, double voltage_v) {
         return ((REGULATOR_POW_TO_RPM_K * power * 100.0) + REGULATOR_POW_TO_RPM_C) * (voltage_v / REGULATOR_BASE_VOLTAGE);
     }
 
     /// Calculates the power to set for wanted rpm on the motor with the given voltage
-    public double calculate_power_for_rpm(double wanted_rpm, double voltage_v) {
+    public static double calculate_power_for_rpm(double wanted_rpm, double voltage_v) {
         return ((wanted_rpm * REGULATOR_BASE_VOLTAGE / voltage_v) - REGULATOR_POW_TO_RPM_C ) / REGULATOR_POW_TO_RPM_K / 100.0;
+    }
+
+    /// Calculates the radian angle we are shooting at given the servo position
+    public static double calculate_rad_angle_for_servo_pos(double servo_pos) {
+        return ((ANGLE_SERVO_END - ANGLE_SERVO_START) * servo_pos) + ANGLE_SERVO_START;
+    }
+
+    /// Calculates the distance factor (times our lowest angle) given our current shooting angle radians.
+    ///
+    /// See the constants above; this seems to best fit a quadratic.
+    public static double calculate_dist_factor_for_angle(double angle_rads) {
+        return DISTANCE_ANGLE_FUNC_A * angle_rads * angle_rads + DISTANCE_ANGLE_FUNC_B * angle_rads + DISTANCE_ANGLE_FUNC_C;
+    }
+
+    /// Calculates the angle in radians given our distance factor (times our lowest angle).
+    ///
+    /// Opposite operation of [ShooterPlusPlus::calculate_dist_factor_for_angle].
+    ///
+    /// See the constants above; this seems to best fit a quadratic.
+    public static double calculate_angle_for_distance_factor(double dist_factor) {
+        return INVERSE_DIST_ANGLE_FUNC_A * dist_factor * dist_factor + INVERSE_DIST_ANGLE_FUNC_B * dist_factor + INVERSE_DIST_ANGLE_FUNC_C;
+    }
+
+    /// Calculates the distance we expect the shooter the hit (at the lowest angle) for the given RPM
+    public static double rpm_to_distance_cm(double rpm) {
+        // TODO
+        return 0.0;
+    }
+
+    /// Calculates the RPM to run the shooter at for a given distance (at the lowest angle)
+    public static double distance_cm_to_rpm(double distance_cm) {
+        // TODO
+        return 0.0;
+    }
+
+    /// Updates the shooter's parameters (RPM, angle) for shooting at a target
+    public void update_for_target(TargetInformation target) {
+        update_for_distance(target.distance_m);
+    }
+
+    /// Updates the shooter's parameters (RPM, angle) for shooting at a specific distance
+    public void update_for_distance(double distance_m) {
+        update_flywheel_rpm(distance_cm_to_rpm(distance_m * 100.0));
+        shooting_distance_m = distance_m;
+
+        // TODO: angle, etc.
+    }
+
+    public void update_flywheel_rpm(double flywheel_rpm) {
+        if (flywheel_rpm == 0.0) {
+            disable_flywheel();
+        } else {
+            // Note: won't really work (unless ran in a loop) because we need load voltage here
+            set_flywheel_power(calculate_power_for_rpm(flywheel_rpm, callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage()));
+
+            flywheel_enabled = true;
+        }
+    }
+
+    ///  Returns how far off we are from the wanted RPM.
+    ///
+    /// Returs NaN if the shooter is not currently enabled
+    public double get_rpm_error() {
+        if (!flywheel_enabled) {
+            return Double.NaN;
+        } else {
+            return Math.abs(wanted_flywheel_rpm - last_a_rpm_measurements.average().orElse(0.0));
+        }
     }
 
     public void disable_flywheel() {
@@ -93,6 +189,15 @@ public class ShooterPlusPlus {
         flywheel_power = power;
     }
 
+
+    /// Returns true when we're okay to fire
+    public boolean is_ready_to_fire() {
+
+        boolean flywheel_ready = flywheel_enabled;
+        boolean spindexer_not_busy = !spindexer.is_motor_busy() && spindexer.can_move();
+
+        return flywheel_ready && spindexer_not_busy;
+    }
     public void run() {
         started_running_time_ms = System.currentTimeMillis();
         flywheel_enabled = true;
@@ -167,6 +272,8 @@ public class ShooterPlusPlus {
         }
 
         flywheel_power = flywheel_rel_power * flywheel_gain;
+
+        set_flywheel_power(calculate_power_for_rpm(wanted_flywheel_rpm, callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage()));
 
         if (!dry_run) {
             set_flywheel_power(flywheel_power);

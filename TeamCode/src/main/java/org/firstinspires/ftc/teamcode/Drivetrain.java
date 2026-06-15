@@ -2,15 +2,12 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Pair;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.generic.GenericPIDController;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
@@ -58,8 +55,17 @@ public class Drivetrain {
 	/// By default, this is forward (Pi / 2)
 	public double wanted_heading = Math.PI / 2.0;
 
-	/// The last robot orientation, saved so we can reset it if our readout becomes all zeroes
-	public Orientation last_robot_orientation;
+	/// The last robot position, saved so we can reset it if our readout becomes garbage
+	public Pose2D last_robot_position;
+
+    /// Offset of the current heading to get the local one; (added to current to get local)
+    public double local_heading_offset = 0.0;
+
+    /// The heading local_heading_offset is relative to; The core heading sent to the odometry computer
+    public double base_heading = 0.0;
+
+    /// When we set the new pos, so we give it some time to update
+    public long set_new_pos_at = 0;
 
 	/// Saved so we don't try to reset the imu 1000x times a second
 	long last_imu_reset_time = 0;
@@ -69,6 +75,9 @@ public class Drivetrain {
 
 	/// If our rotation was caused by a robot-centric manual rotation, when we started doing that
 	long started_rotating_due_to_manual_stick_time = 0;
+
+    /// When we started recalibrating the compass
+    public long started_compass_recalibration_ms = 0;
 
 	public Drivetrain(LinearOpMode opMode, Hardware hw_map) {
 		callingOpMode = opMode;
@@ -95,37 +104,68 @@ public class Drivetrain {
 	/// Sets the starting direction to the current direction
 	public void resetStartingDirection() {
 		wanted_heading = Math.PI / 2.0;
-		hardware.imu.resetYaw();
+
+        // No, we can't do this in hardware....
+        if (last_robot_position != null) {
+            local_heading_offset = -last_robot_position.getHeading(AngleUnit.RADIANS);
+
+            if (local_heading_offset <= - Math.PI * 2.0) {
+                local_heading_offset += Math.PI * 2.0;
+            } else if (local_heading_offset >= Math.PI * 2.0) {
+                local_heading_offset -= Math.PI * 2.0;
+            }
+        }
 	}
 
-	/// Returns how much we've turned (in radians) since the start, with a provided Orientation
-	///
-	/// What our old odometry heading used to be
-	public float getHeadingDifferenceFromStart(Orientation orientation) {
-		if (isIMUOk(orientation)) {
-			return orientation.thirdAngle;
-		} else {
-			tryFixIMU();
-			return last_robot_orientation.thirdAngle;
-		}
-	}
-
-    /// Returns how much we've turned (in radians) since the start
+    /// Sets the current position from an external sensor
     ///
-    /// effectively our current heading, based on the previous orientation
-    public float getCurrentHeading() {
-        return last_robot_orientation.thirdAngle;
+    /// also updates the odometry
+    public void setPos(Pose2D new_pos) {
+       hardware.odometry.setPosition(new_pos);
+
+       local_heading_offset = local_heading_offset - base_heading + new_pos.getHeading(AngleUnit.RADIANS);
+
+       last_robot_position = new_pos;
+       base_heading = new_pos.getHeading(AngleUnit.RADIANS);
+
+       if (local_heading_offset <= - Math.PI * 2.0) {
+           local_heading_offset += Math.PI * 2.0;
+       } else if (local_heading_offset >= Math.PI * 2.0) {
+           local_heading_offset -= Math.PI * 2.0;
+       }
+
+       set_new_pos_at = System.currentTimeMillis();
+    }
+
+	/// Returns our current heading with a provided Pose2D
+	public double getHeadingDifferenceFromStart(Pose2D pos) {
+        double heading = pos.getHeading(AngleUnit.RADIANS);
+
+        heading += local_heading_offset;
+
+        if (heading <= - Math.PI * 2.0) {
+            heading += Math.PI * 2.0;
+        } else if (heading >= Math.PI * 2.0) {
+            heading -= Math.PI * 2.0;
+        }
+
+        return heading;
+	}
+
+    /// Returns our current heading, based on the previous orientation
+    public double getCurrentHeading() {
+        return getHeadingDifferenceFromStart(last_robot_position) + Math.PI / 2.0;
     }
 
 	/// Returns whether the IMU orientation sensors are working correctly, with an existing Orientation to avoid calling the expensive reading twice
-	public boolean isIMUOk(Orientation orientation) {
-		return orientation.thirdAngle != 0.0f;
+	public boolean isIMUOk(Pose2D pos) {
+		return pos.getHeading(AngleUnit.RADIANS) != 0.0f;
 	}
 
 	/// Resets the IMU after we get BONKed
 	public void tryFixIMU() {
 		if ((System.currentTimeMillis() - last_imu_reset_time) > 1000) {
-			hardware.imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(last_robot_orientation)));
+            hardware.odometry.recalibrateIMU();
 			last_imu_reset_time = System.currentTimeMillis();
 		}
 	}
@@ -195,11 +235,40 @@ public class Drivetrain {
 	/// Updates the drive motors based off a translation and rotation stick
 	public void update(Vector2D translation_stick, Vector2D rotation_stick) {
 
-		// Save this, so we only call it once (6 ms!!!!) -> slightly expensive
-		Orientation current_orientation = hardware.imu.getRobotOrientation(AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
-		angular_velocity_rad_per_s = hardware.imu.getRobotAngularVelocity(AngleUnit.RADIANS).zRotationRate;
+        long now_ms = System.currentTimeMillis();
+        hardware.odometry.update();
 
-		float heading_difference_from_start = getHeadingDifferenceFromStart(current_orientation);
+        if (started_compass_recalibration_ms != 0) {
+
+            if (now_ms - started_compass_recalibration_ms > 300) {
+                started_compass_recalibration_ms = 0;
+            }
+
+            return;
+        }
+
+        if (set_new_pos_at != 0) {
+
+            Pose2D new_pos = hardware.odometry.getPosition();
+
+            if (now_ms - set_new_pos_at > 500) {
+                // fuck me I guess, my fault for wanting to make a robot that works
+                set_new_pos_at = 0;
+            }
+
+            // Has it set it yet?
+            if (!ShooterPositioning.pose2d_rougly_eq(new_pos, last_robot_position)) {
+                return;
+            }
+
+            set_new_pos_at = 0;
+
+            return;
+        }
+
+        last_robot_position = hardware.odometry.getPosition();
+
+		double heading_difference_from_start = getHeadingDifferenceFromStart(last_robot_position);
 
 		// Clear rotation due to manual stick; the time is here so we don't stop it 1 ms later, when we're not actually rotating yet
 		if (started_rotating_due_to_manual_stick_time != 0 &&
@@ -392,12 +461,6 @@ public class Drivetrain {
 			hardware.backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 		}
 
-		if (isIMUOk(current_orientation)) {
-			last_robot_orientation = current_orientation;
-		} else {
-			tryFixIMU();
-		}
-
 		if (debug) {
 
 			callingOpMode.telemetry.addLine("-- Drivetrain --");
@@ -405,9 +468,11 @@ public class Drivetrain {
 			callingOpMode.telemetry.addData("stoppped_time         ", stopped_moving_time);
 			callingOpMode.telemetry.addData("breaking?             ", hardware.frontLeftMotor.getZeroPowerBehavior() == DcMotor.ZeroPowerBehavior.BRAKE);
 			callingOpMode.telemetry.addData("translation power     ", translation_power);
-			callingOpMode.telemetry.addData("orientation           ", Math.toDegrees(current_orientation.thirdAngle));
-			callingOpMode.telemetry.addData("orientation (rads)    ", current_orientation.thirdAngle);
+			callingOpMode.telemetry.addData("orientation           ", Math.toDegrees(getCurrentHeading()));
+			callingOpMode.telemetry.addData("orientation (rads)    ", getCurrentHeading());
 			callingOpMode.telemetry.addData("translation local  dir", Math.toDegrees(translation_direction));
+            callingOpMode.telemetry.addData("x pos (m)             ", last_robot_position.getX(DistanceUnit.METER));
+            callingOpMode.telemetry.addData("y pos (m)             ", last_robot_position.getY(DistanceUnit.METER));
 
 			if (fieldCentricTranslation) {
 				callingOpMode.telemetry.addData("translation global dir",  Math.toDegrees(translation_inputs.second));
@@ -419,8 +484,10 @@ public class Drivetrain {
 			callingOpMode.telemetry.addData("Back  Right motor power", backRight);
 
 			callingOpMode.telemetry.addData("heading difference", Math.toDegrees(heading_difference_from_start));
+            callingOpMode.telemetry.addData("heading offset    ", Math.toDegrees(local_heading_offset));
+            callingOpMode.telemetry.addData("heading (imu)     ", last_robot_position.getHeading(AngleUnit.DEGREES));
 			callingOpMode.telemetry.addData("Angular velocity (rad / s)", angular_velocity_rad_per_s);
-			callingOpMode.telemetry.addData("IMU ok", isIMUOk(current_orientation));
+			callingOpMode.telemetry.addData("IMU ok", isIMUOk(last_robot_position));
 			callingOpMode.telemetry.addData("Last IMU fix", last_imu_reset_time);
 
 			callingOpMode.telemetry.addData("Rotating due to manual time", started_rotating_due_to_manual_stick_time);

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.generic.GenericPIDController;
 import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 
+import java.lang.annotation.Target;
 import java.util.Optional;
 
 public class Shooter {
@@ -132,9 +133,17 @@ public class Shooter {
         //hardware.shooterMotor.setPower(compensated_power);
     }
 
-    public void update_rpm_for_distance_m(double distance_m) {
+    /// Updates the shooter's parameters (RPM, angle) for shooting at a target
+    public void update_for_target(TargetInformation target) {
+        update_for_distance(target.distance_m);
+    }
+
+    /// Updates the shooter's parameters (RPM, angle) for shooting at a specific distance
+    public void update_for_distance(double distance_m) {
         update_flywheel_rpm(distance_cm_to_rpm(distance_m * 100.0));
         shooting_distance_m = distance_m;
+
+        // TODO: angle, etc.
     }
 
     public void update_flywheel_rpm(double flywheel_rpm) {
@@ -171,7 +180,7 @@ public class Shooter {
     public void fire() {
         pusher_enabled = true;
         enabled_pusher_time_ms = System.currentTimeMillis();
-        hardware.shooterPusherServo.setPosition(1.0);
+        //hardware.shooterPusherServo.setPosition(1.0);
 
         started_being_stable_ms = 0;
     }
@@ -180,7 +189,7 @@ public class Shooter {
     public void reset_shooter_pusher() {
         pusher_enabled = false;
         enabled_pusher_time_ms = 0;
-        hardware.shooterPusherServo.setPosition(0.0);
+        //hardware.shooterPusherServo.setPosition(0.0);
     }
 
     /// Returns true when we're okay to fire

@@ -4,11 +4,15 @@ import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
+import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.generic.BallColor;
 import org.firstinspires.ftc.teamcode.generic.LedIndicator;
@@ -18,17 +22,20 @@ import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
+import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.ShootingAuto;
 
-@TeleOp(name = "Main (Unknown Team)", group = "Production")
+@TeleOp(name = "!! DO NOT USE !! Main (Unknown Team)", group = "Production")
 public class Main extends LinearOpMode {
 
 	Hardware hardware;
 	Drivetrain drivetrain;
 	LedIndicator ledIndicator;
-	Shooter shooter;
+	ShooterPlusPlus shooter;
     Spindexer spindexer;
     Webcam webcam;
 	Follower pedroFollower;
+
+    Pose2D starting_pos = new Pose2D(DistanceUnit.METER, 1.0, 1.0, AngleUnit.RADIANS, Math.PI / 2.0);
 
     Team team = null;
 
@@ -36,9 +43,12 @@ public class Main extends LinearOpMode {
 
     /// The TargetInformation of the target we're currently rotating towards
     TargetInformation target_to_rotate_to = null;
+    ShooterPositioning positioning = null;
+
     /// The wanted heading of the target for target_to_rotate_to
     double wanted_heading_for_target = Double.NaN;
     long last_long_loop_ms = 0;
+    public boolean updated_position = false;
     static long LONG_LOOP_DELAY_MS = 100;
 
     SlidingWindow<Long> last_loops_took = new SlidingWindow(50);
@@ -50,6 +60,9 @@ public class Main extends LinearOpMode {
     public void spindexer_override() {
 
     }
+
+    // Note: gobilda IMU ne dela dobro na nizkih napetostih!
+    // also, pusti za njega kkšne 0.5 s inita pred startom
 
 	@Override
 	public void runOpMode() {
@@ -67,24 +80,30 @@ public class Main extends LinearOpMode {
 
         spindexer = new Spindexer(this, hardware);
 
-		shooter = new Shooter(this, hardware, spindexer);
-        shooter.reset_shooter_pusher();
+		shooter = new ShooterPlusPlus(this, hardware, spindexer);
 
 		webcam = new Webcam(this, hardware);
 
 		waitForStart();
-		drivetrain.resetStartingDirection();
+        drivetrain.setPos(new Pose2D(DistanceUnit.INCH, 40, 40, AngleUnit.RADIANS, Math.PI / 2));
+        drivetrain.resetStartingDirection();
 
         spindexer.init();
         spindexer_override();
-        spindexer.start_survey();
+        spindexer.switch_to_holding_pattern();
 
-		pedroFollower = Constants.createFollower(hardwareMap);
-		pedroFollower.update();
+		//pedroFollower = Constants.createFollower(hardwareMap);
+		//pedroFollower.update();
 
 		while (opModeIsActive()) {
 
-            telemetry.addData("order", webcam.order);
+            //telemetry.addData("order", webcam.order);
+
+            /*if (webcam.last_calculated_pos != null) {
+                telemetry.addData("calculated pos x", webcam.last_calculated_pos.getX(DistanceUnit.INCH));
+                telemetry.addData("calculated pos y", webcam.last_calculated_pos.getY(DistanceUnit.INCH));
+                telemetry.addData("calculated angle", webcam.last_calculated_pos.getHeading(AngleUnit.DEGREES));
+            }*/
 
             long now = System.currentTimeMillis();
 
@@ -107,7 +126,7 @@ public class Main extends LinearOpMode {
                     if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
                         led_position_to_set = LedIndicator.RED_POSITION;
                     } else {
-                        if (spindexer.ball_in_shooter != null) {
+                        /*if (spindexer.ball_in_shooter != null) {
                             BallColor color = spindexer.balls[spindexer.ball_in_shooter];
 
                             if (color == BallColor.Green) {
@@ -119,7 +138,7 @@ public class Main extends LinearOpMode {
                             }
                         } else {
                             led_position_to_set = LedIndicator.LIGHT_GREEN_POSITION;
-                        }
+                        }*/
                     }
 
                     telemetry.addData("Shooter distance (cm)", shooter.shooting_distance_m * 100.0);
@@ -127,6 +146,7 @@ public class Main extends LinearOpMode {
 
                 telemetry.addData("Shooter RPM", shooter.wanted_flywheel_rpm);
                 telemetry.addData("Shooter Error", rpm_error);
+                telemetry.addData("Shooter RPM measurements len", shooter.last_a_rpm_measurements.length());
             }
 
 			Vector2D translation_vector = new Vector2D(gamepad1.left_stick_x, -gamepad1.left_stick_y);
@@ -147,20 +167,20 @@ public class Main extends LinearOpMode {
                 intake_enabled = !intake_enabled;
 
                 if (intake_enabled) {
-                    hardware.intakeMotor.setPower(1.0);
+                    hardware.intakeMotor.setPower(0.6);
                 } else {
                     hardware.intakeMotor.setPower(0.0);
                 }
             }
 
             if (gamepad1.bWasPressed()) {
-                if (intake_enabled && hardware.intakeMotor.getPower() > 0.9) {
-                    hardware.intakeMotor.setPower(-1.0);
+                if (intake_enabled && hardware.intakeMotor.getPower() > 0.5) {
+                    hardware.intakeMotor.setPower(-0.6);
                 } else {
                     intake_enabled = !intake_enabled;
 
                     if (intake_enabled) {
-                        hardware.intakeMotor.setPower(-1.0);
+                        hardware.intakeMotor.setPower(-0.6);
                     } else {
                         hardware.intakeMotor.setPower(0.0);
                     }
@@ -190,26 +210,26 @@ public class Main extends LinearOpMode {
                 }
             }
 
-            // Rotate towards a target we see
+            // Rotate towards the goal
             if (gamepad1.y || gamepad1.right_bumper) {
+                positioning = new ShooterPositioning();
+                target_to_rotate_to = positioning.compute_target_information(drivetrain.last_robot_position, team);
+                wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
+                drivetrain.wanted_heading = wanted_heading_for_target;
+                led_position_to_set = LedIndicator.AQUA_POSITION;
 
-                if (do_long_loop) {
-                    webcam.update();
-                }
-
-                if (webcam.target_position != null && now - webcam.target_position.time_ms < LONG_LOOP_DELAY_MS + 10) {
-
-                    if (target_to_rotate_to == null || !target_to_rotate_to.partial_eq(webcam.target_position)) {
-                        target_to_rotate_to = webcam.target_position;
-                        // Math.PI / 2.0 here because current heading 0 is forward
-                        wanted_heading_for_target = drivetrain.getCurrentHeading() + Math.PI / 2.0 + target_to_rotate_to.angle_distance_rads;
-                    }
-
-                    drivetrain.wanted_heading = wanted_heading_for_target;
-                    led_position_to_set = LedIndicator.AQUA_POSITION;
-                } else {
-                    led_position_to_set = LedIndicator.RED_POSITION;
-                }
+                telemetry.addData("AAA X", ShootingAuto.blueGoalPose.getX());
+                telemetry.addData("AAA y", ShootingAuto.blueGoalPose.getY());
+                telemetry.addData("BBB X", ShooterPositioning.to_pose2d(ShootingAuto.blueGoalPose).getX(DistanceUnit.INCH));
+                telemetry.addData("BBB Y", ShooterPositioning.to_pose2d(ShootingAuto.blueGoalPose).getY(DistanceUnit.INCH));
+                telemetry.addData("CCC X", drivetrain.last_robot_position.getX(DistanceUnit.INCH));
+                telemetry.addData("CCC Y", drivetrain.last_robot_position.getY(DistanceUnit.INCH));
+                telemetry.addData("Target distance (m)", target_to_rotate_to.distance_m);
+                telemetry.addData("Target ideal angle", Math.toDegrees(target_to_rotate_to.ideal_angle_to_target));
+                telemetry.addData("Target y diff", target_to_rotate_to.y);
+                telemetry.addData("Target x diff", target_to_rotate_to.x);
+                telemetry.addData("Target to turn", Math.toDegrees(target_to_rotate_to.angle_distance_rads));
+                telemetry.addData("Target aaaa", Math.toDegrees(target_to_rotate_to.angle_distance_to_zero));
             }
             else {
                 if (target_to_rotate_to != null) {
@@ -227,53 +247,49 @@ public class Main extends LinearOpMode {
 				if (shooter.flywheel_enabled) {
 					shooter.update_flywheel_rpm(0.0);
 				} else {
-                    if (target_to_rotate_to != null) {
-                        shooter.update_rpm_for_distance_m(target_to_rotate_to.distance_m);
-                    } else if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
-                        shooter.update_rpm_for_distance_m(webcam.target_position.distance_m);
+                    if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
+                        shooter.update_for_target(webcam.target_position);
+                    }
+                    else if (target_to_rotate_to != null) {
+                        shooter.update_for_target(target_to_rotate_to);
+                    } /*else if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
+                        shooter.update_for_target(webcam.target_position);
                     } else {
                         // Screw it
                         shooter.update_flywheel_rpm(3000.0);
-                    }
+                    }*/
 				}
 			}
 
             // Fire balls
 			if (gamepad2.right_trigger > 0.1) {
-                if (shooter.is_ready_to_fire()) {
-                    shooter.fire();
-
-                    if (spindexer.ball_in_shooter != null) {
-                        spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
-                        spindexer.ball_in_shooter = null;
-                    }
-                }
-			}
-
-            if (gamepad2.left_trigger > 0.1) {
-                shooter.fire();
-
-                if (spindexer.ball_in_shooter != null) {
-                    spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
-                    spindexer.ball_in_shooter = null;
-                }
+                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                hardware.spindexerMotor.setPower(1.0);
+			} else if (hardware.spindexerMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                spindexer.switch_to_holding_pattern();
             }
 
             shooter.update();
 
+            // Not recommended!
+            if (gamepad2.guideWasPressed()) {
+                updated_position = false;
+            }
+
             // Select spindexer ball
             if (gamepad2.leftBumperWasPressed()) {
-                if (spindexer.ball_in_shooter != null && spindexer.balls[spindexer.ball_in_shooter] == BallColor.Green) {
+                /*if (spindexer.ball_in_shooter != null && spindexer.balls[spindexer.ball_in_shooter] == BallColor.Green) {
                     spindexer.switch_to_holding_pattern();
                 } else {
                     spindexer.switch_to_coloured_ball(BallColor.Green);
-                }
+                }*/
             } else if (gamepad2.rightBumperWasPressed()) {
-                if (spindexer.ball_in_shooter != null && spindexer.balls[spindexer.ball_in_shooter] == BallColor.Purple) {
+                /*if (spindexer.ball_in_shooter != null && spindexer.balls[spindexer.ball_in_shooter] == BallColor.Purple) {
                     spindexer.switch_to_holding_pattern();
                 } else {
                     spindexer.switch_to_coloured_ball(BallColor.Purple);
-                }
+                }*/
             }
 
             // Go to spindexer holding / intake (out of ex. shooting)
@@ -286,7 +302,7 @@ public class Main extends LinearOpMode {
                 spindexer.ball_to_intake = null;
                 spindexer.ball_in_shooter = null;
                 spindexer.in_survey = false;
-                spindexer.move_to_angle(0.0);
+                spindexer.move_to_angle_sortwise(Spindexer.STARTING_ANGLE);
             }
 
             // Run spindexer survey
@@ -319,13 +335,21 @@ public class Main extends LinearOpMode {
 
 			drivetrain.update(translation_vector, rotation_vector);
 
-            if (webcam.target_position != null) {
-                telemetry.addData("Target distance (m)", webcam.target_position.distance_m);
-                telemetry.addData("Target ideal angle", Math.toDegrees(webcam.target_position.ideal_angle_to_target));
-                telemetry.addData("Target to turn", Math.toDegrees(webcam.target_position.angle_distance_rads));
+            if (drivetrain.set_new_pos_at != 0 || drivetrain.started_compass_recalibration_ms != 0) {
+                led_position_to_set = LedIndicator.ORANGE_POSITION;
             }
 
             if (do_long_loop) {
+                webcam.update();
+
+                /*if (!updated_position && webcam.last_calculated_pos != null && now - webcam.last_calculated_pos_time < 100) {
+                    if (!ShooterPositioning.pose2d_rougly_eq(drivetrain.last_robot_position, webcam.last_calculated_pos) && now - webcam.same_pos_since > 500) {
+                        drivetrain.setPos(webcam.last_calculated_pos);
+                        webcam.last_calculated_pos_time = 0;
+                        updated_position = true;
+                    }
+                }*/
+
                 last_long_loop_ms = now;
             }
 
@@ -339,7 +363,7 @@ public class Main extends LinearOpMode {
 
             hardware.rgbLed.setPosition(led_position_to_set);
 
-            telemetry.addData("RPM (measured)", shooter.last_rpm_measurements.average().orElse(0.0));
+            //telemetry.addData("RPM (measured)", shooter.last_a_rpm_measurements.average().orElse(0.0));
             telemetry.update();
 		}
 	}
