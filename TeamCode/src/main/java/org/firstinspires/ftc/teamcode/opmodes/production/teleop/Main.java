@@ -273,7 +273,7 @@ public class Main extends LinearOpMode {
             // Angle
             if (gamepad2.leftBumperWasPressed()) {
                 servo_position -= 0.1;
-            } else if (gamepad1.bWasPressed()) {
+            } else if (gamepad2.rightBumperWasPressed()) {
                 servo_position += 0.1;
             }
 
@@ -291,7 +291,7 @@ public class Main extends LinearOpMode {
             // Fire balls
 			if (gamepad2.right_trigger > 0.1) {
                 hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                hardware.spindexerMotor.setPower(-1.0);
+                hardware.spindexerMotor.setPower(-0.5);
 			} else if (hardware.spindexerMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                 hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 hardware.spindexerMotor.setTargetPosition(hardware.spindexerMotor.getCurrentPosition());
