@@ -245,21 +245,32 @@ public class Main extends LinearOpMode {
             // Enable / disable the shooter
 			if (gamepad2.xWasPressed()) {
 				if (shooter.flywheel_enabled) {
-					shooter.update_flywheel_rpm(0.0);
-				} else {
+					shooter.update_flywheel_rpm(3000.0);
+				} /*else {
                     if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
                         shooter.update_for_target(webcam.target_position);
                     }
                     else if (target_to_rotate_to != null) {
                         shooter.update_for_target(target_to_rotate_to);
-                    } /*else if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
+                    } else if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
                         shooter.update_for_target(webcam.target_position);
                     } else {
                         // Screw it
                         shooter.update_flywheel_rpm(3000.0);
                     }*/
-				}
 			}
+            if (gamepad2.dpadLeftWasPressed()) {
+                shooter.wanted_flywheel_rpm = 2000.0;
+            }
+            if (gamepad2.dpadUpWasPressed()) {
+                shooter.wanted_flywheel_rpm = 3000.0;
+            }
+            if (gamepad2.dpadRightWasPressed()) {
+                shooter.wanted_flywheel_rpm = 4000.0;
+            }
+            if (gamepad2.dpadDownWasPressed()) {
+                shooter.wanted_flywheel_rpm = 5000.0;
+            }
 
             // Fire balls
 			if (gamepad2.right_trigger > 0.1) {
@@ -275,21 +286,6 @@ public class Main extends LinearOpMode {
             // Not recommended!
             if (gamepad2.guideWasPressed()) {
                 updated_position = false;
-            }
-
-            // Select spindexer ball
-            if (gamepad2.leftBumperWasPressed()) {
-                /*if (spindexer.ball_in_shooter != null && spindexer.balls[spindexer.ball_in_shooter] == BallColor.Green) {
-                    spindexer.switch_to_holding_pattern();
-                } else {
-                    spindexer.switch_to_coloured_ball(BallColor.Green);
-                }*/
-            } else if (gamepad2.rightBumperWasPressed()) {
-                /*if (spindexer.ball_in_shooter != null && spindexer.balls[spindexer.ball_in_shooter] == BallColor.Purple) {
-                    spindexer.switch_to_holding_pattern();
-                } else {
-                    spindexer.switch_to_coloured_ball(BallColor.Purple);
-                }*/
             }
 
             // Go to spindexer holding / intake (out of ex. shooting)
@@ -308,17 +304,6 @@ public class Main extends LinearOpMode {
             // Run spindexer survey
             if (gamepad2.aWasPressed()) {
                 spindexer.start_survey();
-            }
-
-            // Manually turn spindexer
-            if (gamepad2.dpad_up) {
-                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                hardware.spindexerMotor.setPower(0.5);
-            } else if (gamepad2.dpad_down) {
-                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                hardware.spindexerMotor.setPower(-0.5);
-            } else if (hardware.spindexerMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                hardware.spindexerMotor.setPower(0.0);
             }
 
             spindexer.update();
@@ -363,7 +348,7 @@ public class Main extends LinearOpMode {
 
             hardware.rgbLed.setPosition(led_position_to_set);
 
-            //telemetry.addData("RPM (measured)", shooter.last_a_rpm_measurements.average().orElse(0.0));
+            telemetry.addData("RPM (measured)", shooter.last_a_rpm_measurements.average().orElse(0.0));
             telemetry.update();
 		}
 	}

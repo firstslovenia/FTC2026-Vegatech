@@ -24,8 +24,8 @@ public class Spindexer {
     public static int TICKS_PER_REVOLUTION = (int) (28.0 * 27.4);
 
     /// How many encoder ticks (here we calculate it from degrees) we allow the PID controller to miss
-    public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 5) / 360;
-    public static double TOLERANCE_RADS = 5.0 * Math.PI / 180.0;
+    public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 3) / 360;
+    public static double TOLERANCE_RADS = 2.0 * Math.PI / 180.0;
 
     public static double STARTING_ANGLE = Math.PI / 180.0 * 3.0;
 
@@ -252,14 +252,6 @@ public class Spindexer {
         callingOpMode.telemetry.addData("Spindexer b0", balls[0]);
         callingOpMode.telemetry.addData("Spindexer b1", balls[1]);
         callingOpMode.telemetry.addData("Spindexer b2", balls[2]);
-
-        if (ball_being_shot != null) {
-            callingOpMode.telemetry.addData("Shooting ball", ball_being_shot);
-        }
-
-        if (ball_in_shooter != null) {
-            callingOpMode.telemetry.addData("Prepared for ball", ball_in_shooter);
-        }
 
         if (ball_to_intake != null) {
             callingOpMode.telemetry.addData("Intaking ball", ball_to_intake);
