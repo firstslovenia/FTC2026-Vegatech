@@ -49,21 +49,16 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
         shooter.run();
 
         while (opModeIsActive()) {
-            shooter.update();
             webcam.update();
 
             // Fire balls
-            if (gamepad1.right_trigger > 0.1) {
-
-                if (spindexer.ball_in_shooter == null) {
+            if (gamepad1.guideWasPressed()) {
+                if (spindexer.ball_in_shooter != null) {
+                    spindexer.shoot_active_ball();
+                } else {
                     spindexer.switch_to_shooting();
                 }
-
-                if (shooter.is_ready_to_fire()) {
-                    spindexer.shoot_active_ball();
-                }
             }
-
 
             // Go to spindexer holding / intake (out of ex. shooting)
             if (gamepad1.dpadUpWasPressed()) {
@@ -127,17 +122,6 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
             }
 
             shooter.wanted_flywheel_rpm = rpm_x100 * 100.0;
-
-            if (gamepad1.rightTriggerWasPressed()) {
-                hardware.spindexerMotor.setPower(1.0);
-                firing = true;
-                last_fire = System.currentTimeMillis();
-            }
-
-            if (firing && (System.currentTimeMillis() - last_fire) > 1000) {
-                hardware.spindexerMotor.setPower(0.0);
-                firing = false;
-            }
 
             hardware.shooterAngleServo.setPosition(servo_position);
 

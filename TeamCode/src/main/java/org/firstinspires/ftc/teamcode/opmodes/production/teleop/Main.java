@@ -213,7 +213,7 @@ public class Main extends LinearOpMode {
             }
 
             // Rotate towards the goal
-            if (gamepad1.y || gamepad1.right_bumper) {
+            if (gamepad1.yWasPressed() || gamepad1.rightBumperWasPressed()) {
                 positioning = new ShooterPositioning();
                 target_to_rotate_to = positioning.compute_target_information(drivetrain.last_robot_position, team);
                 wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
@@ -243,19 +243,19 @@ public class Main extends LinearOpMode {
 				if (shooter.flywheel_enabled) {
 					shooter.update_flywheel_rpm(0.0);
 				} else {
-                    shooter.update_flywheel_rpm(3000.0);
-                } /*else {
-                    if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
+
+                    shooter.run();
+                    shooter.wanted_flywheel_rpm = 3000.0;
+
+                    /*if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
                         shooter.update_for_target(webcam.target_position);
-                    }
-                    else if (target_to_rotate_to != null) {
+                    } else if (target_to_rotate_to != null) {
                         shooter.update_for_target(target_to_rotate_to);
-                    } else if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
-                        shooter.update_for_target(webcam.target_position);
                     } else {
                         // Screw it
-                        shooter.update_flywheel_rpm(3000.0);
+                        shooter.wanted_flywheel_rpm = 3000.0;
                     }*/
+                }
 			}
             if (gamepad2.dpadLeftWasPressed()) {
                 shooter.wanted_flywheel_rpm = 2000.0;
@@ -289,7 +289,7 @@ public class Main extends LinearOpMode {
             telemetry.addData("Angle servo factor", dist_factor);
 
             // Fire balls
-			if (gamepad2.right_trigger > 0.1) {
+			if (gamepad2.guideWasPressed()) {
                 if (spindexer.ball_in_shooter != null) {
                     spindexer.shoot_active_ball();
                 } else {
@@ -300,9 +300,9 @@ public class Main extends LinearOpMode {
             shooter.update();
 
             // Not recommended!
-            if (gamepad2.guideWasPressed()) {
+            /*if (gamepad2.guideWasPressed()) {
                 updated_position = false;
-            }
+            }*/
 
             // Go to spindexer holding / intake (out of ex. shooting)
             if (gamepad2.yWasPressed()) {
@@ -350,6 +350,19 @@ public class Main extends LinearOpMode {
                         updated_position = true;
                     }
                 }*/
+
+                if (webcam.target_position != null && !webcam.target_position.is_old() && (gamepad1.y || gamepad1.right_bumper)) {
+                    target_to_rotate_to = webcam.target_position;
+                    wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
+                    drivetrain.wanted_heading = wanted_heading_for_target;
+                    led_position_to_set = LedIndicator.AQUA_POSITION;
+
+                    telemetry.addData("Target distance (m)", target_to_rotate_to.distance_m);
+                    telemetry.addData("Target ideal angle", Math.toDegrees(target_to_rotate_to.ideal_angle_to_target));
+                    telemetry.addData("Target y diff", target_to_rotate_to.y);
+                    telemetry.addData("Target x diff", target_to_rotate_to.x);
+                    telemetry.addData("Target to turn", Math.toDegrees(target_to_rotate_to.angle_distance_rads));
+                }
 
                 last_long_loop_ms = now;
             }

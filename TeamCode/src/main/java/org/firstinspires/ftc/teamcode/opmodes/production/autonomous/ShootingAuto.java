@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.Shooter;
+import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.TargetInformation;
@@ -67,7 +68,7 @@ public class ShootingAuto extends OpMode {
     private PathChain end;
 
     Hardware hardware;
-    Shooter shooter;
+    ShooterPlusPlus shooter;
     Spindexer spindexer;
     Webcam webcam;
 
@@ -101,10 +102,10 @@ public class ShootingAuto extends OpMode {
         pickupPose = endPose.withX(endPose.getX() + ballPickupXOffset);
 
         // -- actually build paths
-        move_to_look_at_obelisk = new Path(new BezierLine(startPose, lookAtObeliskPose));
-        move_to_look_at_obelisk.setConstantHeadingInterpolation(lookAtObeliskPose.getHeading());
+        //move_to_look_at_obelisk = new Path(new BezierLine(startPose, lookAtObeliskPose));
+        //move_to_look_at_obelisk.setConstantHeadingInterpolation(lookAtObeliskPose.getHeading());
 
-        move_to_shoot = new Path(new BezierLine(lookAtObeliskPose, shootPose));
+        move_to_shoot = new Path(new BezierLine(startPose, shootPose));
         move_to_shoot.setConstantHeadingInterpolation(shootPose.getHeading());
 
         move_to_pickup = new Path(new BezierLine(endPose, pickupPose));
@@ -118,34 +119,14 @@ public class ShootingAuto extends OpMode {
 
     public void autonomousPathUpdate() {
         switch (pathState) {
-            // 0 - start going to look at obelisk
             case 0:
-                follower.followPath(move_to_look_at_obelisk, true);
-                setPathState(1);
+                setPathState(2);
                 break;
 
-            // Go to look at obelisk
-            case 1:
-                if (!follower.isBusy()) {
-                    setPathState(2);
-                }
-                break;
-
-            // Look at the obelisk until we see the patern or it's too late
+            // Start going to the shoot position
             case 2:
-
-                long now_ms = System.currentTimeMillis();
-
-                if (started_looking_at_obelisk_ms == 0) {
-                    started_looking_at_obelisk_ms = now_ms;
-                }
-
-               webcam.update();
-
-                if (webcam.order != ColorOrder.Unknown || now_ms - started_looking_at_obelisk_ms >= 5_000 || opmodeTimer.getElapsedTime() >= 10_000) {
-                    follower.followPath(move_to_shoot, true);
-                    setPathState(3);
-                }
+                follower.followPath(move_to_shoot, true);
+                setPathState(3);
                 break;
 
             // Go to the shooting position
@@ -166,29 +147,16 @@ public class ShootingAuto extends OpMode {
                 }
 
                 // Pretend we know the pattern
-                BallColor next = webcam.order.color_for_ith(balls_scored);
-
-                if (spindexer.ball_in_shooter == null) {
-                    spindexer.switch_to_coloured_ball(next);
-
-                    // There is none
-                    if (spindexer.ball_in_shooter == null) {
-                        spindexer.switch_to_coloured_ball(next.other());
+                if ( spindexer.ball_in_shooter != null && now - last_shot_time_ms > 1000) {
+                   if (spindexer.ball_in_shooter != null) {
+                        spindexer.shoot_active_ball();
+                    } else {
+                        spindexer.switch_to_shooting();
                     }
                 }
 
-                if (shooter.is_ready_to_fire() && spindexer.ball_in_shooter != null && now - last_shot_time_ms > 1000) {
-                   shooter.fire();
-
-                   spindexer.balls[spindexer.ball_in_shooter] = BallColor.None;
-                   spindexer.ball_in_shooter = null;
-
-                   balls_scored += 1;
-                   last_shot_time_ms = System.currentTimeMillis();
-                }
-
                 // After 24s in the opmode, stop trying to score
-                if ((balls_scored >= 3 && now - last_shot_time_ms > 1000) || opmodeTimer.getElapsedTime() >= 24000) {
+                if (opmodeTimer.getElapsedTime() >= 24000) {
                     shooter.update_flywheel_rpm(0.0);
 
                     spindexer.switch_to_holding_pattern();
@@ -301,8 +269,7 @@ public class ShootingAuto extends OpMode {
         spindexer = new Spindexer(this, hardware);
         spindexer.init();
 
-        shooter = new Shooter(this, hardware, spindexer);
-        shooter.reset_shooter_pusher();
+        shooter = new ShooterPlusPlus(this, hardware, spindexer);
 
         webcam = new Webcam(this, hardware);
     }

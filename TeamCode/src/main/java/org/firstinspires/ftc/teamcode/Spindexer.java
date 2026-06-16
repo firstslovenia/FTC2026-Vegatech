@@ -34,13 +34,13 @@ public class Spindexer {
 
     /// The angle to point at to intake into ball 0 - the orange one
     public static double ANGLE_INTAKE_BALL_0 = Math.PI / 6.0;
-    public static double ANGLE_INTAKE_BALL_1 = ANGLE_INTAKE_BALL_0 - Math.PI * 2.0 / 3.0;
-    public static double ANGLE_INTAKE_BALL_2 = ANGLE_INTAKE_BALL_0 - Math.PI * 4.0 / 3.0;
+    public static double ANGLE_INTAKE_BALL_1 = ANGLE_INTAKE_BALL_0 + Math.PI * 2.0 / 3.0;
+    public static double ANGLE_INTAKE_BALL_2 = ANGLE_INTAKE_BALL_0 + Math.PI * 4.0 / 3.0;
 
     /// The angle to point at to shoot ball 0 - the orange one
-    public static double ANGLE_SHOOT_BALL_1 = - Math.PI / 180.0 * 103.0;
-    public static double ANGLE_SHOOT_BALL_2 = ANGLE_SHOOT_BALL_1 - Math.PI * 2.0 / 3.0;
-    public static double ANGLE_SHOOT_BALL_0 = ANGLE_SHOOT_BALL_1 - Math.PI * 4.0 / 3.0;
+    public static double ANGLE_SHOOT_BALL_2 = - Math.PI / 180.0 * 103.0;
+    public static double ANGLE_SHOOT_BALL_1 = ANGLE_SHOOT_BALL_2 - Math.PI * 2.0 / 3.0;
+    public static double ANGLE_SHOOT_BALL_0 = ANGLE_SHOOT_BALL_2 - Math.PI * 4.0 / 3.0;
 
     public static double ANGLE_HOLD_BALLS_0 = Math.PI / 2.0;
 
@@ -62,6 +62,9 @@ public class Spindexer {
 
     /// What time in millis the motor arrived at the correct position
     public Long stopped_being_busy_ms = null;
+
+    /// When our last shot was
+    public long last_shot = 0;
 
     /// Whether or not we were busy in the last loop, used to set stopped_being_busy_ms
     boolean last_was_busy = false;
@@ -143,6 +146,10 @@ public class Spindexer {
             ball_in_shooter = null;
         }
 
+        if (ball_being_shot != null) {
+            ball_being_shot = null;
+        }
+
         switch_to_available_intake();
 
         if (ball_to_intake != null) {
@@ -167,9 +174,9 @@ public class Spindexer {
 
     /// Goes to shoot balls that we have
     public void switch_to_shooting() {
+
         if (ball_to_intake != null) {
-            // We're already intaking a ball!
-            return;
+            ball_to_intake = null;
         }
 
         if (ball_in_shooter != null) {
@@ -194,10 +201,13 @@ public class Spindexer {
 
         // Finish shooting
         if (ball_being_shot != null && !is_motor_busy()) {
-            balls[ball_being_shot] = null;
+            balls[ball_being_shot] = BallColor.None;
 
-            if (ball_in_shooter != null && balls[ball_in_shooter] != null) {
-                shoot_active_ball();
+            if (ball_in_shooter != null && balls[ball_in_shooter] != BallColor.None) {
+                long now = System.currentTimeMillis();
+                if (now - last_shot > 300) {
+                    shoot_active_ball();
+                }
             } else {
                 switch_to_shooting();
             }
@@ -383,6 +393,7 @@ public class Spindexer {
         }
 
         ball_being_shot = ball_in_shooter;
+        last_shot = System.currentTimeMillis();
 
         switch (ball_in_shooter) {
             case 0:

@@ -17,14 +17,15 @@ public class ShooterPlusPlus {
     // --- Measured constants ------
     // Power to rpm conversion: power is in percentages, rpm just rpm
     // See graph: https://www.wolframalpha.com/input?i=fit+linear&assumption=%7B%22F%22%2C+%22LinearFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B100.0%2C+4950%7D%2C%7B90.0%2C+4450%7D%2C%7B80.0%2C+4050%7D%2C%7B70.0%2C+3460%7D%2C%7B60.0%2C+2950%7D%2C+%7B50.0%2C+2450%7D%7D%22
+    // EEEE: https://www.wolframalpha.com/input?i=fit+linear&assumption=%7B%22F%22%2C+%22LinearFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B86.0%2C+4500%7D%2C%7B66.0%2C+3500%7D%2C%7B49.0%2C+2500%7D%7D%22
     /// The factor times x in the power to rpm conversion
-    static double REGULATOR_POW_TO_RPM_K = 50.2571;
+    static double REGULATOR_POW_TO_RPM_K = 53.94;
 
     /// The factor times 1 in the power to rpm conversion
-    static double REGULATOR_POW_TO_RPM_C = -50.9524;
+    static double REGULATOR_POW_TO_RPM_C = -113.70;
 
     /// The voltage (under load) used for the power to rpm convesion
-    static double REGULATOR_BASE_VOLTAGE = 11.18;
+    static double REGULATOR_BASE_VOLTAGE = 12.33;
 
     /// The lowest and highest angles (servo 0.0 and 1.0 respectively)
     static double ANGLE_SERVO_START = 20.0 / 180.0 * Math.PI;
@@ -137,6 +138,11 @@ public class ShooterPlusPlus {
         // TODO
         return 0.0;
     }
+
+    // Fasttracked calibration
+    // dist -> correct angle
+    // dist -> rpm to shoot
+    //
 
     /// Updates the shooter's parameters (RPM, angle) for shooting at a target
     public void update_for_target(TargetInformation target) {
