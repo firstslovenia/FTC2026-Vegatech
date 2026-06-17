@@ -69,6 +69,7 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
             if (gamepad1.dpadDownWasPressed()) {
                 spindexer.ball_to_intake = null;
                 spindexer.ball_in_shooter = null;
+                spindexer.ball_being_shot = null;
                 spindexer.in_survey = false;
                 spindexer.move_to_angle_sortwise(Spindexer.STARTING_ANGLE);
             }

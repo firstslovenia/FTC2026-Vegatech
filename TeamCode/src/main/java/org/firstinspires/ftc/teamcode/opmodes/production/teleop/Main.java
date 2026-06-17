@@ -87,7 +87,7 @@ public class Main extends LinearOpMode {
 		webcam = new Webcam(this, hardware);
 
 		waitForStart();
-        drivetrain.setPos(new Pose2D(DistanceUnit.INCH, 40, 40, AngleUnit.RADIANS, Math.PI / 2));
+        drivetrain.setPos(starting_pos);
         drivetrain.resetStartingDirection();
 
         spindexer.init();
@@ -313,6 +313,7 @@ public class Main extends LinearOpMode {
             if (gamepad2.bWasPressed()) {
                 spindexer.ball_to_intake = null;
                 spindexer.ball_in_shooter = null;
+                spindexer.ball_being_shot = null;
                 spindexer.in_survey = false;
                 spindexer.move_to_angle_sortwise(Spindexer.STARTING_ANGLE);
             }

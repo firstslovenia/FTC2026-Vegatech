@@ -13,6 +13,6 @@ public class MainRed extends Main {
         team = Team.Red;
 
         // Auto end pose
-        starting_pos = ShooterPositioning.to_pose2d(new Pose(95.0, 32.0, Math.toRadians(180)));
+        starting_pos = ShooterPositioning.to_pose2d(new Pose(95.0, 32.0, Math.toRadians(0)));
     }
 }

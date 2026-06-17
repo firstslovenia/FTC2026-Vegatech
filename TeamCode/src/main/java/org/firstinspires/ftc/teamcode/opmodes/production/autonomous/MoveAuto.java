@@ -9,20 +9,16 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.ColorOrder;
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
-import org.firstinspires.ftc.teamcode.generic.BallColor;
 
-@Autonomous(name = "NO TOUCHIE!!", group = "Examples")
-public class ShootingAuto extends OpMode {
+@Autonomous(name = "NO TOUCHIE!!!", group = "Examples")
+public class MoveAuto extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -65,7 +61,7 @@ public class ShootingAuto extends OpMode {
     private Path rotate_to_correct_heading;
 
     private Path move_to_pickup;
-    private PathChain end;
+    private PathChain move;
 
     Hardware hardware;
     ShooterPlusPlus shooter;
@@ -85,34 +81,8 @@ public class ShootingAuto extends OpMode {
     double shooting_distance_m = 0.0;
 
     public void buildPaths() {
-
-        targetInformation = positioning.compute_target_information_for_two_pos(ShooterPositioning.to_pose2d(shootPose), ShooterPositioning.to_pose2d(goalPose));
-        shootPose = shootPose.setHeading(targetInformation.ideal_angle_to_target);
-
-        // Pedropathing doesn't work if it has no work to do
-        lookAtObeliskPose = shootPose.withY(shootPose.getY() + 10.0);
-
-        double obelisk_delta_y = obeliskPose.getY() - lookAtObeliskPose.getY();
-        double obelisk_delta_x = obeliskPose.getX() - lookAtObeliskPose.getX();
-        double obelisk_angle = Drivetrain.getMagnitudeAndPhiFor(obelisk_delta_x, obelisk_delta_y).second;
-
-        lookAtObeliskPose = lookAtObeliskPose.setHeading(obelisk_angle);
-
-        // Calculate pickup pose
-        pickupPose = endPose.withX(endPose.getX() + ballPickupXOffset);
-
-        // -- actually build paths
-        //move_to_look_at_obelisk = new Path(new BezierLine(startPose, lookAtObeliskPose));
-        //move_to_look_at_obelisk.setConstantHeadingInterpolation(lookAtObeliskPose.getHeading());
-
-        move_to_shoot = new Path(new BezierLine(startPose, shootPose));
-        move_to_shoot.setConstantHeadingInterpolation(shootPose.getHeading());
-
-        move_to_pickup = new Path(new BezierLine(endPose, pickupPose));
-        move_to_pickup.setConstantHeadingInterpolation(pickupPose.getHeading());
-
-        end = follower.pathBuilder()
-                .addPath(new BezierLine(shootPose, endPose))
+        move = follower.pathBuilder()
+                .addPath(new BezierLine(startPose, endPose))
                 .setConstantHeadingInterpolation(endPose.getHeading())
                 .build();
     }
@@ -120,84 +90,22 @@ public class ShootingAuto extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                setPathState(2);
+                setPathState(4);
                 break;
 
-            // Start going to the shoot position
-            case 2:
-                follower.followPath(move_to_shoot, true);
-                setPathState(3);
-                break;
-
-            // Go to the shooting position
-            case 3:
-                if (!follower.isBusy()) {
-                    shooter.update_for_target(targetInformation);
-                    setPathState(4);
-                }
-                break;
-
-            // At score position, scoring
             case 4:
+                spindexer.switch_to_holding_pattern();
+                spindexer.move_to_angle_sortwise(0.0);
 
-                long now = System.currentTimeMillis();
-
-                if (spindexer.in_survey || !spindexer.can_move()) {
-                    return;
-                }
-
-                // Pretend we know the pattern
-                if (now - last_shot_time_ms > 1000) {
-                   if (spindexer.ball_in_shooter != null) {
-                        spindexer.shoot_active_ball();
-                        last_shot_time_ms = now;
-                    } else {
-                        spindexer.switch_to_shooting();
-                    }
-                }
-
-                // After 24s in the opmode, stop trying to score
-                if (opmodeTimer.getElapsedTime() >= 24000) {
-                    shooter.update_flywheel_rpm(0.0);
-
-                    spindexer.switch_to_holding_pattern();
-                    spindexer.move_to_angle_sortwise(0.0);
-
-                    follower.followPath(end, true);
-                    setPathState(5);
-                }
+                follower.followPath(move, true);
+                setPathState(5);
                 break;
 
             // Going to the end position
             case 5:
                 if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 27000) {
-
-                    /*if (opmodeTimer.getElapsedTime() >= 26000) {
-                        setPathState(7);
-                    }*/
-
-                    setPathState(7);
-
-                    // Try in to intake before
-                    /*spindexer.switch_to_holding_pattern();
-
-                    if (spindexer.ball_to_intake == null) {
-                        setPathState(7);
-                    }
-
-                    hardware.intakeMotor.setPower(1.0);
-                    follower.followPath(move_to_pickup);
-                    setPathState(6);*/
-                }
-                break;
-
-            // Try to pickup balls
-            case 6:
-
-                if (opmodeTimer.getElapsedTime() >= 27000) {
                     setPathState(7);
                 }
-
                 break;
 
             // Finished
@@ -209,8 +117,8 @@ public class ShootingAuto extends OpMode {
 
                 spindexer.ball_to_intake = null;
                 spindexer.ball_in_shooter = null;
-                spindexer.in_survey = false;
                 spindexer.ball_being_shot = null;
+                spindexer.in_survey = false;
                 spindexer.move_to_angle_sortwise(0.0);
                 break;
         }

@@ -205,7 +205,7 @@ public class Spindexer {
 
             if (ball_in_shooter != null && balls[ball_in_shooter] != BallColor.None) {
                 long now = System.currentTimeMillis();
-                if (now - last_shot > 300) {
+                if (now - last_shot > 700) {
                     shoot_active_ball();
                 }
             } else {
