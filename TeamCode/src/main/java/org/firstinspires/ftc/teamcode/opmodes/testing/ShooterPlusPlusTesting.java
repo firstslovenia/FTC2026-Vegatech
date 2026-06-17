@@ -65,13 +65,14 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
                 spindexer.switch_to_holding_pattern();
             }
 
+            // Run spindexer survey
+            if (gamepad1.leftStickButtonWasPressed()) {
+                spindexer.start_survey();
+            }
+
             // Reset spindexer
             if (gamepad1.dpadDownWasPressed()) {
-                spindexer.ball_to_intake = null;
-                spindexer.ball_in_shooter = null;
-                spindexer.ball_being_shot = null;
-                spindexer.in_survey = false;
-                spindexer.move_to_angle_sortwise(Spindexer.STARTING_ANGLE);
+                spindexer.reset_state();
             }
 
             spindexer.update();
@@ -122,6 +123,10 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
                 rpm_x100 -= 1.0;
             }
 
+            if (rpm_x100 > 0.0 && !shooter.flywheel_enabled) {
+                shooter.run();
+            }
+
             shooter.wanted_flywheel_rpm = rpm_x100 * 100.0;
 
             hardware.shooterAngleServo.setPosition(servo_position);
@@ -133,6 +138,8 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
             telemetry.addData("Angle servo pos", servo_position);
             telemetry.addData("Angle servo deg", Math.toDegrees(servo_angle));
             telemetry.addData("Angle servo factor", dist_factor);
+            telemetry.addData("Wanted RPM", shooter.wanted_flywheel_rpm);
+            telemetry.addData("Wanted RPM (b)", rpm_x100);
             telemetry.addData("RPMs (a)", shooter.last_a_rpm_measurements.average().orElse(0.0));
             telemetry.addData("Calculated RPMs", shooter.calculate_rpm(shooter.flywheel_power, voltage));
             telemetry.addData("Power    ", shooter.flywheel_power);

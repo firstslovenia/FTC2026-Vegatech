@@ -294,6 +294,9 @@ public class Spindexer {
     /// Tells the spindexer to start surveying which balls we have
     public void start_survey() {
         in_survey = true;
+        ball_in_shooter = null;
+        ball_being_shot = null;
+        ball_to_intake = null;
         move_to_intake_for(0);
     }
 
@@ -422,6 +425,15 @@ public class Spindexer {
                 move_to_angle_sortwise(ANGLE_INTAKE_BALL_2);
                 break;
         }
+    }
+
+    /// Resets the spindexer to the starting state
+    public void reset_state() {
+        ball_to_intake = null;
+        ball_in_shooter = null;
+        ball_being_shot = null;
+        in_survey = false;
+        move_to_angle_sortwise(Spindexer.STARTING_ANGLE);
     }
 
     public double current_angle() {

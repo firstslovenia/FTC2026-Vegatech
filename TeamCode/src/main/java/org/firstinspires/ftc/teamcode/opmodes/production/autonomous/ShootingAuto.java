@@ -133,6 +133,7 @@ public class ShootingAuto extends OpMode {
             case 3:
                 if (!follower.isBusy()) {
                     shooter.update_for_target(targetInformation);
+                    shooter.run();
                     setPathState(4);
                 }
                 break;
@@ -206,12 +207,7 @@ public class ShootingAuto extends OpMode {
                 follower.breakFollowing();
 
                 hardware.intakeMotor.setPower(0.0);
-
-                spindexer.ball_to_intake = null;
-                spindexer.ball_in_shooter = null;
-                spindexer.in_survey = false;
-                spindexer.ball_being_shot = null;
-                spindexer.move_to_angle_sortwise(0.0);
+                spindexer.reset_state();
                 break;
         }
     }
@@ -270,6 +266,9 @@ public class ShootingAuto extends OpMode {
 
         spindexer = new Spindexer(this, hardware);
         spindexer.init();
+        spindexer.balls[0] = BallColor.Green;
+        spindexer.balls[1] = BallColor.Green;
+        spindexer.balls[2] = BallColor.Green;
 
         shooter = new ShooterPlusPlus(this, hardware, spindexer);
 

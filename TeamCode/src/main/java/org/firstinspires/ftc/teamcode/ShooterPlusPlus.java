@@ -111,6 +111,11 @@ public class ShooterPlusPlus {
         return ((ANGLE_SERVO_END - ANGLE_SERVO_START) * servo_pos) + ANGLE_SERVO_START;
     }
 
+    /// Calculates the servo position for a given rad angle
+    public static double calculate_servo_pos_for_rad_angle(double angle_rads) {
+        return (angle_rads - ANGLE_SERVO_START) / (ANGLE_SERVO_END - ANGLE_SERVO_START);
+    }
+
     /// Calculates the distance factor (times our lowest angle) given our current shooting angle radians.
     ///
     /// See the constants above; this seems to best fit a quadratic.
@@ -142,7 +147,17 @@ public class ShooterPlusPlus {
     // Fasttracked calibration
     // dist -> correct angle
     // dist -> rpm to shoot
-    //
+    public static double distance_cm_to_wanted_angle_rads(double distance_cm) {
+        return 0.0;
+    }
+
+    public static double distance_cm_to_wanted_rpm(double distance_cm) {
+        return 0.0;
+    }
+
+    public static double parameters_to_distance_cm(double wanted_angle_rads, double wanted_rpm) {
+        return 0.0;
+    }
 
     /// Updates the shooter's parameters (RPM, angle) for shooting at a target
     public void update_for_target(TargetInformation target) {
@@ -151,16 +166,27 @@ public class ShooterPlusPlus {
 
     /// Updates the shooter's parameters (RPM, angle) for shooting at a specific distance
     public void update_for_distance(double distance_m) {
-        update_flywheel_rpm(distance_cm_to_rpm(distance_m * 100.0));
-        shooting_distance_m = distance_m;
 
-        // TODO: angle, etc.
+        wanted_flywheel_rpm = distance_cm_to_wanted_rpm(distance_m * 100.0);
+        update_flywheel_rpm(wanted_flywheel_rpm);
+
+        double wanted_angle_rads = Math.min(Math.max(0.0, distance_cm_to_wanted_angle_rads(distance_m * 100.0)), 1.0);
+        double wanted_servo_pos = calculate_servo_pos_for_rad_angle(wanted_angle_rads);
+
+        hardware.shooterAngleServo.setPosition(Math.min(Math.max(0.0, wanted_servo_pos), 1.0));
+        shooting_distance_m = distance_m;
     }
 
     public void update_flywheel_rpm(double flywheel_rpm) {
+
         if (flywheel_rpm == 0.0) {
             disable_flywheel();
         } else {
+
+            if (!flywheel_enabled) {
+                run();
+            }
+
             // Note: won't really work (unless ran in a loop) because we need load voltage here
             set_flywheel_power(calculate_power_for_rpm(flywheel_rpm, callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage()));
 
@@ -183,6 +209,7 @@ public class ShooterPlusPlus {
         flywheel_enabled = false;
 
         flywheel_power = 0.0;
+        wanted_flywheel_rpm = 0.0;
         set_flywheel_power(0.0);
 
         started_running_time_ms = 0;
@@ -279,7 +306,7 @@ public class ShooterPlusPlus {
 
         flywheel_power = flywheel_rel_power * flywheel_gain;
 
-        set_flywheel_power(calculate_power_for_rpm(wanted_flywheel_rpm, callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage()));
+        update_flywheel_rpm(wanted_flywheel_rpm);
 
         if (!dry_run) {
             set_flywheel_power(flywheel_power);

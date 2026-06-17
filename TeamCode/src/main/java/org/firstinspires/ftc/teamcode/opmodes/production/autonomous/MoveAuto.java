@@ -115,11 +115,7 @@ public class MoveAuto extends OpMode {
 
                 hardware.intakeMotor.setPower(0.0);
 
-                spindexer.ball_to_intake = null;
-                spindexer.ball_in_shooter = null;
-                spindexer.ball_being_shot = null;
-                spindexer.in_survey = false;
-                spindexer.move_to_angle_sortwise(0.0);
+                spindexer.reset_state();
                 break;
         }
     }

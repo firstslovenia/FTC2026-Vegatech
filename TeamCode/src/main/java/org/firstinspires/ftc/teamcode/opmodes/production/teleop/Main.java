@@ -243,18 +243,16 @@ public class Main extends LinearOpMode {
 				if (shooter.flywheel_enabled) {
 					shooter.update_flywheel_rpm(0.0);
 				} else {
-
                     shooter.run();
-                    shooter.wanted_flywheel_rpm = 3000.0;
 
-                    /*if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
+                    if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
                         shooter.update_for_target(webcam.target_position);
-                    } else if (target_to_rotate_to != null) {
+                    } else if (target_to_rotate_to != null && now - target_to_rotate_to.time_ms < 5000) {
                         shooter.update_for_target(target_to_rotate_to);
                     } else {
                         // Screw it
                         shooter.wanted_flywheel_rpm = 3000.0;
-                    }*/
+                    }
                 }
 			}
             if (gamepad2.dpadLeftWasPressed()) {
@@ -311,11 +309,7 @@ public class Main extends LinearOpMode {
 
             // Reset spindexer
             if (gamepad2.bWasPressed()) {
-                spindexer.ball_to_intake = null;
-                spindexer.ball_in_shooter = null;
-                spindexer.ball_being_shot = null;
-                spindexer.in_survey = false;
-                spindexer.move_to_angle_sortwise(Spindexer.STARTING_ANGLE);
+                spindexer.reset_state();
             }
 
             // Run spindexer survey
