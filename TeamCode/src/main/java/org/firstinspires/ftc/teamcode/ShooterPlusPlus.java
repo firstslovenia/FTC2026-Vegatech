@@ -148,7 +148,7 @@ public class ShooterPlusPlus {
     // dist -> correct angle
     // dist -> rpm to shoot
     public static double distance_cm_to_wanted_angle_rads(double distance_cm) {
-        if (distance_cm >= 190.0) {
+        if (distance_cm >= 220.0) {
             return ANGLE_SERVO_START;
         }
 
@@ -156,16 +156,16 @@ public class ShooterPlusPlus {
             return ANGLE_SERVO_END;
         }
 
-        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+38.5%7D%2C+%7B72%2C+29.25%7D%2C+%7B119%2C+23.7%7D%2C+%7B190%2C+20.0%7D%7D%22
-        double angle_deg = 0.000321407 * Math.pow(distance_cm, 2) - 0.159649 * distance_cm + 38.614;
+        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+38.5%7D%2C+%7B41%2C+36.65%7D%2C+%7B78.6%2C+34.8%7D%2C+%7B92.7%2C+32.95%7D%2C+%7B123%2C+31.3%7D%2C+%7B142%2C+29.25%7D%2C+%7B170%2C+27.4%7D%2C+%7B192%2C+23.7%7D%2C+%7B220%2C+20.0%7D%7D%22
+        double angle_deg = -0.000245785 * Math.pow(distance_cm, 2) - 0.0279509 * distance_cm + 38.3263;
         double angle_rads = Math.toRadians(angle_deg);
 
         return Math.max(Math.min(angle_rads, ANGLE_SERVO_END), ANGLE_SERVO_START);
     }
 
     public static double distance_cm_to_wanted_rpm(double distance_cm) {
-        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+2900%7D%2C+%7B72%2C+3100%7D%2C+%7B119%2C+3350%7D%2C+%7B190%2C+3600%7D%2C+%7B252%2C+4000%7D%2C+%7B358%2C+4400%7D%7D%22
-        double rpm = 0.00166137 * Math.pow(distance_cm, 2) + 3.75056 * distance_cm + 2870.44;
+        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+2900%7D%2C+%7B41%2C+3000%7D%2C+%7B78.6%2C+3000%7D%2C+%7B92.7%2C+3100%7D%2C+%7B123%2C+3200%7D%2C+%7B142%2C+3200%7D%2C+%7B170%2C+3400%7D%2C+%7B192%2C+3500%7D%2C+%7B220%2C+3650%7D%2C+%7B242%2C+3700%7D%2C+%7B265%2C+3800%7D%7D%22
+        double rpm = 0.00794905 * Math.pow(distance_cm, 2) + 1.45309 * distance_cm + 2893.77;
         return Math.max(rpm, 0.0);
     }
 
