@@ -41,6 +41,9 @@ public class Main extends LinearOpMode {
 
     boolean intake_enabled = false;
 
+    /// If the camera servo is currently in the high position
+    boolean camera_servo_high = false;
+
     /// The TargetInformation of the target we're currently rotating towards
     TargetInformation target_to_rotate_to = null;
     ShooterPositioning positioning = null;
@@ -48,10 +51,7 @@ public class Main extends LinearOpMode {
     /// The wanted heading of the target for target_to_rotate_to
     double wanted_heading_for_target = Double.NaN;
     long last_long_loop_ms = 0;
-    public boolean updated_position = false;
     static long LONG_LOOP_DELAY_MS = 100;
-
-    double servo_position = 0.0;
 
     SlidingWindow<Long> last_loops_took = new SlidingWindow(50);
     long last_loop_time = System.currentTimeMillis();
@@ -99,14 +99,6 @@ public class Main extends LinearOpMode {
 
 		while (opModeIsActive()) {
 
-            //telemetry.addData("order", webcam.order);
-
-            /*if (webcam.last_calculated_pos != null) {
-                telemetry.addData("calculated pos x", webcam.last_calculated_pos.getX(DistanceUnit.INCH));
-                telemetry.addData("calculated pos y", webcam.last_calculated_pos.getY(DistanceUnit.INCH));
-                telemetry.addData("calculated angle", webcam.last_calculated_pos.getHeading(AngleUnit.DEGREES));
-            }*/
-
             long now = System.currentTimeMillis();
 
             boolean do_long_loop = (now - last_long_loop_ms) >= LONG_LOOP_DELAY_MS;
@@ -127,20 +119,6 @@ public class Main extends LinearOpMode {
                 } else {
                     if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
                         led_position_to_set = LedIndicator.RED_POSITION;
-                    } else {
-                        /*if (spindexer.ball_in_shooter != null) {
-                            BallColor color = spindexer.balls[spindexer.ball_in_shooter];
-
-                            if (color == BallColor.Green) {
-                                led_position_to_set = LedIndicator.GREEN_POSITION;
-                            } else if (color == BallColor.Purple) {
-                                led_position_to_set = LedIndicator.INDIGO_POSITION;
-                            } else {
-                                led_position_to_set = LedIndicator.ORANGE_POSITION;
-                            }
-                        } else {
-                            led_position_to_set = LedIndicator.LIGHT_GREEN_POSITION;
-                        }*/
                     }
 
                     telemetry.addData("Shooter distance (cm)", shooter.shooting_distance_m * 100.0);
@@ -189,9 +167,8 @@ public class Main extends LinearOpMode {
                 }
             }
 
-			// Reset robot to 90 degrees
+			// Reset robot to -90 degrees
 			if (gamepad1.a) {
-				//drivetrain.wanted_heading = Math.PI / 2.0;
                 drivetrain.wanted_heading = -Math.PI / 2.0;
 			}
 
@@ -227,11 +204,6 @@ public class Main extends LinearOpMode {
                 telemetry.addData("Target to turn", Math.toDegrees(target_to_rotate_to.angle_distance_rads));
                 telemetry.addData("Target aaaa", Math.toDegrees(target_to_rotate_to.angle_distance_to_zero));
             }
-            else {
-                if (target_to_rotate_to != null) {
-                    target_to_rotate_to = null;
-                }
-            }
 
             if (gamepad1.guideWasPressed()) {
                 drivetrain.resetStartingDirection();
@@ -241,10 +213,9 @@ public class Main extends LinearOpMode {
             // Enable / disable the shooter
 			if (gamepad2.xWasPressed()) {
 				if (shooter.flywheel_enabled) {
-					shooter.update_flywheel_rpm(0.0);
+					shooter.disable_flywheel();
 				} else {
                     shooter.run();
-
                     if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
                         shooter.update_for_target(webcam.target_position);
                     } else if (target_to_rotate_to != null && now - target_to_rotate_to.time_ms < 5000) {
@@ -253,8 +224,18 @@ public class Main extends LinearOpMode {
                         // Screw it
                         shooter.wanted_flywheel_rpm = 3000.0;
                     }
+                    shooter.update();
                 }
 			}
+
+            if (target_to_rotate_to != null) {
+                telemetry.addData("Target trt distance (m)", target_to_rotate_to.distance_m);
+                telemetry.addData("Target trt ideal angle", Math.toDegrees(target_to_rotate_to.ideal_angle_to_target));
+                telemetry.addData("Target trt age", now - target_to_rotate_to.time_ms);
+            } else {
+                telemetry.addLine("Target trt: null");
+            }
+
             if (gamepad2.dpadLeftWasPressed()) {
                 shooter.wanted_flywheel_rpm = 2000.0;
             }
@@ -269,15 +250,17 @@ public class Main extends LinearOpMode {
             }
 
             // Angle
+            double servo_position = hardware.shooterAngleServo.getPosition();
+
             if (gamepad2.leftBumperWasPressed()) {
                 servo_position -= 0.1;
+                servo_position = Math.max(Math.min(servo_position, 1.0), 0.0);
+                hardware.shooterAngleServo.setPosition(servo_position);
             } else if (gamepad2.rightBumperWasPressed()) {
                 servo_position += 0.1;
+                servo_position = Math.max(Math.min(servo_position, 1.0), 0.0);
+                hardware.shooterAngleServo.setPosition(servo_position);
             }
-
-            servo_position = Math.max(Math.min(servo_position, 1.0), 0.0);
-
-            hardware.shooterAngleServo.setPosition(servo_position);
 
             double servo_angle = ShooterPlusPlus.calculate_rad_angle_for_servo_pos(servo_position);
             double dist_factor = ShooterPlusPlus.calculate_dist_factor_for_angle(servo_angle);
@@ -285,6 +268,23 @@ public class Main extends LinearOpMode {
             telemetry.addData("Angle servo pos", servo_position);
             telemetry.addData("Angle servo deg", Math.toDegrees(servo_angle));
             telemetry.addData("Angle servo factor", dist_factor);
+
+            // Camera angle
+            double camera_servo_position = hardware.cameraAngleServo.getPosition();
+            if (gamepad2.rightStickButtonWasPressed()) {
+
+                camera_servo_high = !camera_servo_high;
+
+                if (camera_servo_high) {
+                    camera_servo_position = 0.45;
+                } else {
+                    camera_servo_position = 0.35;
+                }
+
+                hardware.cameraAngleServo.setPosition(camera_servo_position);
+            }
+
+            telemetry.addData("Camera servo pos", camera_servo_position);
 
             // Fire balls
 			if (gamepad2.guideWasPressed()) {
@@ -297,10 +297,8 @@ public class Main extends LinearOpMode {
 
             shooter.update();
 
-            // Not recommended!
-            /*if (gamepad2.guideWasPressed()) {
-                updated_position = false;
-            }*/
+            telemetry.addData("Shooter wanted rpm:", shooter.wanted_flywheel_rpm);
+            telemetry.addData("Shooter running   :", shooter.flywheel_enabled);
 
             // Go to spindexer holding / intake (out of ex. shooting)
             if (gamepad2.yWasPressed()) {
@@ -318,6 +316,11 @@ public class Main extends LinearOpMode {
             }
 
             spindexer.update();
+
+            // Show spindexer full sequence
+            if (spindexer.started_full_procedure_ms != null) {
+                led_position_to_set = LedIndicator.VIOLET_POSITION;
+            }
 
 			// Also works for positioning!
 			//
@@ -338,28 +341,20 @@ public class Main extends LinearOpMode {
             if (do_long_loop) {
                 webcam.update();
 
-                /*if (!updated_position && webcam.last_calculated_pos != null && now - webcam.last_calculated_pos_time < 100) {
-                    if (!ShooterPositioning.pose2d_rougly_eq(drivetrain.last_robot_position, webcam.last_calculated_pos) && now - webcam.same_pos_since > 500) {
-                        drivetrain.setPos(webcam.last_calculated_pos);
-                        webcam.last_calculated_pos_time = 0;
-                        updated_position = true;
-                    }
-                }*/
-
                 if (webcam.target_position != null && !webcam.target_position.is_old() && (gamepad1.y || gamepad1.right_bumper)) {
                     target_to_rotate_to = webcam.target_position;
                     wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
                     drivetrain.wanted_heading = wanted_heading_for_target;
-                    led_position_to_set = LedIndicator.AQUA_POSITION;
+                    led_position_to_set = LedIndicator.GREEN_POSITION;
 
-                    telemetry.addData("Target distance (m)", target_to_rotate_to.distance_m);
-                    telemetry.addData("Target ideal angle", Math.toDegrees(target_to_rotate_to.ideal_angle_to_target));
-                    telemetry.addData("Target y diff", target_to_rotate_to.y);
-                    telemetry.addData("Target x diff", target_to_rotate_to.x);
-                    telemetry.addData("Target to turn", Math.toDegrees(target_to_rotate_to.angle_distance_rads));
+                    webcam.target_position = null;
                 }
 
                 last_long_loop_ms = now;
+            }
+
+            if (webcam.target_position != null && !webcam.target_position.is_old()) {
+                led_position_to_set = LedIndicator.GREEN_POSITION;
             }
 
             long elapsed_ms = now - last_loop_time;

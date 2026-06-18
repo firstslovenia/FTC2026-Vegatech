@@ -159,7 +159,7 @@ public class ShootingAuto extends OpMode {
 
                 // After 24s in the opmode, stop trying to score
                 if (opmodeTimer.getElapsedTime() >= 24000) {
-                    shooter.update_flywheel_rpm(0.0);
+                    shooter.disable_flywheel();
 
                     spindexer.switch_to_holding_pattern();
                     spindexer.move_to_angle_sortwise(0.0);

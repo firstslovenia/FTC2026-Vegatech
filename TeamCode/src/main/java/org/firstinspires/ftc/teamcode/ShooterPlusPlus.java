@@ -148,11 +148,25 @@ public class ShooterPlusPlus {
     // dist -> correct angle
     // dist -> rpm to shoot
     public static double distance_cm_to_wanted_angle_rads(double distance_cm) {
-        return 0.0;
+        if (distance_cm >= 190.0) {
+            return ANGLE_SERVO_START;
+        }
+
+        if (distance_cm <= 0.0) {
+            return ANGLE_SERVO_END;
+        }
+
+        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+38.5%7D%2C+%7B72%2C+29.25%7D%2C+%7B119%2C+23.7%7D%2C+%7B190%2C+20.0%7D%7D%22
+        double angle_deg = 0.000321407 * Math.pow(distance_cm, 2) - 0.159649 * distance_cm + 38.614;
+        double angle_rads = Math.toRadians(angle_deg);
+
+        return Math.max(Math.min(angle_rads, ANGLE_SERVO_END), ANGLE_SERVO_START);
     }
 
     public static double distance_cm_to_wanted_rpm(double distance_cm) {
-        return 0.0;
+        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+2900%7D%2C+%7B72%2C+3100%7D%2C+%7B119%2C+3350%7D%2C+%7B190%2C+3600%7D%2C+%7B252%2C+4000%7D%2C+%7B358%2C+4400%7D%7D%22
+        double rpm = 0.00166137 * Math.pow(distance_cm, 2) + 3.75056 * distance_cm + 2870.44;
+        return Math.max(rpm, 0.0);
     }
 
     public static double parameters_to_distance_cm(double wanted_angle_rads, double wanted_rpm) {
@@ -168,7 +182,7 @@ public class ShooterPlusPlus {
     public void update_for_distance(double distance_m) {
 
         wanted_flywheel_rpm = distance_cm_to_wanted_rpm(distance_m * 100.0);
-        update_flywheel_rpm(wanted_flywheel_rpm);
+        flywheel_gain = calculate_power_for_rpm(wanted_flywheel_rpm, callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage());
 
         double wanted_angle_rads = Math.min(Math.max(0.0, distance_cm_to_wanted_angle_rads(distance_m * 100.0)), 1.0);
         double wanted_servo_pos = calculate_servo_pos_for_rad_angle(wanted_angle_rads);
@@ -177,6 +191,7 @@ public class ShooterPlusPlus {
         shooting_distance_m = distance_m;
     }
 
+    /*
     public void update_flywheel_rpm(double flywheel_rpm) {
 
         if (flywheel_rpm == 0.0) {
@@ -189,10 +204,9 @@ public class ShooterPlusPlus {
 
             // Note: won't really work (unless ran in a loop) because we need load voltage here
             set_flywheel_power(calculate_power_for_rpm(flywheel_rpm, callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage()));
-
-            flywheel_enabled = true;
         }
     }
+    */
 
     ///  Returns how far off we are from the wanted RPM.
     ///
@@ -304,9 +318,8 @@ public class ShooterPlusPlus {
             }
         }
 
+        flywheel_gain = calculate_power_for_rpm(wanted_flywheel_rpm, callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage());
         flywheel_power = flywheel_rel_power * flywheel_gain;
-
-        update_flywheel_rpm(wanted_flywheel_rpm);
 
         if (!dry_run) {
             set_flywheel_power(flywheel_power);

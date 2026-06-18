@@ -63,6 +63,11 @@ public class Spindexer {
     /// What time in millis the motor arrived at the correct position
     public Long stopped_being_busy_ms = null;
 
+    /// What time in millis we started having a full spindexer
+    ///
+    /// Used to remove extra balls from the intake ramp
+    public Long started_full_procedure_ms = null;
+
     /// When our last shot was
     public long last_shot = 0;
 
@@ -183,11 +188,11 @@ public class Spindexer {
             return;
         }
 
-        if (balls[0] != null) {
+        if (balls[0] != null && balls[0] != BallColor.None) {
             move_to_shoot_ball(0);
-        } else if (balls[1] != null) {
+        } else if (balls[1] != null && balls[1] != BallColor.None) {
             move_to_shoot_ball(1);
-        } else if (balls[2] != null) {
+        } else if (balls[2] != null && balls[2] != BallColor.None) {
             move_to_shoot_ball(2);
         } else {
             switch_to_holding_pattern();
@@ -199,17 +204,37 @@ public class Spindexer {
         long now_ms = System.currentTimeMillis();
         boolean is_busy = is_motor_busy();
 
-        // Finish shooting
-        if (ball_being_shot != null && !is_motor_busy()) {
-            balls[ball_being_shot] = BallColor.None;
+        if (started_full_procedure_ms != null) {
+            if (now_ms - started_full_procedure_ms > 2000) {
+                on_spindexer_full_procedure_finished();
+            }
+        }
 
-            if (ball_in_shooter != null && balls[ball_in_shooter] != BallColor.None) {
-                long now = System.currentTimeMillis();
-                if (now - last_shot > 700) {
-                    shoot_active_ball();
+        if (ball_being_shot != null) {
+
+            double current_pos = hardware.spindexerMotor.getCurrentPosition();
+            double target_pos = hardware.spindexerMotor.getTargetPosition();
+
+            // Shootwise is negative, meaning if current is < target, we overshot it
+            boolean has_overshot = current_pos < target_pos;
+
+            if (has_overshot) {
+                DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
+                ex.setTargetPositionTolerance(PID_TOLERANCE);
+                ex.setPositionPIDFCoefficients(8.0);
+            }
+
+            if (!is_motor_busy()) {
+                balls[ball_being_shot] = BallColor.None;
+
+                if (ball_in_shooter != null && balls[ball_in_shooter] != BallColor.None) {
+                    long now = System.currentTimeMillis();
+                    if (now - last_shot > 700) {
+                        shoot_active_ball();
+                    }
+                } else {
+                    switch_to_shooting();
                 }
-            } else {
-                switch_to_shooting();
             }
         }
 
@@ -245,6 +270,10 @@ public class Spindexer {
                     balls[ball_to_intake] = ball_color;
                     ball_to_intake = null;
                     switch_to_holding_pattern();
+
+                    if (is_full()) {
+                        on_spindexer_full();
+                    }
                 }
             }
         }
@@ -398,6 +427,10 @@ public class Spindexer {
         ball_being_shot = ball_in_shooter;
         last_shot = System.currentTimeMillis();
 
+        DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
+        ex.setTargetPositionTolerance(PID_TOLERANCE * 2);
+        ex.setPositionPIDFCoefficients(32.0);
+
         switch (ball_in_shooter) {
             case 0:
                 move_to_shoot_ball_shootwise(2);
@@ -446,6 +479,23 @@ public class Spindexer {
 
     public boolean is_motor_busy() {
         return hardware.spindexerMotor.isBusy() || Math.abs(hardware.spindexerMotor.getCurrentPosition() - hardware.spindexerMotor.getTargetPosition()) > PID_TOLERANCE;
+    }
+
+    /// Returns if we've intaked all balls
+    public boolean is_full() {
+        return balls[0] != BallColor.None && balls[1] != BallColor.None && balls[2] != BallColor.None;
+    }
+
+    /// Runs when the spindexer becomes 100% full (we've intaked three balls)
+    public void on_spindexer_full() {
+        started_full_procedure_ms = System.currentTimeMillis();
+        callingOpMode.gamepad1.rumble(200);
+        hardware.intakeMotor.setPower(-0.6);
+    }
+
+    public void on_spindexer_full_procedure_finished() {
+        hardware.intakeMotor.setPower(0.0);
+        started_full_procedure_ms = null;
     }
 
     /// Returns how far (via ticks) we are into the current loop
