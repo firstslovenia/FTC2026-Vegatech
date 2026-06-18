@@ -363,12 +363,12 @@ public class Drivetrain {
 					last_wanted_headings = new SlidingWindow(10, last_wanted_headings.last().get());
 				}*/
 
-				if (debug) {
+				/*if (debug) {
 					callingOpMode.telemetry.addLine("-- Rotational PIDF --");
 					callingOpMode.telemetry.addData("wanted heading", Math.toDegrees(wanted_heading));
 					callingOpMode.telemetry.addData("needed turn", Math.toDegrees(needed_turn));
 					callingOpMode.telemetry.addData("needed turn (other way)", Math.toDegrees(needed_turn_other_way));
-				}
+				}*/
 
 				// Don't wobble wobble
 				double minimum = (Math.PI / 180.0) * 2.0;
@@ -463,34 +463,33 @@ public class Drivetrain {
 
 		if (debug) {
 
-			callingOpMode.telemetry.addLine("-- Drivetrain --");
-			callingOpMode.telemetry.addData("field centric rotation", fieldCentricRotation);
-			callingOpMode.telemetry.addData("stoppped_time         ", stopped_moving_time);
-			callingOpMode.telemetry.addData("breaking?             ", hardware.frontLeftMotor.getZeroPowerBehavior() == DcMotor.ZeroPowerBehavior.BRAKE);
-			callingOpMode.telemetry.addData("translation power     ", translation_power);
-			callingOpMode.telemetry.addData("orientation           ", Math.toDegrees(getCurrentHeading()));
-			callingOpMode.telemetry.addData("orientation (rads)    ", getCurrentHeading());
-			callingOpMode.telemetry.addData("translation local  dir", Math.toDegrees(translation_direction));
-            callingOpMode.telemetry.addData("x pos (m)             ", last_robot_position.getX(DistanceUnit.METER));
-            callingOpMode.telemetry.addData("y pos (m)             ", last_robot_position.getY(DistanceUnit.METER));
+			//callingOpMode.telemetry.addLine("-- Drivetrain --");
+			//callingOpMode.telemetry.addData("Field Centric Rotation", fieldCentricRotation);
+			//callingOpMode.telemetry.addData("stoppped_time         ", stopped_moving_time);
+			//callingOpMode.telemetry.addData("breaking?             ", hardware.frontLeftMotor.getZeroPowerBehavior() == DcMotor.ZeroPowerBehavior.BRAKE);
+			//callingOpMode.telemetry.addData("translation power     ", translation_power);
+			callingOpMode.telemetry.addData("Orientation [deg]", Math.toDegrees(getCurrentHeading()));
+			//callingOpMode.telemetry.addData("orientation (rads)    ", getCurrentHeading());
+            callingOpMode.telemetry.addData("X Position    [m]", last_robot_position.getX(DistanceUnit.METER));
+            callingOpMode.telemetry.addData("Y Position    [m]", last_robot_position.getY(DistanceUnit.METER));
 
-			if (fieldCentricTranslation) {
+			/*if (fieldCentricTranslation) {
 				callingOpMode.telemetry.addData("translation global dir",  Math.toDegrees(translation_inputs.second));
-			}
+			}*/
 
-			callingOpMode.telemetry.addData("Front Left  motor power", frontLeft);
+			/*callingOpMode.telemetry.addData("Front Left  motor power", frontLeft);
 			callingOpMode.telemetry.addData("Front Right motor power", frontRight);
 			callingOpMode.telemetry.addData("Back  Left  motor power", backLeft);
-			callingOpMode.telemetry.addData("Back  Right motor power", backRight);
+			callingOpMode.telemetry.addData("Back  Right motor power", backRight);*/
 
-			callingOpMode.telemetry.addData("heading difference", Math.toDegrees(heading_difference_from_start));
+			/*callingOpMode.telemetry.addData("heading difference", Math.toDegrees(heading_difference_from_start));
             callingOpMode.telemetry.addData("heading offset    ", Math.toDegrees(local_heading_offset));
             callingOpMode.telemetry.addData("heading (imu)     ", last_robot_position.getHeading(AngleUnit.DEGREES));
 			callingOpMode.telemetry.addData("Angular velocity (rad / s)", angular_velocity_rad_per_s);
 			callingOpMode.telemetry.addData("IMU ok", isIMUOk(last_robot_position));
 			callingOpMode.telemetry.addData("Last IMU fix", last_imu_reset_time);
 
-			callingOpMode.telemetry.addData("Rotating due to manual time", started_rotating_due_to_manual_stick_time);
+			callingOpMode.telemetry.addData("Rotating due to manual time", started_rotating_due_to_manual_stick_time);*/
 		}
 	}
 }

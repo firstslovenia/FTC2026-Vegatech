@@ -299,16 +299,16 @@ public class Spindexer {
 
         last_was_busy = is_busy;
 
-        callingOpMode.telemetry.addData("Spindexer b0", balls[0]);
-        callingOpMode.telemetry.addData("Spindexer b1", balls[1]);
-        callingOpMode.telemetry.addData("Spindexer b2", balls[2]);
+        callingOpMode.telemetry.addData("Ball 0", balls[0]);
+        callingOpMode.telemetry.addData("Ball 1", balls[1]);
+        callingOpMode.telemetry.addData("Ball 2", balls[2]);
 
         if (ball_being_shot != null) {
             callingOpMode.telemetry.addData("Shooting ball", ball_being_shot);
         }
 
         if (ball_in_shooter != null) {
-            callingOpMode.telemetry.addData("Prepared for ball", ball_in_shooter);
+            callingOpMode.telemetry.addData("Going to shoot ball", ball_in_shooter);
         }
 
         if (ball_to_intake != null) {
@@ -316,7 +316,7 @@ public class Spindexer {
         }
 
         if (in_survey) {
-            callingOpMode.telemetry.addLine("Surveying balls we have");
+            callingOpMode.telemetry.addLine("Surveying balls");
         }
     }
 

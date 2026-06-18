@@ -105,30 +105,6 @@ public class Main extends LinearOpMode {
 
             led_position_to_set = LedIndicator.OFF_POSITION;
 
-            // If shooter is on, update LED
-            if (shooter.flywheel_enabled) {
-
-                double rpm_error = shooter.get_rpm_error();
-
-                if (Double.isNaN(shooter.shooting_distance_m)) {
-                    if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
-                        led_position_to_set = LedIndicator.ORANGE_POSITION;
-                    } else {
-                        led_position_to_set = LedIndicator.YELLOW_POSITION;
-                    }
-                } else {
-                    if (rpm_error > Shooter.SHOOTER_RPM_STABLE_ERROR_RANGE) {
-                        led_position_to_set = LedIndicator.RED_POSITION;
-                    }
-
-                    telemetry.addData("Shooter distance (cm)", shooter.shooting_distance_m * 100.0);
-                }
-
-                telemetry.addData("Shooter RPM", shooter.wanted_flywheel_rpm);
-                telemetry.addData("Shooter Error", rpm_error);
-                telemetry.addData("Shooter RPM measurements len", shooter.last_a_rpm_measurements.length());
-            }
-
 			Vector2D translation_vector = new Vector2D(gamepad1.left_stick_x, -gamepad1.left_stick_y);
 			Vector2D rotation_vector = new Vector2D(gamepad1.right_stick_x, -gamepad1.right_stick_y);
 
@@ -195,14 +171,6 @@ public class Main extends LinearOpMode {
                 target_to_rotate_to = positioning.compute_target_information(drivetrain.last_robot_position, team);
                 wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
                 drivetrain.wanted_heading = wanted_heading_for_target;
-                led_position_to_set = LedIndicator.AQUA_POSITION;
-
-                telemetry.addData("Target distance (m)", target_to_rotate_to.distance_m);
-                telemetry.addData("Target ideal angle", Math.toDegrees(target_to_rotate_to.ideal_angle_to_target));
-                telemetry.addData("Target y diff", target_to_rotate_to.y);
-                telemetry.addData("Target x diff", target_to_rotate_to.x);
-                telemetry.addData("Target to turn", Math.toDegrees(target_to_rotate_to.angle_distance_rads));
-                telemetry.addData("Target aaaa", Math.toDegrees(target_to_rotate_to.angle_distance_to_zero));
             }
 
             if (gamepad1.guideWasPressed()) {
@@ -211,29 +179,30 @@ public class Main extends LinearOpMode {
 
             // User 2
             // Enable / disable the shooter
-			if (gamepad2.xWasPressed()) {
+			if (gamepad2.leftStickButtonWasPressed()) {
 				if (shooter.flywheel_enabled) {
 					shooter.disable_flywheel();
 				} else {
                     shooter.run();
-                    if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
-                        shooter.update_for_target(webcam.target_position);
-                    } else if (target_to_rotate_to != null && now - target_to_rotate_to.time_ms < 5000) {
-                        shooter.update_for_target(target_to_rotate_to);
-                    } else {
-                        // Screw it
-                        shooter.wanted_flywheel_rpm = 3000.0;
-                    }
-                    shooter.update();
+                    shooter.wanted_flywheel_rpm = 3000.0;
                 }
 			}
 
+            // Aimbot
+            if (gamepad2.xWasPressed()) {
+                if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
+                    shooter.update_for_target(webcam.target_position);
+                } else if (target_to_rotate_to != null && now - target_to_rotate_to.time_ms < 5000) {
+                    shooter.update_for_target(target_to_rotate_to);
+                }
+                shooter.update();
+            }
+
             if (target_to_rotate_to != null) {
-                telemetry.addData("Target trt distance (m)", target_to_rotate_to.distance_m);
-                telemetry.addData("Target trt ideal angle", Math.toDegrees(target_to_rotate_to.ideal_angle_to_target));
-                telemetry.addData("Target trt age", now - target_to_rotate_to.time_ms);
+                telemetry.addData("Target distance  [m]", target_to_rotate_to.distance_m);
+                telemetry.addData("Target age      [ms]", now - target_to_rotate_to.time_ms);
             } else {
-                telemetry.addLine("Target trt: null");
+                telemetry.addLine("Target: null");
             }
 
             if (gamepad2.dpadLeftWasPressed()) {
@@ -248,26 +217,6 @@ public class Main extends LinearOpMode {
             if (gamepad2.dpadDownWasPressed()) {
                 shooter.wanted_flywheel_rpm = 5000.0;
             }
-
-            // Angle
-            double servo_position = hardware.shooterAngleServo.getPosition();
-
-            if (gamepad2.leftBumperWasPressed()) {
-                servo_position -= 0.1;
-                servo_position = Math.max(Math.min(servo_position, 1.0), 0.0);
-                hardware.shooterAngleServo.setPosition(servo_position);
-            } else if (gamepad2.rightBumperWasPressed()) {
-                servo_position += 0.1;
-                servo_position = Math.max(Math.min(servo_position, 1.0), 0.0);
-                hardware.shooterAngleServo.setPosition(servo_position);
-            }
-
-            double servo_angle = ShooterPlusPlus.calculate_rad_angle_for_servo_pos(servo_position);
-            double dist_factor = ShooterPlusPlus.calculate_dist_factor_for_angle(servo_angle);
-
-            telemetry.addData("Angle servo pos", servo_position);
-            telemetry.addData("Angle servo deg", Math.toDegrees(servo_angle));
-            telemetry.addData("Angle servo factor", dist_factor);
 
             // Camera angle
             double camera_servo_position = hardware.cameraAngleServo.getPosition();
@@ -284,7 +233,7 @@ public class Main extends LinearOpMode {
                 hardware.cameraAngleServo.setPosition(camera_servo_position);
             }
 
-            telemetry.addData("Camera servo pos", camera_servo_position);
+            telemetry.addData("Camera angle [ticks]", camera_servo_position);
 
             // Fire balls
 			if (gamepad2.guideWasPressed()) {
@@ -297,8 +246,19 @@ public class Main extends LinearOpMode {
 
             shooter.update();
 
-            telemetry.addData("Shooter wanted rpm:", shooter.wanted_flywheel_rpm);
-            telemetry.addData("Shooter running   :", shooter.flywheel_enabled);
+            // Angle
+            double servo_position = hardware.shooterAngleServo.getPosition();
+            double servo_angle = ShooterPlusPlus.calculate_rad_angle_for_servo_pos(servo_position);
+            telemetry.addData("Shooter angle [deg]", Math.toDegrees(servo_angle));
+
+            telemetry.addData("Shooter target RPM", shooter.wanted_flywheel_rpm);
+            telemetry.addData("Shooter real   RPM", shooter.last_a_rpm_measurements.average().orElse(0.0));
+
+            if (shooter.flywheel_enabled) {
+                telemetry.addLine("Shooter ON");
+            } else {
+                telemetry.addLine("Shooter OFF");
+            }
 
             // Go to spindexer holding / intake (out of ex. shooting)
             if (gamepad2.yWasPressed()) {
@@ -317,11 +277,6 @@ public class Main extends LinearOpMode {
 
             spindexer.update();
 
-            // Show spindexer full sequence
-            if (spindexer.started_full_procedure_ms != null) {
-                led_position_to_set = LedIndicator.VIOLET_POSITION;
-            }
-
 			// Also works for positioning!
 			//
 			//follower.updateConstants();
@@ -334,10 +289,6 @@ public class Main extends LinearOpMode {
 
 			drivetrain.update(translation_vector, rotation_vector);
 
-            if (drivetrain.set_new_pos_at != 0 || drivetrain.started_compass_recalibration_ms != 0) {
-                led_position_to_set = LedIndicator.ORANGE_POSITION;
-            }
-
             if (do_long_loop) {
                 webcam.update();
 
@@ -345,7 +296,6 @@ public class Main extends LinearOpMode {
                     target_to_rotate_to = webcam.target_position;
                     wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
                     drivetrain.wanted_heading = wanted_heading_for_target;
-                    led_position_to_set = LedIndicator.GREEN_POSITION;
 
                     webcam.target_position = null;
                 }
@@ -353,21 +303,30 @@ public class Main extends LinearOpMode {
                 last_long_loop_ms = now;
             }
 
-            if (webcam.target_position != null && !webcam.target_position.is_old()) {
-                led_position_to_set = LedIndicator.GREEN_POSITION;
+            if (shooter.flywheel_enabled) {
+                led_position_to_set = LedIndicator.BLUE_POSITION;
             }
 
-            long elapsed_ms = now - last_loop_time;
-            last_loop_time = now;
-            last_loops_took.push(elapsed_ms);
+            // Show spindexer full sequence
+            if (spindexer.started_full_procedure_ms != null) {
+                led_position_to_set = LedIndicator.VIOLET_POSITION;
+            }
 
-            if (last_loops_took.average().isPresent()) {
-                telemetry.addData("Last 50 loop avg", last_loops_took.average().get());
+            if (webcam.target_position != null && !webcam.target_position.is_old()) {
+
+                telemetry.addLine("Apriltag detected!");
+
+                if ((gamepad1.y || gamepad1.right_bumper)) {
+                    led_position_to_set = LedIndicator.GREEN_POSITION;
+                }
+            }
+
+            if (drivetrain.set_new_pos_at != 0 || drivetrain.started_compass_recalibration_ms != 0) {
+                led_position_to_set = LedIndicator.ORANGE_POSITION;
             }
 
             hardware.rgbLed.setPosition(led_position_to_set);
 
-            telemetry.addData("RPM (measured)", shooter.last_a_rpm_measurements.average().orElse(0.0));
             telemetry.update();
 		}
 	}
