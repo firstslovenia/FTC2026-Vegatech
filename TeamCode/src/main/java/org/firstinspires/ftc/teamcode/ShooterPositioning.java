@@ -35,6 +35,9 @@ public class ShooterPositioning {
 	public double x_distance_to_target_in = Double.NaN;
 	public double y_distance_to_target_in = Double.NaN;
 
+    public static Pose BLUE_GOAL_TELEOP_POSE = new Pose(12.0, 135.0);
+    public static Pose RED_GOAL_TELEOP_POSE = new Pose(132.0, 135.0);
+
     /// Converts a pedro pathing pose to a pose2d
     public static Pose2D to_pose2d(Pose pedro_pos) {
        return new Pose2D(DistanceUnit.INCH, pedro_pos.getX(), pedro_pos.getY(), AngleUnit.RADIANS, pedro_pos.getHeading());
@@ -103,7 +106,7 @@ public class ShooterPositioning {
 
     /// Calculates the target information we need to shoot, given just our current pos and team
     public TargetInformation compute_target_information(Pose2D pos, Team team) {
-        Pose goal_pos = team == Team.Blue ? ShootingAuto.blueGoalPose : ShootingAuto.redGoalPose;
+        Pose goal_pos = team == Team.Blue ? BLUE_GOAL_TELEOP_POSE : RED_GOAL_TELEOP_POSE;
 
         return compute_target_information_for_two_pos(pos, ShooterPositioning.to_pose2d(goal_pos));
     }
