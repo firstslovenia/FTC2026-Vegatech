@@ -208,6 +208,8 @@ public class MoveAuto extends OpMode {
     @Override
     public void start() {
 
+        hardware.odometry.setPosition(ShooterPositioning.to_pose2d(startPose));
+
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);

@@ -224,7 +224,7 @@ public class Main extends LinearOpMode {
                 if (camera_servo_high) {
                     camera_servo_position = 0.25;
                 } else {
-                    camera_servo_position = 0.50;
+                    camera_servo_position = 0.55;
                 }
 
                 hardware.cameraAngleServo.setPosition(camera_servo_position);
