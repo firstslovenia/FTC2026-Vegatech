@@ -98,12 +98,24 @@ public class ShooterPlusPlus {
 
     /// Calculates the expected RPM from the motor's power and voltage
     public static double calculate_rpm(double power, double voltage_v) {
-        return ((REGULATOR_POW_TO_RPM_K * power * 100.0) + REGULATOR_POW_TO_RPM_C) * (voltage_v / REGULATOR_BASE_VOLTAGE);
+        return ((REGULATOR_POW_TO_RPM_K * power * 100.0) + REGULATOR_POW_TO_RPM_C) * calculate_rpm_voltage_factor(voltage_v);
+    }
+
+    // Used to be voltage / BASE_VOLTAGE
+    public static double calculate_rpm_voltage_factor(double voltage_v) {
+        // 12.33 V -> 1.0x (@ 5280 RPM, 1.0 PWR) --- actually je 12.36 5500
+        // 12.71 V -> 5600 = 5400 (1.023)
+        // 12.16 V -> 5400 = 5200
+        // not included: 12.14 V -> 5450 = 5250
+        // 13.67 -> 5800 = 5600 (1.061)
+        // 14.0 -> 5870 = 5670 (1.074)
+        // ----> Jank, samo damo -200 na vse
+        return 0.0479069 * voltage_v + 0.406055;
     }
 
     /// Calculates the power to set for wanted rpm on the motor with the given voltage
     public static double calculate_power_for_rpm(double wanted_rpm, double voltage_v) {
-        return ((wanted_rpm * REGULATOR_BASE_VOLTAGE / voltage_v) - REGULATOR_POW_TO_RPM_C ) / REGULATOR_POW_TO_RPM_K / 100.0;
+        return ((wanted_rpm / calculate_rpm_voltage_factor(voltage_v)) - REGULATOR_POW_TO_RPM_C ) / REGULATOR_POW_TO_RPM_K / 100.0;
     }
 
     /// Calculates the radian angle we are shooting at given the servo position
@@ -164,8 +176,8 @@ public class ShooterPlusPlus {
     }
 
     public static double distance_cm_to_wanted_rpm(double distance_cm) {
-        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+2900%7D%2C+%7B41%2C+3000%7D%2C+%7B78.6%2C+3000%7D%2C+%7B92.7%2C+3100%7D%2C+%7B123%2C+3200%7D%2C+%7B142%2C+3200%7D%2C+%7B170%2C+3400%7D%2C+%7B192%2C+3500%7D%2C+%7B220%2C+3650%7D%2C+%7B242%2C+3700%7D%2C+%7B265%2C+3800%7D%2C+%7B290%2C+4000%7D%2C+%7B320%2C+4100%7D%2C+%7B352%2C+4300%7D%7D%22
-        double rpm = 0.00633561 * Math.pow(distance_cm, 2) + 1.86845 * distance_cm + 2878.02;
+        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+2900%7D%2C+%7B41%2C+3000%7D%2C+%7B78.6%2C+3000%7D%2C+%7B92.7%2C+3100%7D%2C+%7B123%2C+3200%7D%2C+%7B142%2C+3200%7D%2C+%7B170%2C+3400%7D%2C+%7B192%2C+3500%7D%2C+%7B220%2C+3650%7D%2C+%7B242%2C+3700%7D%2C+%7B265%2C+3800%7D%2C+%7B290%2C+4000%7D%2C+%7B320%2C+4200%7D%2C+%7B352%2C+4400%7D%7D%22
+        double rpm = 0.00826885 * Math.pow(distance_cm, 2) + 1.38794 * distance_cm + 2895.53;
         return Math.max(rpm, 0.0);
     }
 
