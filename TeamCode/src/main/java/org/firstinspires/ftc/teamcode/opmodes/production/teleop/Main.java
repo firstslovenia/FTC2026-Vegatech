@@ -51,6 +51,7 @@ public class Main extends LinearOpMode {
     /// The wanted heading of the target for target_to_rotate_to
     double wanted_heading_for_target = Double.NaN;
     long last_long_loop_ms = 0;
+    long aligned_via_camera = 0;
     static long LONG_LOOP_DELAY_MS = 100;
 
     SlidingWindow<Long> last_loops_took = new SlidingWindow(50);
@@ -299,6 +300,7 @@ public class Main extends LinearOpMode {
                     drivetrain.wanted_heading = wanted_heading_for_target;
 
                     webcam.target_position = null;
+                    aligned_via_camera = now;
                 }
 
                 last_long_loop_ms = now;
@@ -313,7 +315,7 @@ public class Main extends LinearOpMode {
                 led_position_to_set = LedIndicator.VIOLET_POSITION;
             }
 
-            if (webcam.target_position != null && !webcam.target_position.is_old()) {
+            if (now - aligned_via_camera < 1000) {
 
                 telemetry.addLine("Apriltag detected!");
 
