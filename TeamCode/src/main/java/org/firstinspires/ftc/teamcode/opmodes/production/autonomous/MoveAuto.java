@@ -67,7 +67,6 @@ public class MoveAuto extends OpMode {
 
     Hardware hardware;
     ShooterPlusPlus shooter;
-    Spindexer spindexer;
     Webcam webcam;
 
     /// How many balls we've already scored
@@ -100,9 +99,6 @@ public class MoveAuto extends OpMode {
                 break;
 
             case 4:
-                spindexer.switch_to_holding_pattern();
-                spindexer.move_to_angle_sortwise(0.0);
-
                 follower.followPath(move, true);
                 setPathState(5);
                 break;
@@ -126,10 +122,7 @@ public class MoveAuto extends OpMode {
             case 7:
 
                 follower.breakFollowing();
-
                 hardware.intakeMotor.setPower(0.0);
-
-                spindexer.reset_state();
                 break;
         }
     }
@@ -153,7 +146,6 @@ public class MoveAuto extends OpMode {
         autonomousPathUpdate();
 
         shooter.update();
-        spindexer.update();
 
         // Feedback to Driver Hub for debugging
         telemetry.addData("shoot dist [cm]", shooting_distance_m);
@@ -161,12 +153,8 @@ public class MoveAuto extends OpMode {
         telemetry.addData("shooter RPM delta", shooter.get_rpm_error());
         telemetry.addData("path state", pathState);
         telemetry.addData("balls shot", balls_scored);
-        telemetry.addData("spx can move", spindexer.can_move());
-        telemetry.addData("spx busy", spindexer.is_motor_busy());
         telemetry.addData("spx Position", hardware.spindexerMotor.getCurrentPosition());
         telemetry.addData("spx Wanted pos", hardware.spindexerMotor.getTargetPosition());
-        telemetry.addData("spx Nearest 0 angle", spindexer.nearest_shootwise_pos_at_angle(hardware.spindexerMotor.getCurrentPosition(), 0.0));
-        telemetry.addData("spx Angle", Math.toDegrees(spindexer.current_angle()));
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("order: ", webcam.order);
@@ -185,11 +173,6 @@ public class MoveAuto extends OpMode {
 
         hardware = new Hardware(this);
         hardware.init();
-
-        spindexer = new Spindexer(this, hardware);
-        spindexer.init();
-
-        shooter = new ShooterPlusPlus(this, hardware, spindexer);
 
         webcam = new Webcam(this, hardware);
     }
@@ -216,8 +199,6 @@ public class MoveAuto extends OpMode {
 
         opmodeTimer.resetTimer();
         setPathState(0);
-
-        spindexer.start_survey();
     }
 
     /**
