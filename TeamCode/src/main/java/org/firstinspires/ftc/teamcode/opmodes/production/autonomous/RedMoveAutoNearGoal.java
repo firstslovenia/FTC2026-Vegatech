@@ -10,7 +10,7 @@ public class RedMoveAutoNearGoal extends MoveAuto {
 
         final Pose start_pose = new Pose(119.6, 130, Math.toRadians(36));
         final Pose intermediate_pose = new Pose(start_pose.getX() - 30, start_pose.getY() - 40, start_pose.getHeading());
-        final Pose end_pose = CommonPositions.RED_AUTO_END_POSE;
+        final Pose end_pose = CommonPositions.RED_AUTO_END_POSE_NEAR_GOAL;
 
         startPose = start_pose;
         intermediatePose = intermediate_pose;

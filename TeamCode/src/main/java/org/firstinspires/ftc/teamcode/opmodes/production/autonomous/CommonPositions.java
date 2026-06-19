@@ -4,5 +4,7 @@ import com.pedropathing.geometry.Pose;
 
 public class CommonPositions {
     public static final Pose BLUE_AUTO_END_POSE = new Pose(38.0, 12.0, Math.toRadians(180));
+    public static final Pose BLUE_AUTO_END_POSE_NEAR_GOAL = new Pose(42.0, 116.0, Math.toRadians(180));
     public static final Pose RED_AUTO_END_POSE = new Pose(106.0, 12.0, Math.toRadians(0));
+    public static final Pose RED_AUTO_END_POSE_NEAR_GOAL = new Pose(100.0, 116.0, Math.toRadians(0));
 }
