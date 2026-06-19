@@ -28,6 +28,7 @@ public class MoveAuto extends OpMode {
     // Must be set by derived classes!!!!
     public Pose startPose;
     public Pose lookAtObeliskPose;
+    public Pose intermediatePose;
     public Pose shootPose;
     public Pose endPose;
     public Pose pickupPose;
@@ -62,6 +63,7 @@ public class MoveAuto extends OpMode {
 
     private Path move_to_pickup;
     private PathChain move;
+    private PathChain move_2;
 
     Hardware hardware;
     ShooterPlusPlus shooter;
@@ -82,7 +84,11 @@ public class MoveAuto extends OpMode {
 
     public void buildPaths() {
         move = follower.pathBuilder()
-                .addPath(new BezierLine(startPose, endPose))
+                .addPath(new BezierLine(startPose, intermediatePose))
+                .setConstantHeadingInterpolation(startPose.getHeading())
+                .build();
+        move_2 = follower.pathBuilder()
+                .addPath(new BezierLine(intermediatePose, endPose))
                 .setConstantHeadingInterpolation(endPose.getHeading())
                 .build();
     }
@@ -101,8 +107,16 @@ public class MoveAuto extends OpMode {
                 setPathState(5);
                 break;
 
-            // Going to the end position
+            // Going to the intermediate position
             case 5:
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 20000) {
+                    follower.followPath(move_2, true);
+                    setPathState(6);
+                }
+                break;
+
+            // Going to the end position
+            case 6:
                 if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 29000) {
                     setPathState(7);
                 }
