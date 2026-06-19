@@ -164,8 +164,8 @@ public class ShooterPlusPlus {
     }
 
     public static double distance_cm_to_wanted_rpm(double distance_cm) {
-        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+2900%7D%2C+%7B41%2C+3000%7D%2C+%7B78.6%2C+3000%7D%2C+%7B92.7%2C+3100%7D%2C+%7B123%2C+3200%7D%2C+%7B142%2C+3200%7D%2C+%7B170%2C+3400%7D%2C+%7B192%2C+3500%7D%2C+%7B220%2C+3650%7D%2C+%7B242%2C+3700%7D%2C+%7B265%2C+3800%7D%7D%22
-        double rpm = 0.00794905 * Math.pow(distance_cm, 2) + 1.45309 * distance_cm + 2893.77;
+        // https://www.wolframalpha.com/input?i=fit+quadratic&assumption=%7B%22F%22%2C+%22QuadraticFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B0%2C+2900%7D%2C+%7B41%2C+3000%7D%2C+%7B78.6%2C+3000%7D%2C+%7B92.7%2C+3100%7D%2C+%7B123%2C+3200%7D%2C+%7B142%2C+3200%7D%2C+%7B170%2C+3400%7D%2C+%7B192%2C+3500%7D%2C+%7B220%2C+3650%7D%2C+%7B242%2C+3700%7D%2C+%7B265%2C+3800%7D%2C+%7B290%2C+4000%7D%2C+%7B320%2C+4100%7D%2C+%7B352%2C+4300%7D%7D%22
+        double rpm = 0.00633561 * Math.pow(distance_cm, 2) + 1.86845 * distance_cm + 2878.02;
         return Math.max(rpm, 0.0);
     }
 

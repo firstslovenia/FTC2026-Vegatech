@@ -157,8 +157,8 @@ public class ShootingAuto extends OpMode {
                     }
                 }
 
-                // After 24s in the opmode, stop trying to score
-                if (opmodeTimer.getElapsedTime() >= 24000) {
+                // After 22s in the opmode, stop trying to score
+                if (opmodeTimer.getElapsedTime() >= 22000) {
                     shooter.disable_flywheel();
 
                     spindexer.switch_to_holding_pattern();
@@ -171,7 +171,7 @@ public class ShootingAuto extends OpMode {
 
             // Going to the end position
             case 5:
-                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 27000) {
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 29000) {
 
                     /*if (opmodeTimer.getElapsedTime() >= 26000) {
                         setPathState(7);

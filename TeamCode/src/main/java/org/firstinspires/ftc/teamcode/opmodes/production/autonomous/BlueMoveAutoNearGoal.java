@@ -10,7 +10,7 @@ public class BlueMoveAutoNearGoal extends MoveAuto {
         super();
 
         final Pose start_pose = new Pose(24.3, 130, Math.toRadians(144));
-        final Pose end_pose = new Pose(48.0, 32.0, Math.toRadians(180));
+        final Pose end_pose = CommonPositions.BLUE_AUTO_END_POSE;
 
         startPose = start_pose;
         endPose = end_pose;

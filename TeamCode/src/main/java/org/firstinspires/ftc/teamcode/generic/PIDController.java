@@ -116,10 +116,10 @@ public abstract class PIDController {
 
 			OpMode opmode = callingOpMode.get();
 
-			opmode.telemetry.addData(telemetry_prefix + "proportional", p);
+			/*opmode.telemetry.addData(telemetry_prefix + "proportional", p);
 			opmode.telemetry.addData(telemetry_prefix + "integral", i);
 			opmode.telemetry.addData(telemetry_prefix + "derivative", d);
-			opmode.telemetry.addData(telemetry_prefix + "constant", f);
+			opmode.telemetry.addData(telemetry_prefix + "constant", f);*/
 		}
 
 		double value = p + i + d + f;

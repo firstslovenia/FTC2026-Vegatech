@@ -103,7 +103,7 @@ public class MoveAuto extends OpMode {
 
             // Going to the end position
             case 5:
-                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 27000) {
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 29000) {
                     setPathState(7);
                 }
                 break;

@@ -10,7 +10,7 @@ public class BlueMoveAutoBottomTriangle extends MoveAuto {
         super();
 
         final Pose start_pose = new Pose(56.0, 8.0, Math.toRadians(90));
-        final Pose end_pose = new Pose(48.0, 32.0, Math.toRadians(180));
+        final Pose end_pose = CommonPositions.BLUE_AUTO_END_POSE;
 
         startPose = start_pose;
         endPose = end_pose;

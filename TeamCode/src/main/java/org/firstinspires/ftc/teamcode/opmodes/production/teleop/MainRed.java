@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.generic.Team;
+import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.CommonPositions;
 
 @TeleOp(name = "Main (Red)", group = "Production")
 public class MainRed extends Main {
@@ -11,8 +12,6 @@ public class MainRed extends Main {
         super();
 
         team = Team.Red;
-
-        // Auto end pose
-        starting_pos = ShooterPositioning.to_pose2d(new Pose(95.0, 32.0, Math.toRadians(0)));
+        starting_pos = ShooterPositioning.to_pose2d(CommonPositions.RED_AUTO_END_POSE);
     }
 }

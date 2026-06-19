@@ -9,7 +9,7 @@ public class RedMoveAutoBottomTriangle extends MoveAuto {
         super();
 
         final Pose start_pose = new Pose(88.0, 8.0, Math.toRadians(90));
-        final Pose end_pose = new Pose(95.0, 32.0, Math.toRadians(0));
+        final Pose end_pose = CommonPositions.RED_AUTO_END_POSE;
 
         startPose = start_pose;
         endPose = end_pose;

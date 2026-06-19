@@ -299,10 +299,6 @@ public class Spindexer {
 
         last_was_busy = is_busy;
 
-        callingOpMode.telemetry.addData("Ball 0", balls[0]);
-        callingOpMode.telemetry.addData("Ball 1", balls[1]);
-        callingOpMode.telemetry.addData("Ball 2", balls[2]);
-
         if (ball_being_shot != null) {
             callingOpMode.telemetry.addData("Shooting ball", ball_being_shot);
         }
@@ -318,6 +314,10 @@ public class Spindexer {
         if (in_survey) {
             callingOpMode.telemetry.addLine("Surveying balls");
         }
+
+        callingOpMode.telemetry.addData("Ball 0", balls[0]);
+        callingOpMode.telemetry.addData("Ball 1", balls[1]);
+        callingOpMode.telemetry.addData("Ball 2", balls[2]);
     }
 
     /// Tells the spindexer to start surveying which balls we have

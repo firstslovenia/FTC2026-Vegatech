@@ -143,6 +143,8 @@ public class Main extends LinearOpMode {
                 }
             }
 
+            telemetry.addData("Intake power", hardware.intakeMotor.getPower());
+
 			// Reset robot to -90 degrees
 			if (gamepad1.a) {
                 drivetrain.wanted_heading = -Math.PI / 2.0;
@@ -198,13 +200,6 @@ public class Main extends LinearOpMode {
                 shooter.update();
             }
 
-            if (target_to_rotate_to != null) {
-                telemetry.addData("Target distance  [m]", target_to_rotate_to.distance_m);
-                telemetry.addData("Target age      [ms]", now - target_to_rotate_to.time_ms);
-            } else {
-                telemetry.addLine("Target: null");
-            }
-
             if (gamepad2.dpadLeftWasPressed()) {
                 shooter.wanted_flywheel_rpm = 2000.0;
             }
@@ -233,7 +228,7 @@ public class Main extends LinearOpMode {
                 hardware.cameraAngleServo.setPosition(camera_servo_position);
             }
 
-            telemetry.addData("Camera angle [ticks]", camera_servo_position);
+            //telemetry.addData("Camera angle [ticks]", camera_servo_position);
 
             // Fire balls
 			if (gamepad2.guideWasPressed()) {
@@ -243,22 +238,6 @@ public class Main extends LinearOpMode {
                     spindexer.switch_to_shooting();
                 }
 			}
-
-            shooter.update();
-
-            // Angle
-            double servo_position = hardware.shooterAngleServo.getPosition();
-            double servo_angle = ShooterPlusPlus.calculate_rad_angle_for_servo_pos(servo_position);
-            telemetry.addData("Shooter angle [deg]", Math.toDegrees(servo_angle));
-
-            telemetry.addData("Shooter target RPM", shooter.wanted_flywheel_rpm);
-            telemetry.addData("Shooter real   RPM", shooter.last_a_rpm_measurements.average().orElse(0.0));
-
-            if (shooter.flywheel_enabled) {
-                telemetry.addLine("Shooter ON");
-            } else {
-                telemetry.addLine("Shooter OFF");
-            }
 
             // Go to spindexer holding / intake (out of ex. shooting)
             if (gamepad2.yWasPressed()) {
@@ -276,6 +255,28 @@ public class Main extends LinearOpMode {
             }
 
             spindexer.update();
+
+            shooter.update();
+
+            if (shooter.flywheel_enabled) {
+                telemetry.addLine("Shooter ON");
+            } else {
+                telemetry.addLine("Shooter OFF");
+            }
+
+            // Angle
+            double servo_position = hardware.shooterAngleServo.getPosition();
+            double servo_angle = ShooterPlusPlus.calculate_rad_angle_for_servo_pos(servo_position);
+            telemetry.addData("Shooter angle [deg]", Math.toDegrees(servo_angle));
+
+            double shooter_wanted_rpm = shooter.wanted_flywheel_rpm;
+            double shooter_real_rpm = shooter.last_a_rpm_measurements.average().orElse(0.0);
+            boolean shooter_correct_speed = Math.abs(shooter_wanted_rpm - shooter_real_rpm) <= 200.0;
+
+            telemetry.addData("Shooter @ correct speed", shooter_correct_speed);
+
+            //telemetry.addData("Shooter target RPM", shooter.wanted_flywheel_rpm);
+            //telemetry.addData("Shooter real   RPM", shooter.last_a_rpm_measurements.average().orElse(0.0));
 
 			// Also works for positioning!
 			//
@@ -319,6 +320,15 @@ public class Main extends LinearOpMode {
                 if ((gamepad1.y || gamepad1.right_bumper)) {
                     led_position_to_set = LedIndicator.GREEN_POSITION;
                 }
+            } else {
+                telemetry.addLine("Apriltag NOT detected!");
+            }
+
+            if (target_to_rotate_to != null) {
+                telemetry.addData("Target distance  [m]", target_to_rotate_to.distance_m);
+                telemetry.addData("Target age      [ms]", now - target_to_rotate_to.time_ms);
+            } else {
+                telemetry.addLine("Target: null");
             }
 
             if (drivetrain.set_new_pos_at != 0 || drivetrain.started_compass_recalibration_ms != 0) {
