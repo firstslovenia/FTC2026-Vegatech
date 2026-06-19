@@ -222,7 +222,7 @@ public class Main extends LinearOpMode {
                 camera_servo_high = !camera_servo_high;
 
                 if (camera_servo_high) {
-                    camera_servo_position = 0.25;
+                    camera_servo_position = 0.30;
                 } else {
                     camera_servo_position = 0.55;
                 }
