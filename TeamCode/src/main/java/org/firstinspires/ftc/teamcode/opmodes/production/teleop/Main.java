@@ -221,9 +221,9 @@ public class Main extends LinearOpMode {
                 camera_servo_high = !camera_servo_high;
 
                 if (camera_servo_high) {
-                    camera_servo_position = 0.45;
+                    camera_servo_position = 0.25;
                 } else {
-                    camera_servo_position = 0.35;
+                    camera_servo_position = 0.50;
                 }
 
                 hardware.cameraAngleServo.setPosition(camera_servo_position);
@@ -253,6 +253,15 @@ public class Main extends LinearOpMode {
             // Run spindexer survey
             if (gamepad2.aWasPressed()) {
                 spindexer.start_survey();
+            }
+
+            // Manually move spindexer
+            if (gamepad2.left_trigger > 0.1) {
+                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                hardware.spindexerMotor.setPower(0.7);
+            } else if (gamepad2.left_bumper) {
+                hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                hardware.spindexerMotor.setPower(-0.7);
             }
 
             spindexer.update();
