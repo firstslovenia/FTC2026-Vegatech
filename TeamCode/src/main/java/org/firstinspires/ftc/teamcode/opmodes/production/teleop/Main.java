@@ -39,6 +39,7 @@ public class Main extends LinearOpMode {
 
     Team team = null;
 
+    boolean manual_spindexer = false;
     boolean intake_enabled = false;
 
     /// If the camera servo is currently in the high position
@@ -247,6 +248,7 @@ public class Main extends LinearOpMode {
 
             // Reset spindexer
             if (gamepad2.bWasPressed()) {
+                manual_spindexer = false;
                 spindexer.reset_state();
             }
 
@@ -256,15 +258,21 @@ public class Main extends LinearOpMode {
             }
 
             // Manually move spindexer
-            if (gamepad2.left_trigger > 0.1) {
+            if (gamepad2.left_trigger > 0.2) {
+                manual_spindexer = true;
                 hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 hardware.spindexerMotor.setPower(0.7);
             } else if (gamepad2.left_bumper) {
+                manual_spindexer = true;
                 hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 hardware.spindexerMotor.setPower(-0.7);
+            } else if (manual_spindexer) {
+                hardware.spindexerMotor.setPower(0.0);
             }
 
-            spindexer.update();
+            if (!manual_spindexer) {
+                spindexer.update();
+            }
 
             shooter.update();
 
