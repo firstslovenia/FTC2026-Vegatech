@@ -188,7 +188,7 @@ public class Main extends LinearOpMode {
 					shooter.disable_flywheel();
 				} else {
                     shooter.run();
-                    shooter.wanted_flywheel_rpm = 3000.0;
+                    shooter.wanted_flywheel_rpm = 4200.0;
                 }
 			}
 
@@ -203,16 +203,14 @@ public class Main extends LinearOpMode {
             }
 
             if (gamepad2.dpadLeftWasPressed()) {
-                shooter.wanted_flywheel_rpm = 2000.0;
+                shooter.wanted_flywheel_rpm = shooter.wanted_flywheel_rpm - 50;
             }
             if (gamepad2.dpadUpWasPressed()) {
-                shooter.wanted_flywheel_rpm = 3000.0;
+                shooter.wanted_flywheel_rpm = 4200.0;
+                hardware.shooterAngleServo.setPosition(0.0);
             }
             if (gamepad2.dpadRightWasPressed()) {
-                shooter.wanted_flywheel_rpm = 4000.0;
-            }
-            if (gamepad2.dpadDownWasPressed()) {
-                shooter.wanted_flywheel_rpm = 5000.0;
+                shooter.wanted_flywheel_rpm = shooter.wanted_flywheel_rpm - 50;
             }
 
             // Camera angle
