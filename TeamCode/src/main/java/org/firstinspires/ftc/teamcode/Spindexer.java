@@ -205,6 +205,11 @@ public class Spindexer {
         boolean is_busy = is_motor_busy();
 
         if (started_full_procedure_ms != null) {
+
+            if (hardware.intakeMotor.getPower() >= 0.0 && now_ms - started_full_procedure_ms > 200) {
+                hardware.intakeMotor.setPower(-0.6);
+            }
+
             if (now_ms - started_full_procedure_ms > 2000) {
                 on_spindexer_full_procedure_finished();
             }
@@ -490,7 +495,6 @@ public class Spindexer {
     public void on_spindexer_full() {
         started_full_procedure_ms = System.currentTimeMillis();
         callingOpMode.gamepad1.rumble(200);
-        hardware.intakeMotor.setPower(-0.6);
     }
 
     public void on_spindexer_full_procedure_finished() {

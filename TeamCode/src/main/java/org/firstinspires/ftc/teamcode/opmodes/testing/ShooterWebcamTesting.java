@@ -32,6 +32,15 @@ public class ShooterWebcamTesting extends LinearOpMode {
 		while (opModeIsActive()) {
 			webcam.update();
 
+            double camera_servo_position = hardware.cameraAngleServo.getPosition();
+            if (gamepad2.rightStickButtonWasPressed()) {
+                camera_servo_position += 0.01;
+                hardware.cameraAngleServo.setPosition(camera_servo_position);
+            } else if (gamepad2.leftStickButtonWasPressed()) {
+                camera_servo_position -= 0.01;
+                hardware.cameraAngleServo.setPosition(camera_servo_position);
+            }
+
 			if (webcam.getApriltags().isEmpty()) {
 				continue;
 			}
@@ -40,6 +49,7 @@ public class ShooterWebcamTesting extends LinearOpMode {
 
 			TargetInformation target_information = webcam.target_position;
 
+            telemetry.addData("Servo pos", camera_servo_position);
 			telemetry.addData("Yaw   [deg]", Math.toDegrees(detection.ftcPose.yaw));
 			telemetry.addData("Pitch [deg]", Math.toDegrees(detection.ftcPose.pitch));
 			telemetry.addData("Roll  [deg]", Math.toDegrees(detection.ftcPose.roll));

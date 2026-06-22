@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.BallColor;
+import org.firstinspires.ftc.teamcode.opmodes.production.teleop.Main;
 
 @Autonomous(name = "NO TOUCHIE!!", group = "Examples")
 public class ShootingAuto extends OpMode {
@@ -102,14 +103,14 @@ public class ShootingAuto extends OpMode {
         pickupPose = endPose.withX(endPose.getX() + ballPickupXOffset);
 
         // -- actually build paths
-        //move_to_look_at_obelisk = new Path(new BezierLine(startPose, lookAtObeliskPose));
-        //move_to_look_at_obelisk.setConstantHeadingInterpolation(lookAtObeliskPose.getHeading());
+        move_to_look_at_obelisk = new Path(new BezierLine(startPose, lookAtObeliskPose));
+        move_to_look_at_obelisk.setLinearHeadingInterpolation(startPose.getHeading(), lookAtObeliskPose.getHeading());
 
-        move_to_shoot = new Path(new BezierLine(startPose, shootPose));
+        move_to_shoot = new Path(new BezierLine(lookAtObeliskPose, shootPose));
         move_to_shoot.setConstantHeadingInterpolation(shootPose.getHeading());
 
-        move_to_pickup = new Path(new BezierLine(endPose, pickupPose));
-        move_to_pickup.setConstantHeadingInterpolation(pickupPose.getHeading());
+        //move_to_pickup = new Path(new BezierLine(endPose, pickupPose));
+        //move_to_pickup.setConstantHeadingInterpolation(pickupPose.getHeading());
 
         end = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, endPose))
@@ -120,13 +121,30 @@ public class ShootingAuto extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                setPathState(2);
+                follower.followPath(move_to_look_at_obelisk, true);
+                setPathState(1);
+                break;
+
+            case 1:
+                if (!follower.isBusy()) {
+                    setPathState(2);
+                }
                 break;
 
             // Start going to the shoot position
             case 2:
-                follower.followPath(move_to_shoot, true);
-                setPathState(3);
+                long now_ms = System.currentTimeMillis();
+
+                if (started_looking_at_obelisk_ms == 0) {
+                    started_looking_at_obelisk_ms = now_ms;
+                }
+
+                webcam.update();
+
+                if (webcam.order != ColorOrder.Unknown || now_ms - started_looking_at_obelisk_ms >= 7_000 || opmodeTimer.getElapsedTime() >= 13_000) {
+                    follower.followPath(move_to_shoot, true);
+                    setPathState(3);
+                }
                 break;
 
             // Go to the shooting position
@@ -290,6 +308,8 @@ public class ShootingAuto extends OpMode {
     public void start() {
 
         hardware.odometry.setPosition(ShooterPositioning.to_pose2d(startPose));
+
+        hardware.cameraAngleServo.setPosition(Main.LOWER_CAMERA_POSITION);
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();

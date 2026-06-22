@@ -27,6 +27,12 @@ import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.ShootingAuto
 @TeleOp(name = "!! DO NOT USE !! Main (Unknown Team)", group = "Production")
 public class Main extends LinearOpMode {
 
+    // Higher number is facing more down
+    public static final double HIGHER_CAMERA_POSITION = 0.44;
+    public static final double LOWER_CAMERA_POSITION = 0.52;
+
+    public static final long LONG_LOOP_DELAY_MS = 100;
+
 	Hardware hardware;
 	Drivetrain drivetrain;
 	LedIndicator ledIndicator;
@@ -53,7 +59,6 @@ public class Main extends LinearOpMode {
     double wanted_heading_for_target = Double.NaN;
     long last_long_loop_ms = 0;
     long aligned_via_camera = 0;
-    static long LONG_LOOP_DELAY_MS = 100;
 
     SlidingWindow<Long> last_loops_took = new SlidingWindow(50);
     long last_loop_time = System.currentTimeMillis();
@@ -91,6 +96,8 @@ public class Main extends LinearOpMode {
 		waitForStart();
         drivetrain.setPos(starting_pos);
         drivetrain.resetStartingDirection();
+
+        hardware.cameraAngleServo.setPosition(LOWER_CAMERA_POSITION);
 
         spindexer.init();
         spindexer_override();
@@ -170,11 +177,23 @@ public class Main extends LinearOpMode {
             }
 
             // Rotate towards the goal
-            if (gamepad1.yWasPressed() || gamepad1.rightBumperWasPressed()) {
-                positioning = new ShooterPositioning();
-                target_to_rotate_to = positioning.compute_target_information(drivetrain.last_robot_position, team);
-                wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
-                drivetrain.wanted_heading = wanted_heading_for_target;
+            if (gamepad1.y || gamepad1.right_bumper) {
+
+                boolean recalculate_from_odometry = true;
+
+                if (target_to_rotate_to != null) {
+                    if (now - aligned_via_camera < 5000) {
+                        recalculate_from_odometry = false;
+                    }
+                }
+
+                if (recalculate_from_odometry) {
+                    positioning = new ShooterPositioning();
+                    target_to_rotate_to = positioning.compute_target_information(drivetrain.last_robot_position, team);
+                    aligned_via_camera = 0;
+                    wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
+                    drivetrain.wanted_heading = wanted_heading_for_target;
+                }
             }
 
             if (gamepad1.guideWasPressed()) {
@@ -184,6 +203,7 @@ public class Main extends LinearOpMode {
             // User 2
             // Enable / disable the shooter
 			if (gamepad2.leftStickButtonWasPressed()) {
+                shooter.shooting_distance_m = Double.NaN;
 				if (shooter.flywheel_enabled) {
 					shooter.disable_flywheel();
 				} else {
@@ -194,9 +214,9 @@ public class Main extends LinearOpMode {
 
             // Aimbot
             if (gamepad2.xWasPressed()) {
-                if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
+                if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
                     shooter.update_for_target(webcam.target_position);
-                } else if (target_to_rotate_to != null && now - target_to_rotate_to.time_ms < 5000) {
+                } else if (target_to_rotate_to != null && now - target_to_rotate_to.time_ms < 10000) {
                     shooter.update_for_target(target_to_rotate_to);
                 }
                 shooter.update();
@@ -220,9 +240,9 @@ public class Main extends LinearOpMode {
                 camera_servo_high = !camera_servo_high;
 
                 if (camera_servo_high) {
-                    camera_servo_position = 0.30;
+                    camera_servo_position = HIGHER_CAMERA_POSITION;
                 } else {
-                    camera_servo_position = 0.55;
+                    camera_servo_position = LOWER_CAMERA_POSITION;
                 }
 
                 hardware.cameraAngleServo.setPosition(camera_servo_position);
@@ -290,6 +310,7 @@ public class Main extends LinearOpMode {
             boolean shooter_correct_speed = Math.abs(shooter_wanted_rpm - shooter_real_rpm) <= 200.0;
 
             telemetry.addData("Shooter @ correct speed", shooter_correct_speed);
+            telemetry.addLine("(" + shooter_wanted_rpm + " vs " + shooter_real_rpm + ")");
 
             //telemetry.addData("Shooter target RPM", shooter.wanted_flywheel_rpm);
             //telemetry.addData("Shooter real   RPM", shooter.last_a_rpm_measurements.average().orElse(0.0));
@@ -322,7 +343,11 @@ public class Main extends LinearOpMode {
             }
 
             if (shooter.flywheel_enabled) {
-                led_position_to_set = LedIndicator.BLUE_POSITION;
+                if (Double.isNaN(shooter.shooting_distance_m)) {
+                    led_position_to_set = LedIndicator.BLUE_POSITION;
+                } else {
+                    led_position_to_set = LedIndicator.INDIGO_POSITION;
+                }
             }
 
             // Show spindexer full sequence
