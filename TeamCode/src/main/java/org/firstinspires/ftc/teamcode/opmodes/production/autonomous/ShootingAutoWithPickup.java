@@ -22,8 +22,8 @@ import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.BallColor;
 import org.firstinspires.ftc.teamcode.opmodes.production.teleop.Main;
 
-@Autonomous(name = "NO TOUCHIE!!", group = "Examples")
-public class ShootingAuto extends OpMode {
+@Autonomous(name = "NO TOUCHIE!!!", group = "Examples")
+public class ShootingAutoWithPickup extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -35,17 +35,12 @@ public class ShootingAuto extends OpMode {
     public Pose lookAtObeliskPose;
     public Pose shootPose;
     public Pose endPose;
-    public Pose pickupPose;
+    public Pose pickupStartPose;
+    public Pose pickupEndPose;
     public Pose goalPose;
 
     public ShooterPositioning positioning = new ShooterPositioning();
     public TargetInformation targetInformation = null;
-
-    public static double ballPickupXOffsetRed = 30.0;
-    public static double ballPickupXOffsetBlue = -30.0;
-
-    /// X offset to apply to final position to pickup balls
-    public double ballPickupXOffset = ballPickupXOffsetRed;
 
     public static Pose blueGoalPose = new Pose(8.0, 135.0);
     public static Pose redGoalPose = new Pose(132.0, 136.0);
@@ -63,9 +58,11 @@ public class ShootingAuto extends OpMode {
     private Path move_to_look_at_obelisk;
     private Path move_to_shoot;
 
-    private Path rotate_to_correct_heading;
-
     private Path move_to_pickup;
+
+    private Path pickup;
+
+    private Path move_to_shoot_from_pickup;
     private PathChain end;
 
     Hardware hardware;
@@ -99,9 +96,6 @@ public class ShootingAuto extends OpMode {
 
         lookAtObeliskPose = lookAtObeliskPose.setHeading(obelisk_angle);
 
-        // Calculate pickup pose
-        pickupPose = endPose.withX(endPose.getX() + ballPickupXOffset);
-
         // -- actually build paths
         move_to_look_at_obelisk = new Path(new BezierLine(startPose, lookAtObeliskPose));
         move_to_look_at_obelisk.setLinearHeadingInterpolation(startPose.getHeading(), lookAtObeliskPose.getHeading());
@@ -109,8 +103,14 @@ public class ShootingAuto extends OpMode {
         move_to_shoot = new Path(new BezierLine(lookAtObeliskPose, shootPose));
         move_to_shoot.setConstantHeadingInterpolation(shootPose.getHeading());
 
-        //move_to_pickup = new Path(new BezierLine(endPose, pickupPose));
-        //move_to_pickup.setConstantHeadingInterpolation(pickupPose.getHeading());
+        move_to_pickup = new Path(new BezierLine(shootPose, pickupStartPose));
+        move_to_pickup.setConstantHeadingInterpolation(pickupStartPose.getHeading());
+
+        pickup = new Path(new BezierLine(pickupStartPose, pickupEndPose));
+        pickup.setConstantHeadingInterpolation(pickupEndPose.getHeading());
+
+        move_to_shoot_from_pickup = new Path(new BezierLine(pickupEndPose, shootPose));
+        move_to_shoot_from_pickup.setConstantHeadingInterpolation(shootPose.getHeading());
 
         end = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose, endPose))
@@ -141,7 +141,7 @@ public class ShootingAuto extends OpMode {
 
                 webcam.update();
 
-                if (webcam.order != ColorOrder.Unknown || now_ms - started_looking_at_obelisk_ms >= 7_000 || opmodeTimer.getElapsedTime() >= 13_000) {
+                if (webcam.order != ColorOrder.Unknown || now_ms - started_looking_at_obelisk_ms >= 5_000 || opmodeTimer.getElapsedTime() >= 7_000) {
                     follower.followPath(move_to_shoot, true);
                     setPathState(3);
                 }
@@ -159,29 +159,71 @@ public class ShootingAuto extends OpMode {
             // At score position, scoring
             case 4:
 
-                long now = System.currentTimeMillis();
+                // After 15s in the opmode, (or after we've shot everything), stop trying to score
+                if (!shooter.flywheel_enabled || opmodeTimer.getElapsedTime() >= 15000) {
+                    shooter.disable_flywheel();
 
-                // After 22s in the opmode, (or after we've shot everything), stop trying to score
-                if (!shooter.flywheel_enabled || opmodeTimer.getElapsedTime() >= 22000) {
+                    spindexer.switch_to_holding_pattern();
+                    spindexer.move_to_angle_sortwise(0.0);
+
+                    follower.followPath(move_to_pickup, true);
+                    setPathState(5);
+                }
+                break;
+
+            // Going to the intake position
+            case 5:
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 18000) {
+                    hardware.intakeMotor.setPower(0.6);
+                    spindexer.switch_to_holding_pattern();
+                    follower.followPath(pickup, true);
+                    setPathState(6);
+                }
+                break;
+
+            // Intaking
+            case 6:
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 21000) {
+                    // should be handled by the spindxer
+                    // hardware.intakeMotor.setPower(0.0);
+                    follower.followPath(move_to_shoot_from_pickup, true);
+                    setPathState(7);
+                }
+                break;
+
+            // Going to the shooting position
+            case 7:
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 24000) {
+                    shooter.update_for_target(targetInformation);
+                    shooter.run();
+                    setPathState(8);
+                }
+                break;
+
+            // Shooting again
+            case 8:
+
+                // After 15s in the opmode, (or after we've shot everything), stop trying to score
+                if (!shooter.flywheel_enabled || opmodeTimer.getElapsedTime() >= 28000) {
                     shooter.disable_flywheel();
 
                     spindexer.switch_to_holding_pattern();
                     spindexer.move_to_angle_sortwise(0.0);
 
                     follower.followPath(end, true);
-                    setPathState(5);
+                    setPathState(9);
                 }
                 break;
 
             // Going to the end position
-            case 5:
-                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 29000) {
-                    setPathState(6);
+            case 9:
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 29500) {
+                    setPathState(10);
                 }
                 break;
 
-            // Finished
-            case 6:
+            // End
+            case 10:
 
                 follower.breakFollowing();
 

@@ -8,14 +8,9 @@ public class RedAutoNearGoal extends ShootingAuto {
     public RedAutoNearGoal() {
         super();
 
-        final Pose start_pose = new Pose(119.6, 130, Math.toRadians(36));
-        final Pose shoot_pose = new Pose(85.0, 95.0, Math.toRadians(0));
-        final Pose end_pose = CommonPositions.RED_AUTO_END_POSE_NEAR_GOAL;
-
-        startPose = start_pose;
-        shootPose = shoot_pose;
-        endPose = end_pose;
+        startPose = CommonPositions.RED_AUTO_NEAR_GOAL_START_POSE;
+        shootPose = CommonPositions.RED_AUTO_NEAR_GOAL_SHOOT_POSE;
+        endPose = CommonPositions.RED_AUTO_END_POSE_NEAR_GOAL;
         goalPose = redGoalPose;
-        ballPickupXOffset = ballPickupXOffsetRed;
     }
 }

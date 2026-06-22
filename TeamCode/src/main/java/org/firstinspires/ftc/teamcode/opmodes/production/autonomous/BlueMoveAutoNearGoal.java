@@ -9,13 +9,8 @@ public class BlueMoveAutoNearGoal extends MoveAuto {
     public BlueMoveAutoNearGoal() {
         super();
 
-        final Pose start_pose = new Pose(24.3, 130, Math.toRadians(144));
-        final Pose intermediate_pose = new Pose(start_pose.getX() + 18, start_pose.getY() - 16, start_pose.getHeading());
-        final Pose end_pose = CommonPositions.BLUE_AUTO_END_POSE_NEAR_GOAL;
-
-        startPose = start_pose;
-        intermediatePose = intermediate_pose;
-        endPose = end_pose;
-        ballPickupXOffset = ballPickupXOffsetBlue;
+        startPose = CommonPositions.BLUE_AUTO_NEAR_GOAL_START_POSE;
+        intermediatePose = new Pose(startPose.getX() + 18, startPose.getY() - 16, startPose.getHeading());
+        endPose = CommonPositions.BLUE_AUTO_END_POSE_NEAR_GOAL;
     }
 }

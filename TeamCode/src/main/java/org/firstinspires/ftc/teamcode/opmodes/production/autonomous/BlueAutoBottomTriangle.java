@@ -9,14 +9,9 @@ public class BlueAutoBottomTriangle extends ShootingAuto {
     public BlueAutoBottomTriangle() {
         super();
 
-        final Pose start_pose = new Pose(56.0, 8.0, Math.toRadians(90));
-        final Pose shoot_pose = new Pose(60.0, 22.0, Math.toRadians(0));
-        final Pose end_pose = CommonPositions.BLUE_AUTO_END_POSE;
-
-        startPose = start_pose;
-        shootPose = shoot_pose;
-        endPose = end_pose;
+        startPose = CommonPositions.BLUE_AUTO_FAR_ZONE_START_POSE;
+        shootPose = CommonPositions.BLUE_AUTO_FAR_ZONE_SHOOT_POSE;
+        endPose = CommonPositions.BLUE_AUTO_END_POSE;
         goalPose = blueGoalFarPose;
-        ballPickupXOffset = ballPickupXOffsetBlue;
     }
 }
