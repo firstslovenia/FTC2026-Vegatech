@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -11,7 +9,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Hardware {
@@ -43,16 +40,21 @@ public class Hardware {
     public static DcMotor intakeMotor = null;
     public static DcMotor spindexerMotor = null;
 	public static IMU imu = null;
-
 	public static Servo rgbLed = null;
     public static RevColorSensorV3 colorSensor = null;
 
 	public static WebcamName webcam = null;
     public static GoBildaPinpointDriver odometry = null;
+    public static double ODOMETRY_EPSILON = 0.0001;
 
 	public Hardware (OpMode opmode) {
 		callingOpMode = opmode;
 	}
+
+    /// Returns true if our odometry has no starting position set
+    public boolean is_odometry_starting_pos_unset() {
+        return Math.abs(odometry.getPosition().getX(DistanceUnit.METER)) < ODOMETRY_EPSILON && Math.abs(odometry.getPosition().getY(DistanceUnit.METER)) < ODOMETRY_EPSILON;
+    }
 
 	public void init()    {
 		frontLeftMotor = callingOpMode.hardwareMap.get(DcMotor.class, "frontLeftMotor");
@@ -73,10 +75,14 @@ public class Hardware {
         backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
 		odometry = callingOpMode.hardwareMap.get(GoBildaPinpointDriver.class, "odometry");
-        odometry.setOffsets(-6.4, -6.3, DistanceUnit.INCH);
-        odometry.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odometry.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
-        odometry.resetPosAndIMU();
+
+        // Keep position from auto
+        if (is_odometry_starting_pos_unset()) {
+            odometry.setOffsets(-6.4, -6.3, DistanceUnit.INCH);
+            odometry.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+            odometry.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            odometry.resetPosAndIMU();
+        }
 
 		shooterMotorA = callingOpMode.hardwareMap.get(DcMotor.class, "shooterMotorA");
         shooterMotorA.setDirection(DcMotorSimple.Direction.REVERSE);

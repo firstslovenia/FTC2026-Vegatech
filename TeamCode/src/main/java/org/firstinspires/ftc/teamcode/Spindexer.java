@@ -243,8 +243,12 @@ public class Spindexer {
             }
         }
 
+        else if (ball_in_shooter != null && !is_busy) {
+            shoot_active_ball();
+        }
+
         // Finish intake, if applicable
-        if (ball_to_intake != null && !is_motor_busy()) {
+        if (ball_to_intake != null && !is_busy) {
 
             NormalizedRGBA output = hardware.colorSensor.getNormalizedColors();
             double distance_cm = hardware.colorSensor.getDistance(DistanceUnit.CM);
@@ -489,6 +493,11 @@ public class Spindexer {
     /// Returns if we've intaked all balls
     public boolean is_full() {
         return balls[0] != BallColor.None && balls[1] != BallColor.None && balls[2] != BallColor.None;
+    }
+
+    /// Returns if we've are empty
+    public boolean is_empty() {
+        return balls[0] == BallColor.None && balls[1] == BallColor.None && balls[2] == BallColor.None;
     }
 
     /// Runs when the spindexer becomes 100% full (we've intaked three balls)

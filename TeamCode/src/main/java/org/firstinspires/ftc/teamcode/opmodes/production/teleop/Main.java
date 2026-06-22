@@ -94,7 +94,11 @@ public class Main extends LinearOpMode {
 		webcam = new Webcam(this, hardware);
 
 		waitForStart();
-        drivetrain.setPos(starting_pos);
+
+        // Set starting position if we didn't already keep one from before
+        if (hardware.is_odometry_starting_pos_unset()) {
+            drivetrain.setPos(starting_pos);
+        }
         drivetrain.resetStartingDirection();
 
         hardware.cameraAngleServo.setPosition(LOWER_CAMERA_POSITION);
@@ -102,9 +106,6 @@ public class Main extends LinearOpMode {
         spindexer.init();
         spindexer_override();
         spindexer.switch_to_holding_pattern();
-
-		//pedroFollower = Constants.createFollower(hardwareMap);
-		//pedroFollower.update();
 
 		while (opModeIsActive()) {
 
@@ -203,12 +204,10 @@ public class Main extends LinearOpMode {
             // User 2
             // Enable / disable the shooter
 			if (gamepad2.leftStickButtonWasPressed()) {
-                shooter.shooting_distance_m = Double.NaN;
 				if (shooter.flywheel_enabled) {
 					shooter.disable_flywheel();
 				} else {
                     shooter.run();
-                    shooter.wanted_flywheel_rpm = 4200.0;
                 }
 			}
 
@@ -247,17 +246,6 @@ public class Main extends LinearOpMode {
 
                 hardware.cameraAngleServo.setPosition(camera_servo_position);
             }
-
-            //telemetry.addData("Camera angle [ticks]", camera_servo_position);
-
-            // Fire balls
-			if (gamepad2.guideWasPressed()) {
-                if (spindexer.ball_in_shooter != null) {
-                    spindexer.shoot_active_ball();
-                } else {
-                    spindexer.switch_to_shooting();
-                }
-			}
 
             // Go to spindexer holding / intake (out of ex. shooting)
             if (gamepad2.yWasPressed()) {
@@ -312,34 +300,32 @@ public class Main extends LinearOpMode {
             telemetry.addData("Shooter @ correct speed", shooter_correct_speed);
             telemetry.addLine("(" + shooter_wanted_rpm + " vs " + shooter_real_rpm + ")");
 
-            //telemetry.addData("Shooter target RPM", shooter.wanted_flywheel_rpm);
-            //telemetry.addData("Shooter real   RPM", shooter.last_a_rpm_measurements.average().orElse(0.0));
-
-			// Also works for positioning!
-			//
-			//follower.updateConstants();
-			//follower.updatePose();
-			//follower.updateDrivetrain();
-			//
-			// Just do not use setTeleopDrive
-            // Not needed currently
-			//pedroFollower.update();
-
 			drivetrain.update(translation_vector, rotation_vector);
 
             if (do_long_loop) {
                 webcam.update();
 
-                if (webcam.target_position != null && !webcam.target_position.is_old() && (gamepad1.y || gamepad1.right_bumper)) {
+                if (webcam.target_position != null && !webcam.target_position.is_old() && gamepad1.left_bumper) {
                     target_to_rotate_to = webcam.target_position;
                     wanted_heading_for_target = drivetrain.getCurrentHeading() + target_to_rotate_to.angle_distance_rads;
                     drivetrain.wanted_heading = wanted_heading_for_target;
 
                     webcam.target_position = null;
                     aligned_via_camera = now;
+
+                    // TODO: potentially update odometry here
                 }
 
                 last_long_loop_ms = now;
+            }
+
+            // Update shooter for the current position
+            if (target_to_rotate_to != null) {
+                if (webcam.target_position != null && now - webcam.target_position.time_ms < 5000) {
+                    shooter.update_for_target(webcam.target_position);
+                } else {
+                    shooter.update_for_target(target_to_rotate_to);
+                }
             }
 
             if (shooter.flywheel_enabled) {
@@ -356,7 +342,6 @@ public class Main extends LinearOpMode {
             }
 
             if (now - aligned_via_camera < 1000) {
-
                 telemetry.addLine("Apriltag detected!");
 
                 if ((gamepad1.y || gamepad1.right_bumper)) {

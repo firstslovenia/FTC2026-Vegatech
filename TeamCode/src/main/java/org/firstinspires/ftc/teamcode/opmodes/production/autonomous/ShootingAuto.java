@@ -161,22 +161,8 @@ public class ShootingAuto extends OpMode {
 
                 long now = System.currentTimeMillis();
 
-                if (spindexer.in_survey || !spindexer.can_move()) {
-                    return;
-                }
-
-                // Pretend we know the pattern
-                if (now - last_shot_time_ms > 1000) {
-                   if (spindexer.ball_in_shooter != null) {
-                        spindexer.shoot_active_ball();
-                        last_shot_time_ms = now;
-                    } else {
-                        spindexer.switch_to_shooting();
-                    }
-                }
-
-                // After 22s in the opmode, stop trying to score
-                if (opmodeTimer.getElapsedTime() >= 22000) {
+                // After 22s in the opmode, (or after we've shot everything), stop trying to score
+                if (!shooter.flywheel_enabled || opmodeTimer.getElapsedTime() >= 22000) {
                     shooter.disable_flywheel();
 
                     spindexer.switch_to_holding_pattern();

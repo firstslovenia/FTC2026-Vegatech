@@ -252,8 +252,10 @@ public class ShooterPlusPlus {
     /// Returns true when we're okay to fire
     public boolean is_ready_to_fire() {
 
-        boolean flywheel_ready = flywheel_enabled;
-        boolean spindexer_not_busy = !spindexer.is_motor_busy() && spindexer.can_move();
+        double real_rpm = last_a_rpm_measurements.average().orElse(0.0);
+
+        boolean flywheel_ready = flywheel_enabled && Math.abs(wanted_flywheel_rpm - real_rpm) <= 200;
+        boolean spindexer_not_busy = !spindexer.is_motor_busy() && spindexer.can_move() && !spindexer.is_empty();
 
         return flywheel_ready && spindexer_not_busy;
     }
@@ -335,6 +337,14 @@ public class ShooterPlusPlus {
 
         if (!dry_run) {
             set_flywheel_power(flywheel_power);
+
+            if (is_ready_to_fire()) {
+                spindexer.switch_to_shooting();
+            }
+
+            if (spindexer.is_empty() && !spindexer.is_motor_busy()) {
+                disable_flywheel();
+            }
         }
     }
 }
