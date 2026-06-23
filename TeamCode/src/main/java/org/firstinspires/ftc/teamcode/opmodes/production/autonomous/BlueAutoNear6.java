@@ -8,9 +8,11 @@ public class BlueAutoNear6 extends GenericAuto6 {
     public BlueAutoNear6() {
         super();
 
-        startPose = CommonPositions.BLUE_AUTO_NEAR_GOAL_START_POSE;
-        shootPose = CommonPositions.BLUE_AUTO_NEAR_GOAL_SHOOT_POSE;
-        endPose = CommonPositions.BLUE_AUTO_END_POSE_NEAR_GOAL;
+        startPose = CommonPositions.BLUE_AUTO_NEAR_START;
+        shootPose = CommonPositions.BLUE_AUTO_NEAR_SHOOT;
+        pickupStartPose = CommonPositions.BLUE_AUTO_NEAR_START_PICKUP;
+        pickupEndPose = CommonPositions.BLUE_AUTO_NEAR_END_PICKUP;
+        endPose = CommonPositions.BLUE_AUTO_NEAR_END;
         goalPose = blueGoalPose;
     }
 }

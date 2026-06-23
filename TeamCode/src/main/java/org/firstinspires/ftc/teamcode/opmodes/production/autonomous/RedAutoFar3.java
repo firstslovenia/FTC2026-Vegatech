@@ -7,9 +7,9 @@ public class RedAutoFar3 extends GenericAuto3 {
     public RedAutoFar3() {
         super();
 
-        startPose = CommonPositions.RED_AUTO_FAR_ZONE_START_POSE;
-        shootPose = CommonPositions.RED_AUTO_FAR_ZONE_SHOOT_POSE;
-        endPose = CommonPositions.RED_AUTO_END_POSE;
+        startPose = CommonPositions.RED_AUTO_FAR_START;
+        shootPose = CommonPositions.RED_AUTO_FAR_SHOOT;
+        endPose = CommonPositions.RED_AUTO_FAR_END;
         goalPose = redGoalFarPose;
     }
 }

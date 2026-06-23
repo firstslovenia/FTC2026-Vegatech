@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode.opmodes.production.teleop;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
@@ -12,6 +11,6 @@ public class MainRedNearGoal extends Main {
         super();
 
         team = Team.Red;
-        starting_pos = ShooterPositioning.to_pose2d(CommonPositions.RED_AUTO_END_POSE_NEAR_GOAL);
+        starting_pos = ShooterPositioning.to_pose2d(CommonPositions.RED_AUTO_NEAR_END);
     }
 }

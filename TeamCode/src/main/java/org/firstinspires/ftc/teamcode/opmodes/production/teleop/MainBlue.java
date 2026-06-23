@@ -11,6 +11,6 @@ public class MainBlue extends Main {
         super();
 
         team = Team.Blue;
-        starting_pos = ShooterPositioning.to_pose2d(CommonPositions.BLUE_AUTO_END_POSE);
+        starting_pos = ShooterPositioning.to_pose2d(CommonPositions.BLUE_AUTO_FAR_END);
     }
 }

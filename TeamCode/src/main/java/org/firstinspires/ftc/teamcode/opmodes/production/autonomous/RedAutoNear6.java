@@ -7,9 +7,11 @@ public class RedAutoNear6 extends GenericAuto6 {
     public RedAutoNear6() {
         super();
 
-        startPose = CommonPositions.RED_AUTO_NEAR_GOAL_START_POSE;
-        shootPose = CommonPositions.RED_AUTO_NEAR_GOAL_SHOOT_POSE;
-        endPose = CommonPositions.RED_AUTO_END_POSE_NEAR_GOAL;
+        startPose = CommonPositions.RED_AUTO_NEAR_START;
+        shootPose = CommonPositions.RED_AUTO_NEAR_SHOOT;
+        pickupStartPose = CommonPositions.RED_AUTO_NEAR_START_PICKUP;
+        pickupEndPose = CommonPositions.RED_AUTO_NEAR_END_PICKUP;
+        endPose = CommonPositions.RED_AUTO_NEAR_END;
         goalPose = redGoalPose;
     }
 }

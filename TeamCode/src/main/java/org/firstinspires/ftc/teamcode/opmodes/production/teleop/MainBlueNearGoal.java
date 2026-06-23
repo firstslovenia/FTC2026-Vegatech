@@ -11,6 +11,6 @@ public class MainBlueNearGoal extends Main {
         super();
 
         team = Team.Blue;
-        starting_pos = ShooterPositioning.to_pose2d(CommonPositions.BLUE_AUTO_END_POSE_NEAR_GOAL);
+        starting_pos = ShooterPositioning.to_pose2d(CommonPositions.BLUE_AUTO_NEAR_END);
     }
 }

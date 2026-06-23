@@ -9,8 +9,8 @@ public class BlueAutoFar0 extends GenericAuto0 {
     public BlueAutoFar0() {
         super();
 
-        startPose = CommonPositions.BLUE_AUTO_FAR_ZONE_START_POSE;
+        startPose = CommonPositions.BLUE_AUTO_FAR_START;
         intermediatePose = new Pose(startPose.getX(), startPose.getY() + 12, startPose.getHeading());
-        endPose = CommonPositions.BLUE_AUTO_END_POSE;
+        endPose = CommonPositions.BLUE_AUTO_FAR_END;
     }
 }

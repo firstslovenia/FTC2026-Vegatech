@@ -9,8 +9,8 @@ public class BlueAutoNear0 extends GenericAuto0 {
     public BlueAutoNear0() {
         super();
 
-        startPose = CommonPositions.BLUE_AUTO_NEAR_GOAL_START_POSE;
+        startPose = CommonPositions.BLUE_AUTO_NEAR_START;
         intermediatePose = new Pose(startPose.getX() + 18, startPose.getY() - 16, startPose.getHeading());
-        endPose = CommonPositions.BLUE_AUTO_END_POSE_NEAR_GOAL;
+        endPose = CommonPositions.BLUE_AUTO_NEAR_END;
     }
 }

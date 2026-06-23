@@ -8,8 +8,8 @@ public class RedAutoFar0 extends GenericAuto0 {
     public RedAutoFar0() {
         super();
 
-        startPose = CommonPositions.RED_AUTO_FAR_ZONE_START_POSE;
+        startPose = CommonPositions.RED_AUTO_FAR_START;
         intermediatePose = new Pose(startPose.getX(), startPose.getY() + 12, startPose.getHeading());
-        endPose = CommonPositions.RED_AUTO_END_POSE;
+        endPose = CommonPositions.RED_AUTO_FAR_END;
     }
 }

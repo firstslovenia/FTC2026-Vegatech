@@ -8,8 +8,8 @@ public class RedAutoNear0 extends GenericAuto0 {
     public RedAutoNear0() {
         super();
 
-        startPose = CommonPositions.RED_AUTO_NEAR_GOAL_START_POSE;
+        startPose = CommonPositions.RED_AUTO_NEAR_START;
         intermediatePose = new Pose(startPose.getX() - 18, startPose.getY() - 16, startPose.getHeading());
-        endPose = CommonPositions.RED_AUTO_END_POSE_NEAR_GOAL;
+        endPose = CommonPositions.RED_AUTO_NEAR_END;
     }
 }
