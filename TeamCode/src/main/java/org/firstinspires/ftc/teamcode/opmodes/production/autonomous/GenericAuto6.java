@@ -292,7 +292,6 @@ public class GenericAuto6 extends OpMode {
 
         spindexer = new Spindexer(this, hardware);
         spindexer.init();
-        spindexer.start_survey();
 
         shooter = new ShooterPlusPlus(this, hardware, spindexer);
 
@@ -312,6 +311,7 @@ public class GenericAuto6 extends OpMode {
      **/
     @Override
     public void start() {
+        spindexer.start_survey();
 
         hardware.odometry.setPosition(ShooterPositioning.to_pose2d(startPose));
 
@@ -323,8 +323,6 @@ public class GenericAuto6 extends OpMode {
 
         opmodeTimer.resetTimer();
         setPathState(0);
-
-        spindexer.start_survey();
     }
 
     /**

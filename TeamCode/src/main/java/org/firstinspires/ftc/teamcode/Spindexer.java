@@ -158,6 +158,7 @@ public class Spindexer {
             ball_being_shot = null;
         }
 
+        set_normal_tolerance();
         switch_to_available_intake();
 
         if (ball_to_intake != null) {
@@ -202,6 +203,12 @@ public class Spindexer {
         }
     }
 
+    public void set_normal_tolerance() {
+        DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
+        ex.setTargetPositionTolerance(PID_TOLERANCE);
+        ex.setPositionPIDFCoefficients(8.0);
+    }
+
     public void update() {
 
         long now_ms = System.currentTimeMillis();
@@ -227,13 +234,12 @@ public class Spindexer {
             boolean has_overshot = current_pos < target_pos;
 
             if (has_overshot) {
-                DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
-                ex.setTargetPositionTolerance(PID_TOLERANCE);
-                ex.setPositionPIDFCoefficients(8.0);
+                set_normal_tolerance();
             }
 
             if (!is_motor_busy()) {
                 balls[ball_being_shot] = BallColor.None;
+                set_normal_tolerance();
 
                 if (ball_in_shooter != null && balls[ball_in_shooter] != BallColor.None) {
                     long now = System.currentTimeMillis();
