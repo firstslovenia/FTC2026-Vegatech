@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware;
 
-@TeleOp(name = "ResetOdometry", group = "Production")
+@TeleOp(name = "Reset Odometry", group = "Production")
 public class ResetOdometry extends LinearOpMode {
     Hardware hardware;
 

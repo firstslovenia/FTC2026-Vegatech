@@ -6,7 +6,7 @@ import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.CommonPositions;
 
-@TeleOp(name = "Main (Red)", group = "Production")
+@TeleOp(name = "Main | Red", group = "Production")
 public class MainRed extends Main {
     public MainRed() {
         super();

@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.production.autonomous;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Move auto - red (triangle)", group = "Examples")
+@Autonomous(name = "Red | Far Zone | 0", group = "Examples")
 public class RedMoveAutoBottomTriangle extends MoveAuto {
     public RedMoveAutoBottomTriangle() {
         super();

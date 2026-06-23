@@ -4,7 +4,7 @@ package org.firstinspires.ftc.teamcode.opmodes.production.autonomous;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Move auto - blue (near goal)", group = "Examples")
+@Autonomous(name = "Blue | Near Goal | 0")
 public class BlueMoveAutoNearGoal extends MoveAuto {
     public BlueMoveAutoNearGoal() {
         super();

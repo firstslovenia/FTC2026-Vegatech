@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.CommonPositions;
 import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.RedAutoNearGoal;
 
-@TeleOp(name = "Main (Blue)", group = "Production")
+@TeleOp(name = "Main | Blue", group = "Production")
 public class MainBlue extends Main {
     public MainBlue() {
         super();

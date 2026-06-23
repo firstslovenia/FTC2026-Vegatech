@@ -6,7 +6,7 @@ import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.CommonPositions;
 
-@TeleOp(name = "Main (Red NEAR GOAL)", group = "Production")
+@TeleOp(name = "Main | Red | Near Goal", group = "Production")
 public class MainRedNearGoal extends Main {
     public MainRedNearGoal() {
         super();

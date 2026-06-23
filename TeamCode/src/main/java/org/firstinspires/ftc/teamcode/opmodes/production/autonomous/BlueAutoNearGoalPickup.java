@@ -4,7 +4,7 @@ package org.firstinspires.ftc.teamcode.opmodes.production.autonomous;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Auto - blue (near goal & pickup)", group = "Examples")
+@Autonomous(name = "Blue | Near Goal | 6")
 public class BlueAutoNearGoalPickup extends ShootingAutoWithPickup {
     public BlueAutoNearGoalPickup() {
         super();

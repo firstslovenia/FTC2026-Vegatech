@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.production.autonomous;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Auto - red (near goal)")
+@Autonomous(name = "Red | Near Goal | 3")
 public class RedAutoNearGoal extends ShootingAuto {
     public RedAutoNearGoal() {
         super();
