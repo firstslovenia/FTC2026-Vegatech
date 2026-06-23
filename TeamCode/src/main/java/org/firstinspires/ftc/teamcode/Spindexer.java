@@ -27,7 +27,7 @@ public class Spindexer {
     public static final long BALL_SHOOT_DELAY = 700;
 
     /// How many encoder ticks (here we calculate it from degrees) we allow the PID controller to miss
-    public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 7) / 360;
+    public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 6) / 360;
     public static double TOLERANCE_RADS = 5.0 * Math.PI / 180.0;
 
     public static double STARTING_ANGLE = Math.PI / 180.0 * 3.0;
@@ -49,6 +49,10 @@ public class Spindexer {
 
     public static double ANGLE_HOLD_BALLS_1 = Math.PI / 2.0 + Math.PI * 2.0 / 3.0;
     public static double ANGLE_HOLD_BALLS_2 = Math.PI / 2.0 + Math.PI * 4.0 / 3.0;
+
+    /// Pid coefficient when we are normally operating the spindexer
+    public static double NORMAL_PID_COEFFICIENT = 8.0;
+    public static double MOTOR_POWER = 1.0;
 
     /// Balls are numbered ball 0 through ball 2, counterclockwise, starting at more orange to less orange
     public BallColor balls[] = new BallColor[] {BallColor.None, BallColor.None, BallColor.None};
@@ -86,10 +90,16 @@ public class Spindexer {
 
     public void init() {
 
+        // Anti-tweaking / stuck mechanism
+        if (callingOpMode.hardwareMap.voltageSensor.iterator().next().getVoltage() >= 12.7) {
+            MOTOR_POWER = 0.8;
+        }
+
         DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
         ex.setTargetPositionTolerance(PID_TOLERANCE);
-        ex.setPositionPIDFCoefficients(8.0);
+        ex.setPositionPIDFCoefficients(NORMAL_PID_COEFFICIENT);
 
+        hardware.spindexerMotor.setPower(MOTOR_POWER);
         hardware.spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hardware.spindexerMotor.setTargetPosition(0);
     }
@@ -206,7 +216,7 @@ public class Spindexer {
     public void set_normal_tolerance() {
         DcMotorEx ex = (DcMotorEx) hardware.spindexerMotor;
         ex.setTargetPositionTolerance(PID_TOLERANCE);
-        ex.setPositionPIDFCoefficients(8.0);
+        ex.setPositionPIDFCoefficients(NORMAL_PID_COEFFICIENT);
     }
 
     public void update() {
@@ -387,7 +397,7 @@ public class Spindexer {
             stopped_being_busy_ms = null;
         }
 
-        hardware.spindexerMotor.setPower(1.0);
+        hardware.spindexerMotor.setPower(MOTOR_POWER);
         hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
@@ -405,7 +415,7 @@ public class Spindexer {
             stopped_being_busy_ms = null;
         }
 
-        hardware.spindexerMotor.setPower(1.0);
+        hardware.spindexerMotor.setPower(MOTOR_POWER);
         hardware.spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
