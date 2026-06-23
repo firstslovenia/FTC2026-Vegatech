@@ -102,7 +102,7 @@ public class ShooterPlusPlus {
 
     /// Calculates the expected RPM from the motor's power and voltage
     public static double calculate_rpm(double power, double voltage_v) {
-        return ((REGULATOR_POW_TO_RPM_K * power * 100.0) + REGULATOR_POW_TO_RPM_C) * (calculate_rpm_voltage_factor(voltage_v) / REGULATOR_VOLTAGE_COMP_VALUE);
+        return ((REGULATOR_POW_TO_RPM_K * (power * 100.0)) + REGULATOR_POW_TO_RPM_C) * (calculate_rpm_voltage_factor(voltage_v) / REGULATOR_VOLTAGE_COMP_VALUE);
     }
 
     // Used to be voltage / BASE_VOLTAGE
@@ -119,7 +119,7 @@ public class ShooterPlusPlus {
 
     /// Calculates the power to set for wanted rpm on the motor with the given voltage
     public static double calculate_power_for_rpm(double wanted_rpm, double voltage_v) {
-        return ((wanted_rpm / calculate_rpm_voltage_factor(voltage_v)) - REGULATOR_POW_TO_RPM_C ) / REGULATOR_POW_TO_RPM_K / 100.0;
+        return ((wanted_rpm / calculate_rpm_voltage_factor(voltage_v) * REGULATOR_VOLTAGE_COMP_VALUE) - REGULATOR_POW_TO_RPM_C ) / REGULATOR_POW_TO_RPM_K / 100.0;
     }
 
     /// Calculates the radian angle we are shooting at given the servo position
