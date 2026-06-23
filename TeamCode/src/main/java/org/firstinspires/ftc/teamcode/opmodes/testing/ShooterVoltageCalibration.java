@@ -11,12 +11,11 @@ import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
 
-@TeleOp(name = "Shooter Voltage Calibration", group = "Testing")
+@TeleOp(name = "Shooter++ Voltage Calibration", group = "Testing")
 public class ShooterVoltageCalibration extends LinearOpMode {
 
     Hardware hardware;
     ShooterPlusPlus shooter;
-
     Spindexer spindexer;
 
     @Override
@@ -30,6 +29,7 @@ public class ShooterVoltageCalibration extends LinearOpMode {
         spindexer = new Spindexer(this, hardware);
 
         shooter = new ShooterPlusPlus(this, hardware, spindexer);
+        shooter.automatically_shoot = false;
 
         waitForStart();
 

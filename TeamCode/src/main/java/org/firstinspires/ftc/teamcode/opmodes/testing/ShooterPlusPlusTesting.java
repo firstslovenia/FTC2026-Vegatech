@@ -40,6 +40,7 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
         spindexer = new Spindexer(this, hardware);
 
         shooter = new ShooterPlusPlus(this, hardware, spindexer);
+        shooter.automatically_shoot = false;
 
         waitForStart();
 

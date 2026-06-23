@@ -16,15 +16,15 @@ public class ShooterPlusPlus {
 
     // --- Measured constants ------
     // Power to rpm conversion: power is in percentages, rpm just rpm
-    // See: https://www.wolframalpha.com/input?i=fit+linear&assumption=%7B%22F%22%2C+%22LinearFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B86.0%2C+4500%7D%2C%7B66.0%2C+3500%7D%2C%7B49.0%2C+2500%7D%7D%22
+    // See: https://www.wolframalpha.com/input?i=fit+linear&assumption=%7B%22F%22%2C+%22LinearFitCalculator%22%2C+%22data2%22%7D+-%3E%22%7B%7B49.4%2C+2340%7D%2C+%7B65.0%2C+3100%7D%2C+%7B83.3%2C+4100%7D%2C+%7B100.0%2C+4850%7D%7D%22
     /// The factor times x in the power to rpm conversion
-    static double REGULATOR_POW_TO_RPM_K = 53.94;
+    static double REGULATOR_POW_TO_RPM_K = 50.1753;
 
     /// The factor times 1 in the power to rpm conversion
-    static double REGULATOR_POW_TO_RPM_C = -113.70;
+    static double REGULATOR_POW_TO_RPM_C = -136.799;
 
     /// The voltage (under load) used for the power to rpm convesion
-    static double REGULATOR_BASE_VOLTAGE = 12.33;
+    static double REGULATOR_BASE_VOLTAGE = 11.75;
 
     /// The value of calculate_rpm_voltage_factor(REGULATOR_BASE_VOLTAGE)
     ///
@@ -79,6 +79,9 @@ public class ShooterPlusPlus {
 
     /// Whether to not actually update motor values
     public boolean dry_run = false;
+
+    /// Whether to shoot when we can
+    public boolean automatically_shoot = true;
 
     /// The last flywheel encoder position we measured
     public SlidingWindow<Integer> last_b_position_ticks = new SlidingWindow<>(1, 0);
@@ -342,12 +345,14 @@ public class ShooterPlusPlus {
         if (!dry_run) {
             set_flywheel_power(flywheel_power);
 
-            if (is_ready_to_fire()) {
-                spindexer.switch_to_shooting();
-            }
+            if (automatically_shoot) {
+                if (is_ready_to_fire()) {
+                    spindexer.switch_to_shooting();
+                }
 
-            if (spindexer.is_empty() && !spindexer.is_motor_busy()) {
-                disable_flywheel();
+                if (spindexer.is_empty() && !spindexer.is_motor_busy()) {
+                    disable_flywheel();
+                }
             }
         }
     }

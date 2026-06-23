@@ -65,7 +65,6 @@ public class GenericAuto0 extends OpMode {
     private PathChain move_2;
 
     Hardware hardware;
-    ShooterPlusPlus shooter;
     Webcam webcam;
 
     /// How many balls we've already scored
@@ -144,16 +143,8 @@ public class GenericAuto0 extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
-        shooter.update();
-
         // Feedback to Driver Hub for debugging
-        telemetry.addData("shoot dist [cm]", shooting_distance_m);
-        telemetry.addData("shooter is ready", shooter.is_ready_to_fire());
-        telemetry.addData("shooter RPM delta", shooter.get_rpm_error());
         telemetry.addData("path state", pathState);
-        telemetry.addData("balls shot", balls_scored);
-        telemetry.addData("spx Position", hardware.spindexerMotor.getCurrentPosition());
-        telemetry.addData("spx Wanted pos", hardware.spindexerMotor.getTargetPosition());
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("order: ", webcam.order);

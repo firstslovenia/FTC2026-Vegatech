@@ -78,7 +78,7 @@ public class Hardware {
 
         // Keep position from auto
         if (is_odometry_starting_pos_unset()) {
-            odometry.setOffsets(-6.4, -6.3, DistanceUnit.INCH);
+            odometry.setOffsets(-15.63, -17.03, DistanceUnit.CM);
             odometry.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
             odometry.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
             odometry.resetPosAndIMU();

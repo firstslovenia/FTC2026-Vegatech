@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.production.autonomous;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red | Far Zone | 0", group = "Examples")
+@Autonomous(name = "Red | Far Zone | 0")
 public class RedAutoFar0 extends GenericAuto0 {
     public RedAutoFar0() {
         super();
