@@ -42,6 +42,8 @@ public class ShooterWebcamTesting extends LinearOpMode {
             }
 
 			if (webcam.getApriltags().isEmpty()) {
+                telemetry.addData("Servo pos", camera_servo_position);
+                telemetry.update();
 				continue;
 			}
 

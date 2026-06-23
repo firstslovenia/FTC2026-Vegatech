@@ -23,8 +23,11 @@ public class Spindexer {
     /// How many encoder counts mean one revolution on the output axle
     public static int TICKS_PER_REVOLUTION = (int) (28.0 * 27.4);
 
+    /// How long to wait in between shooting balls
+    public static final long BALL_SHOOT_DELAY = 500;
+
     /// How many encoder ticks (here we calculate it from degrees) we allow the PID controller to miss
-    public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 5) / 360;
+    public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 7) / 360;
     public static double TOLERANCE_RADS = 5.0 * Math.PI / 180.0;
 
     public static double STARTING_ANGLE = Math.PI / 180.0 * 3.0;
@@ -234,7 +237,7 @@ public class Spindexer {
 
                 if (ball_in_shooter != null && balls[ball_in_shooter] != BallColor.None) {
                     long now = System.currentTimeMillis();
-                    if (now - last_shot > 700) {
+                    if (now - last_shot > BALL_SHOOT_DELAY) {
                         shoot_active_ball();
                     }
                 } else {
@@ -245,6 +248,10 @@ public class Spindexer {
 
         else if (ball_in_shooter != null && !is_busy) {
             shoot_active_ball();
+        }
+
+        if ((ball_in_shooter != null || ball_being_shot != null) && is_empty()) {
+            switch_to_holding_pattern();
         }
 
         // Finish intake, if applicable

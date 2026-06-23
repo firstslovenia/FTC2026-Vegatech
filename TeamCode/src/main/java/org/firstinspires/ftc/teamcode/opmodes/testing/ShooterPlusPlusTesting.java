@@ -54,11 +54,7 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
 
             // Fire balls
             if (gamepad1.guideWasPressed()) {
-                if (spindexer.ball_in_shooter != null) {
-                    spindexer.shoot_active_ball();
-                } else {
-                    spindexer.switch_to_shooting();
-                }
+                spindexer.switch_to_shooting();
             }
 
             // Go to spindexer holding / intake (out of ex. shooting)

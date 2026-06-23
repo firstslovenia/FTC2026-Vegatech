@@ -80,6 +80,9 @@ public class GenericAuto6 extends OpMode {
     /// The distance between our shooting pos and the goal
     double shooting_distance_m = 0.0;
 
+    /// Temp value
+    double previous_max_power_scaling;
+
     public void buildPaths() {
 
         targetInformation = positioning.compute_target_information_for_two_pos(ShooterPositioning.to_pose2d(shootPose), ShooterPositioning.to_pose2d(goalPose));
@@ -175,6 +178,9 @@ public class GenericAuto6 extends OpMode {
                     hardware.intakeMotor.setPower(0.6);
                     spindexer.switch_to_holding_pattern();
                     follower.followPath(pickup, true);
+
+                    previous_max_power_scaling = follower.getMaxPowerScaling();
+                    follower.setMaxPowerScaling(0.3);
                     setPathState(6);
                 }
                 break;
@@ -185,6 +191,7 @@ public class GenericAuto6 extends OpMode {
                     // should be handled by the spindxer
                     // hardware.intakeMotor.setPower(0.0);
                     follower.followPath(move_to_shoot_from_pickup, true);
+                    follower.setMaxPowerScaling(previous_max_power_scaling);
                     setPathState(7);
                 }
                 break;

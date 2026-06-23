@@ -10,6 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
+import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.Spindexer;
@@ -24,7 +25,9 @@ import org.firstinspires.ftc.teamcode.generic.Vector2D;
 public class Main extends LinearOpMode {
 
     // Higher number is facing more down
+    // -30 deg ish
     public static final double HIGHER_CAMERA_POSITION = 0.44;
+    // -11 deg ish
     public static final double LOWER_CAMERA_POSITION = 0.52;
 
     public static final long LONG_LOOP_DELAY_MS = 100;
@@ -340,7 +343,7 @@ public class Main extends LinearOpMode {
             if (now - aligned_via_camera < 1000) {
                 telemetry.addLine("Apriltag detected!");
 
-                if ((gamepad1.y || gamepad1.right_bumper)) {
+                if (gamepad1.left_bumper) {
                     led_position_to_set = LedIndicator.GREEN_POSITION;
                 }
             } else {
