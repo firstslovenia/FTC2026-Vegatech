@@ -24,7 +24,7 @@ public class Spindexer {
     public static int TICKS_PER_REVOLUTION = (int) (28.0 * 27.4);
 
     /// How long to wait in between shooting balls
-    public static final long BALL_SHOOT_DELAY = 500;
+    public static final long BALL_SHOOT_DELAY = 700;
 
     /// How many encoder ticks (here we calculate it from degrees) we allow the PID controller to miss
     public static int PID_TOLERANCE = (TICKS_PER_REVOLUTION * 7) / 360;
