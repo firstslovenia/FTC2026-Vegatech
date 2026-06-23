@@ -4,8 +4,8 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name = "Red | Far Zone | 0", group = "Examples")
-public class RedMoveAutoBottomTriangle extends MoveAuto {
-    public RedMoveAutoBottomTriangle() {
+public class RedAutoFar0 extends GenericAuto0 {
+    public RedAutoFar0() {
         super();
 
         startPose = CommonPositions.RED_AUTO_FAR_ZONE_START_POSE;

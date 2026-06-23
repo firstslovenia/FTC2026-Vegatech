@@ -8,21 +8,17 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.Spindexer;
-import org.firstinspires.ftc.teamcode.generic.BallColor;
 import org.firstinspires.ftc.teamcode.generic.LedIndicator;
-import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
-import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.ShootingAuto;
 
 @TeleOp(name = "!! DO NOT USE !! Main (Unknown Team)", group = "Production")
 public class Main extends LinearOpMode {

@@ -13,17 +13,15 @@ import org.firstinspires.ftc.teamcode.ColorOrder;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
-import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
-import org.firstinspires.ftc.teamcode.generic.BallColor;
 import org.firstinspires.ftc.teamcode.opmodes.production.teleop.Main;
 
 @Autonomous(name = "NO TOUCHIE!!", group = "Examples")
-public class ShootingAuto extends OpMode {
+public class GenericAuto3 extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;

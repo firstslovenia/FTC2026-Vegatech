@@ -13,12 +13,11 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
-import org.firstinspires.ftc.teamcode.Spindexer;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
 
-@Autonomous(name = "NO TOUCHIE!!!", group = "Examples")
-public class MoveAuto extends OpMode {
+@Autonomous(name = "NO TOUCHIE!", group = "Examples")
+public class GenericAuto0 extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;

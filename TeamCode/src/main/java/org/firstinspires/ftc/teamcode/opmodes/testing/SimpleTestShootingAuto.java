@@ -4,10 +4,10 @@ package org.firstinspires.ftc.teamcode.opmodes.testing;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.ShootingAuto;
+import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.GenericAuto3;
 
 @Autonomous(name = "Testing Auto - shoot w/o movement")
-public class SimpleTestShootingAuto extends ShootingAuto {
+public class SimpleTestShootingAuto extends GenericAuto3 {
     public SimpleTestShootingAuto() {
         super();
 

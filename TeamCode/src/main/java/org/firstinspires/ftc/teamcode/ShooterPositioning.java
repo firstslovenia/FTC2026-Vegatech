@@ -6,7 +6,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.generic.Team;
-import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.ShootingAuto;
 
 public class ShooterPositioning {
 

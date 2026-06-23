@@ -5,10 +5,10 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.CommonPositions;
-import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.MoveAuto;
+import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.GenericAuto0;
 
 @Autonomous(name = "!! Setup Blue Goal Auto R")
-public class BlueFieldSetupAutoR extends MoveAuto {
+public class BlueFieldSetupAutoR extends GenericAuto0 {
     public BlueFieldSetupAutoR() {
         super();
 

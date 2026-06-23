@@ -1,12 +1,11 @@
 
 package org.firstinspires.ftc.teamcode.opmodes.production.autonomous;
 
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Blue | Near Goal | 6")
-public class BlueAutoNearGoalPickup extends ShootingAutoWithPickup {
-    public BlueAutoNearGoalPickup() {
+@Autonomous(name = "Blue | Near Goal | 3")
+public class BlueAutoNear3 extends GenericAuto3 {
+    public BlueAutoNear3() {
         super();
 
         startPose = CommonPositions.BLUE_AUTO_NEAR_GOAL_START_POSE;

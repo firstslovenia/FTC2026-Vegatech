@@ -4,8 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.generic.Team;
-import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.CommonPositions;
-import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.RedAutoNearGoal;
 
 @TeleOp(name = "Testing Prod Odometry")
 public class TestMainNearGoal extends Main {
