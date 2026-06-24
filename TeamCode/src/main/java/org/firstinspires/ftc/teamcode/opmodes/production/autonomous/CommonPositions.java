@@ -11,11 +11,11 @@ public class CommonPositions {
     public static final Pose RED_AUTO_FAR_START = new Pose(88.0, 8.0, Math.toRadians(90));
 
     /// Shooting positions
-    public static final Pose BLUE_AUTO_NEAR_SHOOT = new Pose(48.0, 106.0, Math.toRadians(0));
-    public static final Pose BLUE_AUTO_FAR_SHOOT = new Pose(60.0, 22.0, Math.toRadians(0));
+    public static final Pose BLUE_AUTO_NEAR_SHOOT = new Pose(50.0, 115.0, Math.toRadians(0));
+    public static final Pose BLUE_AUTO_FAR_SHOOT = new Pose(60.0, 18.0, Math.toRadians(0));
 
-    public static final Pose RED_AUTO_NEAR_SHOOT = new Pose(96.0, 106.0, Math.toRadians(0));
-    public static final Pose RED_AUTO_FAR_SHOOT = new Pose(86.0, 20.0, Math.toRadians(0));
+    public static final Pose RED_AUTO_NEAR_SHOOT = new Pose(90.0, 115.0, Math.toRadians(0));
+    public static final Pose RED_AUTO_FAR_SHOOT = new Pose(86.0, 18.0, Math.toRadians(0));
 
     /// Intake when near goal
     public static final Pose RED_AUTO_NEAR_START_PICKUP = new Pose(98.0 - 1, 83.0 + 1, Math.toRadians(0));
