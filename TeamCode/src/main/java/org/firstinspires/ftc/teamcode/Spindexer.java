@@ -219,7 +219,11 @@ public class Spindexer {
         }
 
         if (ball_in_shooter != null) {
-            return;
+            if (balls[ball_in_shooter] == BallColor.None || balls[ball_in_shooter] == null) {
+                ball_in_shooter = null;
+            } else {
+                return;
+            }
         }
 
         // Shoot in correct pattern

@@ -203,23 +203,13 @@ public class Main extends LinearOpMode {
 
             // User 2
             // Enable / disable the shooter
-			if (gamepad2.leftStickButtonWasPressed()) {
+			if (gamepad2.rightStickButtonWasPressed()) {
 				if (shooter.flywheel_enabled) {
 					shooter.disable_flywheel();
 				} else {
                     shooter.run();
                 }
 			}
-
-            // Aimbot
-            if (gamepad2.xWasPressed()) {
-                if (webcam.target_position != null && now - webcam.target_position.time_ms < 10000) {
-                    shooter.update_for_target(webcam.target_position);
-                } else if (target_to_rotate_to != null && now - target_to_rotate_to.time_ms < 10000) {
-                    shooter.update_for_target(target_to_rotate_to);
-                }
-                shooter.update();
-            }
 
             if (gamepad2.dpadLeftWasPressed()) {
                 shooter.color_order_override = ColorOrder.GreenPurplePurple;
@@ -236,7 +226,7 @@ public class Main extends LinearOpMode {
 
             // Camera angle
             double camera_servo_position = hardware.cameraAngleServo.getPosition();
-            if (gamepad2.rightStickButtonWasPressed()) {
+            if (gamepad2.leftStickButtonWasPressed()) {
 
                 camera_servo_high = !camera_servo_high;
 
