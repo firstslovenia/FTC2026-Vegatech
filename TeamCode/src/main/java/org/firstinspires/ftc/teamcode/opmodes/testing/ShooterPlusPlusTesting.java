@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.*;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.ColorOrder;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.Spindexer;
@@ -54,7 +55,14 @@ public class ShooterPlusPlusTesting extends LinearOpMode {
 
             // Fire balls
             if (gamepad1.guideWasPressed()) {
-                spindexer.switch_to_shooting();
+
+                ColorOrder order = ColorOrder.Unknown;
+
+                if (webcam != null) {
+                    order = webcam.order;
+                }
+
+                spindexer.switch_to_shooting(order);
             }
 
             // Go to spindexer holding / intake (out of ex. shooting)

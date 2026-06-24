@@ -9,12 +9,14 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.ShooterPlusPlus;
 import org.firstinspires.ftc.teamcode.ShooterPositioning;
 import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
+import org.firstinspires.ftc.teamcode.opmodes.production.teleop.Main;
 
 @Autonomous(name = "NO TOUCHIE!", group = "Examples")
 public class GenericAuto0 extends OpMode {
@@ -147,6 +149,8 @@ public class GenericAuto0 extends OpMode {
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
+        telemetry.addData("x (gobilda, m)", hardware.odometry.getPosition().getX(DistanceUnit.METER));
+        telemetry.addData("y (goblida, m)", hardware.odometry.getPosition().getY(DistanceUnit.METER));
         telemetry.addData("order: ", webcam.order);
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.update();
@@ -182,6 +186,8 @@ public class GenericAuto0 extends OpMode {
     public void start() {
 
         hardware.odometry.setPosition(ShooterPositioning.to_pose2d(startPose));
+
+        hardware.cameraAngleServo.setPosition(Main.LOWER_CAMERA_POSITION);
 
         follower = Constants.createFollower(hardwareMap);
         buildPaths();

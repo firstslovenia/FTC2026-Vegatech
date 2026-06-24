@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.ColorOrder;
 import org.firstinspires.ftc.teamcode.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware;
 import org.firstinspires.ftc.teamcode.Shooter;
@@ -221,14 +222,16 @@ public class Main extends LinearOpMode {
             }
 
             if (gamepad2.dpadLeftWasPressed()) {
-                shooter.wanted_flywheel_rpm = shooter.wanted_flywheel_rpm - 50;
+                shooter.color_order_override = ColorOrder.GreenPurplePurple;
             }
             if (gamepad2.dpadUpWasPressed()) {
-                shooter.wanted_flywheel_rpm = 4200.0;
-                hardware.shooterAngleServo.setPosition(0.0);
+                shooter.color_order_override = ColorOrder.PurpleGreenPurple;
             }
             if (gamepad2.dpadRightWasPressed()) {
-                shooter.wanted_flywheel_rpm = shooter.wanted_flywheel_rpm - 50;
+                shooter.color_order_override = ColorOrder.PurplePurpleGreen;
+            }
+            if (gamepad2.dpadDownWasPressed()) {
+                shooter.color_order_override = null;
             }
 
             // Camera angle
@@ -356,6 +359,9 @@ public class Main extends LinearOpMode {
             } else {
                 telemetry.addLine("Target: null");
             }
+
+            telemetry.addData("Webcam Color Order  ", webcam.order);
+            telemetry.addData("Color Order Override", shooter.color_order_override);
 
             if (drivetrain.set_new_pos_at != 0 || drivetrain.started_compass_recalibration_ms != 0) {
                 led_position_to_set = LedIndicator.ORANGE_POSITION;

@@ -61,6 +61,9 @@ public class ShooterPlusPlus {
     OpMode callingOpMode;
     Hardware hardware;
     Spindexer spindexer;
+    Webcam webcam;
+
+    public ColorOrder color_order_override = null;
 
     ///  What distance we are regulating for
     public double shooting_distance_m = Double.NaN;
@@ -101,6 +104,12 @@ public class ShooterPlusPlus {
 
         hardware.shooterMotorA.setPower(0.0);
         hardware.shooterMotorB.setPower(0.0);
+    }
+
+    public ShooterPlusPlus(OpMode callingOpMode, Hardware hardware, Spindexer spindexer, Webcam webcam) {
+        this(callingOpMode, hardware, spindexer);
+
+        this.webcam = webcam;
     }
 
     /// Calculates the expected RPM from the motor's power and voltage
@@ -347,7 +356,18 @@ public class ShooterPlusPlus {
 
             if (automatically_shoot) {
                 if (is_ready_to_fire()) {
-                    spindexer.switch_to_shooting();
+
+                    ColorOrder order = ColorOrder.Unknown;
+
+                    if (webcam != null) {
+                        order = webcam.order;
+                    }
+
+                    if (color_order_override != null) {
+                        order = color_order_override;
+                    }
+
+                    spindexer.switch_to_shooting(order);
                 }
 
                 if (spindexer.is_empty() && !spindexer.is_motor_busy()) {

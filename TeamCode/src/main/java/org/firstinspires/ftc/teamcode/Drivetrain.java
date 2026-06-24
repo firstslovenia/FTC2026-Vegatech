@@ -103,6 +103,7 @@ public class Drivetrain {
 
 	/// Sets the starting direction to the current direction
 	public void resetStartingDirection() {
+        last_robot_position = hardware.odometry.getPosition();
 		wanted_heading = Math.PI / 2.0;
 
         // No, we can't do this in hardware....

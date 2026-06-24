@@ -244,9 +244,9 @@ public class GenericAuto3 extends OpMode {
         spindexer = new Spindexer(this, hardware);
         spindexer.init();
 
-        shooter = new ShooterPlusPlus(this, hardware, spindexer);
-
         webcam = new Webcam(this, hardware);
+
+        shooter = new ShooterPlusPlus(this, hardware, spindexer, webcam);
     }
 
     /**

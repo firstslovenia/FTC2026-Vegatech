@@ -44,8 +44,11 @@ public class GenericAuto6 extends OpMode {
     public static Pose redGoalPose = new Pose(132.0, 136.0);
 
     // Target poses for far autonomous modes
-    public static Pose blueGoalFarPose = new Pose(15.0, 136.0);
-    public static Pose redGoalFarPose = new Pose(129.0, 136.0);
+    //public static Pose blueGoalFarPose = new Pose(15.0, 136.0);
+    //public static Pose redGoalFarPose = new Pose(129.0, 136.0);
+
+    public static Pose blueGoalFarPose = blueGoalPose;
+    public static Pose redGoalFarPose = redGoalPose;
 
     public static Pose obeliskPose = new Pose(72.0, 144.0);
 
@@ -293,9 +296,9 @@ public class GenericAuto6 extends OpMode {
         spindexer = new Spindexer(this, hardware);
         spindexer.init();
 
-        shooter = new ShooterPlusPlus(this, hardware, spindexer);
-
         webcam = new Webcam(this, hardware);
+
+        shooter = new ShooterPlusPlus(this, hardware, spindexer, webcam);
     }
 
     /**

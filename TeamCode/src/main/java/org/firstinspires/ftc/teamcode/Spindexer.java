@@ -191,8 +191,28 @@ public class Spindexer {
         }
     }
 
+    /// Helper function:
+    /// Returns how many balls will be shot in the correct color, if we want to shoot
+    /// the order starting at the given index
+    int score_starting_position_for_order(int starting, ColorOrder order) {
+        if (order == ColorOrder.Unknown) {
+            return 0;
+        }
+
+        int balls_positions[] = {Math.floorMod(starting, 3), Math.floorMod(starting - 1, 3),  Math.floorMod(starting - 2, 3)};
+
+        int score = 0;
+        for (int i = 0; i < 3; i++) {
+            if (balls[balls_positions[i]] == order.as_array()[i]) {
+                score += 1;
+            }
+        }
+
+        return score;
+    }
+
     /// Goes to shoot balls that we have
-    public void switch_to_shooting() {
+    public void switch_to_shooting(ColorOrder preferred_order) {
 
         if (ball_to_intake != null) {
             ball_to_intake = null;
@@ -202,14 +222,33 @@ public class Spindexer {
             return;
         }
 
-        if (balls[0] != null && balls[0] != BallColor.None) {
-            move_to_shoot_ball(0);
-        } else if (balls[1] != null && balls[1] != BallColor.None) {
-            move_to_shoot_ball(1);
-        } else if (balls[2] != null && balls[2] != BallColor.None) {
-            move_to_shoot_ball(2);
+        // Shoot in correct pattern
+        if (is_full() && preferred_order != ColorOrder.Unknown) {
+            // find the best order to shoot in to get the most of the pattern
+            int best_starting_ball = 0;
+            int best_starting_score = 0;
+
+            for (int i = 0; i < 3; i++) {
+                int score = score_starting_position_for_order(i, preferred_order);
+
+                if (score > best_starting_score) {
+                   best_starting_ball = i;
+                   best_starting_score = score;
+                }
+            }
+
+            move_to_shoot_ball(best_starting_ball);
+
         } else {
-            switch_to_holding_pattern();
+            if (balls[0] != null && balls[0] != BallColor.None) {
+                move_to_shoot_ball(0);
+            } else if (balls[1] != null && balls[1] != BallColor.None) {
+                move_to_shoot_ball(1);
+            } else if (balls[2] != null && balls[2] != BallColor.None) {
+                move_to_shoot_ball(2);
+            } else {
+                switch_to_holding_pattern();
+            }
         }
     }
 
@@ -257,7 +296,7 @@ public class Spindexer {
                         shoot_active_ball();
                     }
                 } else {
-                    switch_to_shooting();
+                    switch_to_shooting(ColorOrder.Unknown);
                 }
             }
         }
