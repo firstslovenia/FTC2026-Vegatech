@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.pedropathing.follower.Follower;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
+@Disabled
 @TeleOp(name = "Shooter Power Testing", group = "Production")
 public class ShooterPowerTesting extends LinearOpMode {
 

@@ -3,9 +3,11 @@ package org.firstinspires.ftc.teamcode.opmodes.testing;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.opmodes.production.autonomous.GenericAuto3;
 
+@Disabled
 @Autonomous(name = "Testing Auto - shoot w/o movement")
 public class SimpleTestShootingAuto extends GenericAuto3 {
     public SimpleTestShootingAuto() {

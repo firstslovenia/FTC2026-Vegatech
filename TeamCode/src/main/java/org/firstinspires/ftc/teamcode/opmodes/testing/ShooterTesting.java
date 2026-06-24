@@ -8,6 +8,7 @@ import org.firstinspires.ftc.teamcode.Shooter;
 import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 
+@Disabled
 @TeleOp(name = "Shooter Testing", group = "Testing")
 public class ShooterTesting extends LinearOpMode {
 

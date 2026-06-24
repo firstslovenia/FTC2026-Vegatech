@@ -19,20 +19,20 @@ public class CommonPositions {
 
     /// Intake when near goal
     public static final Pose RED_AUTO_NEAR_START_PICKUP = new Pose(98.0 - 1, 83.0 + 1, Math.toRadians(0));
-    public static final Pose RED_AUTO_NEAR_END_PICKUP = new Pose(124.0, 83.0 + 1, Math.toRadians(0));
+    public static final Pose RED_AUTO_NEAR_END_PICKUP = new Pose(124.0 + 4, 83.0 + 1, Math.toRadians(0));
 
     public static final Pose BLUE_AUTO_NEAR_START_PICKUP = new Pose(45.0 + 1, 83.0 + 1, Math.toRadians(180));
-    public static final Pose BLUE_AUTO_NEAR_END_PICKUP = new Pose(19.0, 83.0 + 1, Math.toRadians(180));
+    public static final Pose BLUE_AUTO_NEAR_END_PICKUP = new Pose(19.0 - 4, 83.0 + 1, Math.toRadians(180));
 
     /// Intake when in far zone
     public static final Pose RED_AUTO_FAR_START_PICKUP = new Pose(98.0 - 1, 35.0 + 1, Math.toRadians(0));
-    public static final Pose RED_AUTO_FAR_END_PICKUP = new Pose(124.0, 35.0 + 1, Math.toRadians(0));
+    public static final Pose RED_AUTO_FAR_END_PICKUP = new Pose(124.0 + 4, 35.0 + 1, Math.toRadians(0));
 
     public static final Pose BLUE_AUTO_FAR_START_PICKUP = new Pose(45.0 + 1, 35.0 + 1, Math.toRadians(180));
-    public static final Pose BLUE_AUTO_FAR_END_PICKUP = new Pose(19.0, 35.0 + 1, Math.toRadians(180));
+    public static final Pose BLUE_AUTO_FAR_END_PICKUP = new Pose(19.0 - 4, 35.0 + 1, Math.toRadians(180));
 
     public static final Pose RED_AUTO_MIDDLE_START_PICKUP = new Pose(98.0 - 1, 61.0 + 1, Math.toRadians(0));
-    public static final Pose BLUE_AUTO_MIDDLE_START_PICKUP = new Pose(45.0 + 1, 61.0 + 1, Math.toRadians(180));
+    public static final Pose BLUE_AUTO_MIDDLE_START_PICKUP = new Pose(45.0 - 2 - 2 + 1, 61.0 + 1, Math.toRadians(180));
 
     /// End positions
     public static final Pose BLUE_AUTO_FAR_END = new Pose(38.0, 12.0, Math.toRadians(180));

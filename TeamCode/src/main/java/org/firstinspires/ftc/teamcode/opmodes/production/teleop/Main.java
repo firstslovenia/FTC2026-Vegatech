@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.production.teleop;
 
 import com.pedropathing.follower.Follower;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -22,6 +23,7 @@ import org.firstinspires.ftc.teamcode.generic.SlidingWindow;
 import org.firstinspires.ftc.teamcode.generic.Team;
 import org.firstinspires.ftc.teamcode.generic.Vector2D;
 
+@Disabled
 @TeleOp(name = "!! DO NOT USE !! Main (Unknown Team)", group = "Production")
 public class Main extends LinearOpMode {
 

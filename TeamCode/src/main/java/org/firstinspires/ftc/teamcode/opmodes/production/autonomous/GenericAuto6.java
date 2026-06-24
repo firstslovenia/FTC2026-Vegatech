@@ -7,6 +7,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.ColorOrder;
@@ -20,6 +21,7 @@ import org.firstinspires.ftc.teamcode.TargetInformation;
 import org.firstinspires.ftc.teamcode.Webcam;
 import org.firstinspires.ftc.teamcode.opmodes.production.teleop.Main;
 
+@Disabled
 @Autonomous(name = "NO TOUCHIE!!!", group = "Examples")
 public class GenericAuto6 extends OpMode {
 
