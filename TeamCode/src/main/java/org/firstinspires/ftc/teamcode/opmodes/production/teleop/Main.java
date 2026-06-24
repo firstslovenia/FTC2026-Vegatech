@@ -120,15 +120,10 @@ public class Main extends LinearOpMode {
 			Vector2D translation_vector = new Vector2D(gamepad1.left_stick_x, -gamepad1.left_stick_y);
 			Vector2D rotation_vector = new Vector2D(gamepad1.right_stick_x, -gamepad1.right_stick_y);
 
-            // Slow movement
-			if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
-				translation_vector = new Vector2D(0.0, 0.0);
-
-				if (gamepad1.dpad_up) { translation_vector.y += 0.65; }
-				if (gamepad1.dpad_down) { translation_vector.y -= 0.65; }
-				if (gamepad1.dpad_right) { translation_vector.x += 0.65; }
-				if (gamepad1.dpad_left) { translation_vector.x -= 0.65; }
-			}
+            if (gamepad1.dpad_up) { drivetrain.wanted_heading = Math.PI / 2.0; }
+            if (gamepad1.dpad_down) { drivetrain.wanted_heading = -Math.PI / 2.0; }
+            if (gamepad1.dpad_right) { drivetrain.wanted_heading = 0; }
+            if (gamepad1.dpad_left) { drivetrain.wanted_heading = Math.PI; }
 
             // Enable / disable intake
             if (gamepad1.xWasPressed()) {
