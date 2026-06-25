@@ -67,8 +67,14 @@ public class Spindexer {
     /// Set to true when we're spinning the entire spindexer around to see which balls we have
     public boolean in_survey = false;
 
+    ///  What time in millis the motor started being busy
+    public Long started_being_busy_ms = null;
+
     /// What time in millis the motor arrived at the correct position
     public Long stopped_being_busy_ms = null;
+
+    /// What position we wanted to go to before we started being stuck
+    public Integer stuck_restore_position = null;
 
     /// What time in millis we started having a full spindexer
     ///
@@ -366,13 +372,48 @@ public class Spindexer {
 
         if (stopped_being_busy_ms == null && !is_busy && last_was_busy) {
             stopped_being_busy_ms = now_ms;
+
+            if (stuck_restore_position == null) {
+                started_being_busy_ms = null;
+            }
         }
 
         if (is_busy) {
+
+            if (started_being_busy_ms == null) {
+                started_being_busy_ms = now_ms;
+            }
+
             stopped_being_busy_ms = null;
         }
 
         last_was_busy = is_busy;
+
+        // Stuck detection
+        if (started_being_busy_ms != null && now_ms - started_being_busy_ms > 2000) {
+            if (stuck_restore_position == null) {
+                int wanted = hardware.spindexerMotor.getTargetPosition();
+                int current = hardware.spindexerMotor.getCurrentPosition();
+
+                stuck_restore_position = wanted;
+                int signum_wanted = (int) Math.signum(wanted - current);
+
+                hardware.spindexerMotor.setTargetPosition(current - signum_wanted * 20 * PID_TOLERANCE);
+            }
+
+            if (!is_busy) {
+
+                if (stuck_restore_position != null) {
+                    hardware.spindexerMotor.setTargetPosition(stuck_restore_position);
+                    stuck_restore_position = null;
+                }
+                started_being_busy_ms = null;
+            }
+        }
+
+        if (stuck_restore_position != null) {
+            callingOpMode.telemetry.addLine("Trying to unstuck spindexer...");
+        }
 
         if (ball_being_shot != null) {
             callingOpMode.telemetry.addData("Shooting ball", ball_being_shot);
@@ -437,6 +478,7 @@ public class Spindexer {
         if (Math.abs(target_angle() - angle_rads) > TOLERANCE_RADS) {
             int encoder_pos = hardware.spindexerMotor.getCurrentPosition();
             hardware.spindexerMotor.setTargetPosition(nearest_shootwise_pos_at_angle(encoder_pos, angle_rads));
+            started_being_busy_ms = System.currentTimeMillis();
             stopped_being_busy_ms = null;
         }
 
@@ -455,6 +497,7 @@ public class Spindexer {
         if (Math.abs(target_angle() - angle_rads) > TOLERANCE_RADS) {
             int encoder_pos = hardware.spindexerMotor.getCurrentPosition();
             hardware.spindexerMotor.setTargetPosition(nearest_sortwise_pos_at_angle(encoder_pos, angle_rads));
+            started_being_busy_ms = System.currentTimeMillis();
             stopped_being_busy_ms = null;
         }
 
