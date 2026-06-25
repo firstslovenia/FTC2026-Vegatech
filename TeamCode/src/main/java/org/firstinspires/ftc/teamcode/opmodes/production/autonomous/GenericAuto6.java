@@ -192,7 +192,7 @@ public class GenericAuto6 extends OpMode {
 
             // Intaking
             case 6:
-                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 23000) {
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 21000) {
                     // should be handled by the spindxer
                     // hardware.intakeMotor.setPower(0.0);
                     follower.followPath(move_to_shoot_from_pickup, true);
@@ -203,7 +203,7 @@ public class GenericAuto6 extends OpMode {
 
             // Going to the shooting position
             case 7:
-                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 26000) {
+                if (!follower.isBusy() || opmodeTimer.getElapsedTime() >= 24000) {
                     shooter.update_for_target(targetInformation);
                     shooter.run();
                     setPathState(8);
@@ -213,6 +213,7 @@ public class GenericAuto6 extends OpMode {
             // Shooting again
             case 8:
 
+                // After 15s in the opmode, (or after we've shot everything), stop trying to score
                 if (!shooter.flywheel_enabled || opmodeTimer.getElapsedTime() >= 28000) {
                     shooter.disable_flywheel();
 
